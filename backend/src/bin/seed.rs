@@ -1,5 +1,5 @@
 use anyhow::Context;
-use chrono::{DateTime, Days, Duration, NaiveDate, Utc};
+use chrono::{DateTime, Datelike, Days, Duration, NaiveDate, Timelike, Utc};
 use dealflow_api::auth::password::hash_password;
 use dealflow_api::models::{Role, StageKind};
 use dealflow_api::MIGRATOR;
@@ -327,6 +327,9 @@ async fn seed_deals(
     let open: Vec<Uuid> = stage_ids(ids, StageKind::Open);
     let won = stage_ids(ids, StageKind::Won)[0];
     let lost = stage_ids(ids, StageKind::Lost)[0];
+    let now = Utc::now();
+    let month_start = now - Duration::days(i64::from(now.day0())) - Duration::seconds(i64::from(now.num_seconds_from_midnight()));
+    let hours_into_month = (now - month_start).num_hours().max(2);
     let mut deals = Vec::new();
 
     for n in 0..72 {
@@ -359,6 +362,9 @@ async fn seed_deals(
         let mut closed_at = None;
         if let Some(final_stage) = outcome {
             at = (at + Duration::days(rng.gen_range(3..20))).min(Utc::now() - Duration::hours(1));
+            if final_stage == won && rng.gen_bool(0.3) {
+                at = at.max(month_start + Duration::hours(rng.gen_range(1..hours_into_month)));
+            }
             changes.push((path.last().copied(), final_stage, at));
             path.push(final_stage);
             closed_at = Some(at);
@@ -402,7 +408,11 @@ async fn seed_deals(
         .bind(expected_close)
         .bind(closed_at)
         .bind(created)
-        .bind(at)
+        .bind(if outcome.is_none() {
+            at.max(days_ago(rng.gen_range(1..24)))
+        } else {
+            at
+        })
         .execute(&mut **tx)
         .await?;
 

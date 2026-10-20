@@ -35,6 +35,14 @@ for (const scheme of ["light", "dark"] as const) {
       await shot(page, info, `${scheme}-${screen.name}`);
     }
 
+    await page.goto("/today");
+    await page.keyboard.press("ControlOrMeta+k");
+    await page.getByRole("combobox").fill("fleet");
+    await expect(page.getByRole("option").first()).toBeVisible();
+    await expectAccessible(page);
+    await shot(page, info, `${scheme}-palette`);
+    await page.keyboard.press("Escape");
+
     await page.goto("/companies");
     await page.locator("table a").first().click();
     await page.waitForURL(/\/companies\/[0-9a-f-]+$/);
