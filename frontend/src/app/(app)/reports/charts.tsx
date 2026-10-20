@@ -52,7 +52,7 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
 
   return (
     <div>
-      <div className="text-meta text-muted mb-3 flex flex-wrap gap-x-5 gap-y-1">
+      <div className="text-meta text-muted mb-6 flex flex-wrap gap-x-5 gap-y-1">
         <span className="flex items-center gap-2">
           <span aria-hidden="true" className="bg-track inline-block size-3 rounded-[2px]" />
           Full value of open deals

@@ -211,7 +211,7 @@ export function Board({
           },
         }}
       >
-        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
+        <div className="-mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
           {columns.map((column) => (
             <Column key={column.stage.id} column={column} />
           ))}
@@ -257,7 +257,7 @@ function Column({ column }: { column: BoardColumn }) {
         </p>
       </header>
       <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
-        <ul ref={setNodeRef} className="flex min-h-24 flex-1 flex-col gap-2 p-2">
+        <ul ref={setNodeRef} className="flex min-h-24 flex-col gap-2 p-2 sm:max-h-[calc(100dvh-17rem)] sm:overflow-y-auto">
           {column.deals.map((deal) => (
             <SortableDeal key={deal.id} deal={deal} />
           ))}
