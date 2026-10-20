@@ -251,9 +251,9 @@ export function Stat({
   note?: ReactNode;
 }) {
   return (
-    <div className="rounded-card border-line bg-surface shadow-highlight flex min-w-0 flex-col gap-3 border p-5">
+    <div className="rounded-card border-line bg-surface shadow-highlight flex min-w-0 flex-col gap-2 border p-4 sm:gap-3 sm:p-5">
       <p className="text-body text-muted font-medium">{label}</p>
-      <p className="num text-display truncate font-semibold tracking-tight">{value}</p>
+      <p className="num text-title sm:text-display truncate font-semibold tracking-tight">{value}</p>
       {note ? <p className="text-meta text-muted">{note}</p> : null}
     </div>
   );
