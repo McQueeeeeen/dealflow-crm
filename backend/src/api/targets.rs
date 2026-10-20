@@ -177,6 +177,9 @@ mod tests {
     #[test]
     fn months_start_on_the_first() {
         let date = NaiveDate::from_ymd_opt(2026, 10, 20).unwrap();
-        assert_eq!(month_start(date), NaiveDate::from_ymd_opt(2026, 10, 1).unwrap());
+        assert_eq!(
+            month_start(date),
+            NaiveDate::from_ymd_opt(2026, 10, 1).unwrap()
+        );
     }
 }

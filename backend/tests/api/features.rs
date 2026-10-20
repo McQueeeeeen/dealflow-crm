@@ -46,7 +46,9 @@ async fn live_changes_stay_inside_their_workspace(pool: PgPool) {
     next_event(&mut body, "hello").await;
     app.hub.listening().await;
 
-    let foreign = app.create_deal(&globex, json!({ "title": "Not yours" })).await;
+    let foreign = app
+        .create_deal(&globex, json!({ "title": "Not yours" }))
+        .await;
     let own = app.create_deal(&acme, json!({ "title": "Fleet" })).await;
 
     let event = next_event(&mut body, "change").await;
@@ -99,7 +101,8 @@ async fn search_tolerates_typos_and_respects_tenancy(pool: PgPool) {
     )
     .await
     .assert_status(StatusCode::CREATED);
-    app.create_deal(&acme, json!({ "title": "Fleet renewal" })).await;
+    app.create_deal(&acme, json!({ "title": "Fleet renewal" }))
+        .await;
     app.post(
         "/api/v1/companies",
         &globex,
@@ -121,7 +124,10 @@ async fn search_tolerates_typos_and_respects_tenancy(pool: PgPool) {
     assert_eq!(deals.body["deals"][0]["title"], "Fleet renewal");
 
     let short = app.get("/api/v1/search?q=h", &acme).await;
-    assert_eq!(short.body, json!({ "deals": [], "companies": [], "contacts": [] }));
+    assert_eq!(
+        short.body,
+        json!({ "deals": [], "companies": [], "contacts": [] })
+    );
 }
 
 #[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
@@ -190,7 +196,10 @@ async fn contact_import_previews_then_dedupes(pool: PgPool) {
     assert_eq!(preview.body["created"], 1);
     assert_eq!(preview.body["companies_created"], 1);
     assert_eq!(preview.body["errors"][0]["row"], 2);
-    assert_eq!(preview.body["errors"][0]["message"], "first name is required");
+    assert_eq!(
+        preview.body["errors"][0]["message"],
+        "first name is required"
+    );
     assert_eq!(preview.body["errors"][1]["row"], 3);
     let empty = app.get("/api/v1/contacts", &admin).await;
     assert_eq!(empty.body["total"], 0, "a dry run writes nothing");
@@ -219,7 +228,10 @@ async fn contact_import_previews_then_dedupes(pool: PgPool) {
     let contacts = app.get("/api/v1/contacts", &admin).await;
     assert_eq!(contacts.body["total"], 1);
     let emma = &contacts.body["data"][0];
-    assert_eq!(emma["last_name"], "Novak", "blank cells keep existing values");
+    assert_eq!(
+        emma["last_name"], "Novak",
+        "blank cells keep existing values"
+    );
     assert_eq!(emma["job_title"], "COO");
     assert_eq!(emma["company_name"], "Harbor");
 }
@@ -289,15 +301,27 @@ async fn cold_threshold_and_last_activity(pool: PgPool) {
 
     let me = app.get("/api/v1/auth/me", &admin).await;
     assert_eq!(me.body["stale_after_days"], 14);
-    app.put("/api/v1/organization", &rep, json!({ "stale_after_days": 7 }))
-        .await
-        .assert_status(StatusCode::FORBIDDEN);
-    app.put("/api/v1/organization", &admin, json!({ "stale_after_days": 0 }))
-        .await
-        .assert_status(StatusCode::UNPROCESSABLE_ENTITY);
-    app.put("/api/v1/organization", &admin, json!({ "stale_after_days": 7 }))
-        .await
-        .assert_status(StatusCode::NO_CONTENT);
+    app.put(
+        "/api/v1/organization",
+        &rep,
+        json!({ "stale_after_days": 7 }),
+    )
+    .await
+    .assert_status(StatusCode::FORBIDDEN);
+    app.put(
+        "/api/v1/organization",
+        &admin,
+        json!({ "stale_after_days": 0 }),
+    )
+    .await
+    .assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+    app.put(
+        "/api/v1/organization",
+        &admin,
+        json!({ "stale_after_days": 7 }),
+    )
+    .await
+    .assert_status(StatusCode::NO_CONTENT);
     let me = app.get("/api/v1/auth/me", &rep).await;
     assert_eq!(me.body["stale_after_days"], 7);
 
