@@ -8,6 +8,7 @@ import { useState } from "react";
 import { OwnerFilter } from "@/components/owner-select";
 import { ContactFormDialog } from "@/components/record-forms";
 import { Table } from "@/components/table";
+import { ExportLink, ImportButton } from "@/components/transfer";
 import {
   Button,
   EmptyState,
@@ -46,9 +47,13 @@ export default function ContactsPage() {
       <PageHeader
         title="Contacts"
         actions={
-          <Button variant="primary" onClick={() => setCreating(true)}>
-            Add Contact
-          </Button>
+          <>
+            <ImportButton kind="contacts" />
+            <ExportLink kind="contacts" />
+            <Button variant="primary" onClick={() => setCreating(true)}>
+              Add Contact
+            </Button>
+          </>
         }
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">

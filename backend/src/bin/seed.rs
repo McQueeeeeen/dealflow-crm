@@ -163,6 +163,7 @@ async fn main() -> anyhow::Result<()> {
     let contacts = seed_contacts(&mut tx, &ids, &companies, &mut rng).await?;
     let deals = seed_deals(&mut tx, &ids, &contacts, &mut rng).await?;
     seed_tasks_and_notes(&mut tx, &ids, &deals, &mut rng).await?;
+    seed_targets(&mut tx, &ids, &mut rng).await?;
     tx.commit().await?;
 
     println!(
@@ -220,6 +221,25 @@ async fn seed_workspace(tx: &mut Transaction<'_, Postgres>) -> anyhow::Result<Id
         stages.push((id, kind));
     }
     Ok(Ids { org, users, stages })
+}
+
+async fn seed_targets(
+    tx: &mut Transaction<'_, Postgres>,
+    ids: &Ids,
+    rng: &mut StdRng,
+) -> anyhow::Result<()> {
+    for &user in &ids.users {
+        sqlx::query(
+            "INSERT INTO sales_targets (organization_id, user_id, month, amount_cents)
+             VALUES ($1, $2, date_trunc('month', now())::date, $3)",
+        )
+        .bind(ids.org)
+        .bind(user)
+        .bind(rng.gen_range(6..=16) * 2_500_000_i64)
+        .execute(&mut **tx)
+        .await?;
+    }
+    Ok(())
 }
 
 fn days_ago(days: i64) -> DateTime<Utc> {

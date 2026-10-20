@@ -27,16 +27,21 @@ async function proxy(req: NextRequest, { params }: Context): Promise<Response> {
     },
     body: hasBody ? await req.text() : undefined,
     cache: "no-store",
+    signal: req.signal,
   }).catch(() => null);
   if (!upstream) return unavailable();
 
-  if (upstream.status === 204) {
-    return new Response(null, { status: 204 });
+  const headers = new Headers();
+  for (const name of ["Content-Type", "Content-Disposition", "Cache-Control"]) {
+    const value = upstream.headers.get(name);
+    if (value) headers.set(name, value);
   }
-  return new Response(await upstream.text(), {
+  return new Response(upstream.status === 204 ? null : upstream.body, {
     status: upstream.status,
-    headers: { "Content-Type": upstream.headers.get("Content-Type") ?? "application/json" },
+    headers,
   });
 }
+
+export const maxDuration = 300;
 
 export { proxy as GET, proxy as POST, proxy as PUT, proxy as DELETE };

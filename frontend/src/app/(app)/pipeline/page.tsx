@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { DealFormDialog } from "@/components/deal-form";
 import { OwnerFilter } from "@/components/owner-select";
+import { ExportLink } from "@/components/transfer";
 import { Button, EmptyState, ErrorState, Loading, PageHeader, TextInput } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { useMoney, useUrlParams, useUrlSearch } from "@/lib/hooks";
@@ -45,9 +46,12 @@ export default function PipelinePage() {
           ) : undefined
         }
         actions={
-          <Button variant="primary" onClick={() => setCreating(true)}>
-            New Deal
-          </Button>
+          <>
+            <ExportLink kind="deals" />
+            <Button variant="primary" onClick={() => setCreating(true)}>
+              New Deal
+            </Button>
+          </>
         }
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">

@@ -39,7 +39,10 @@ export default function SettingsPage() {
       <PageHeader title="Settings" description={me?.organization_name} />
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <TeamSection />
-        <PipelineSection />
+        <div className="grid gap-6">
+          <PipelineSection />
+          <WorkspaceSection />
+        </div>
       </div>
     </>
   );
@@ -453,5 +456,61 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
         ) : null}
       </div>
     </ModalForm>
+  );
+}
+
+function WorkspaceSection() {
+  const me = useMe().data;
+  const client = useQueryClient();
+  const [days, setDays] = useState(String(me?.stale_after_days ?? 14));
+  const save = useMutation({
+    mutationFn: () => put("/organization", { stale_after_days: Number(days) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.me }),
+  });
+  return (
+    <Panel className="p-4">
+      <h2 className="text-title font-semibold">Going Cold</h2>
+      <p className="text-body text-muted mt-1">
+        Open deals with no notes, completed follow-ups or changes for this long are flagged on the
+        board and on Today.
+      </p>
+      <form
+        className="mt-4 flex items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+      >
+        <Field
+          label="Days without activity"
+          name="stale_after_days"
+          error={fieldError(save.error, "stale_after_days")}
+        >
+          {(p) => (
+            <TextInput
+              {...p}
+              type="number"
+              min={1}
+              max={365}
+              inputMode="numeric"
+              value={days}
+              onChange={(e) => {
+                save.reset();
+                setDays(e.target.value);
+              }}
+              className="num w-28"
+            />
+          )}
+        </Field>
+        <Button type="submit" busy={save.isPending}>
+          Save
+        </Button>
+      </form>
+      {save.isSuccess ? (
+        <p role="status" className="text-meta text-won mt-2">
+          Saved. Deals quiet for {days} days now count as going cold.
+        </p>
+      ) : null}
+    </Panel>
   );
 }

@@ -7,8 +7,8 @@ import {
   IconScale,
   IconTrophy,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
 
 import { OwnerFilter } from "@/components/owner-select";
 import { Table } from "@/components/table";
@@ -18,17 +18,19 @@ import {
   Loading,
   PageHeader,
   Panel,
+  Button,
   Person,
   Select,
   Stat,
+  TextInput,
   TickMeter,
 } from "@/components/ui";
-import { get, query } from "@/lib/api";
-import { percent, shortDate } from "@/lib/format";
+import { get, put, query } from "@/lib/api";
+import { centsToInput, monthLabel, parseMoneyInput, percent, shortDate } from "@/lib/format";
 import { WON_HEAT } from "@/lib/heat";
 import { useMoney, useUrlParams } from "@/lib/hooks";
-import { isManager, keys, useMe } from "@/lib/queries";
-import type { Forecast, Funnel, LeaderboardRow, Summary } from "@/lib/types";
+import { isManager, keys, useMe, useTargets } from "@/lib/queries";
+import type { Forecast, Funnel, LeaderboardRow, Summary, TargetRow } from "@/lib/types";
 
 import { FunnelChart, ForecastChart } from "./charts";
 
@@ -82,6 +84,7 @@ export default function ReportsPage() {
         <ForecastSection owner={owner} />
       </div>
 
+      <TargetsSection />
       {isManager(me) ? <LeaderboardSection from={from} owner={owner} /> : null}
     </>
   );
@@ -289,5 +292,103 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
         )}
       </Section>
     </div>
+  );
+}
+
+function TargetsSection() {
+  const me = useMe().data;
+  const fmt = useMoney();
+  const targets = useTargets();
+  const data = targets.data;
+  return (
+    <div className="mt-6">
+      <Section
+        title="Monthly Targets"
+        subtitle={`Won value against each target for ${data ? monthLabel(data.month) : "this month"}. Lighter ticks are open deals expected to close this month, weighted by stage.`}
+      >
+        {targets.isPending ? (
+          <Loading label="Loading targets…" />
+        ) : targets.isError ? (
+          <ErrorState error={targets.error} onRetry={() => targets.refetch()} />
+        ) : (
+          <ul className="row-list -mx-2 p-0">
+            {targets.data.rows.map((row) => {
+              const goal = row.target_cents;
+              return (
+                <li
+                  key={row.user_id}
+                  className="grid items-center gap-x-6 gap-y-2 px-3.5 py-3 md:grid-cols-[11rem_minmax(0,1fr)_auto]"
+                >
+                  <span className="font-medium">
+                    <Person name={row.full_name} />
+                  </span>
+                  <TickMeter
+                    label={`${row.full_name}: ${fmt(row.won_cents)} won${goal ? ` of ${fmt(goal)}` : ""}`}
+                    segments={[
+                      { value: row.won_cents, color: "var(--won)" },
+                      {
+                        value: row.weighted_cents,
+                        color: "color-mix(in oklch, var(--won) 35%, transparent)",
+                      },
+                    ]}
+                    max={goal ?? undefined}
+                    ticks={56}
+                    className="h-5"
+                  />
+                  <div className="flex items-center justify-between gap-4 md:justify-end">
+                    <p className="num text-body">
+                      <span className="font-medium">{fmt(row.won_cents)}</span>{" "}
+                      <span className="text-muted">
+                        {goal ? `of ${fmt(goal)}, ${percent(row.won_cents / goal)}` : "no target"}
+                      </span>
+                    </p>
+                    {isManager(me) ? (
+                      <TargetEditor row={row} month={targets.data.month} />
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function TargetEditor({ row, month }: { row: TargetRow; month: string }) {
+  const client = useQueryClient();
+  const [value, setValue] = useState(row.target_cents ? centsToInput(row.target_cents) : "");
+  const save = useMutation({
+    mutationFn: (amount: number | null) =>
+      put(`/targets/${row.user_id}`, { month, amount_cents: amount }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["targets"] }),
+  });
+  const cents = value.trim() ? parseMoneyInput(value) : null;
+  return (
+    <form
+      className="flex items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save.mutate(cents);
+      }}
+    >
+      <label className="sr-only" htmlFor={`target-${row.user_id}`}>
+        Target for {row.full_name}
+      </label>
+      <TextInput
+        id={`target-${row.user_id}`}
+        name="target"
+        inputMode="decimal"
+        placeholder="Target"
+        value={value}
+        aria-invalid={value.trim() !== "" && cents === null ? true : undefined}
+        onChange={(e) => setValue(e.target.value)}
+        className="num w-28"
+      />
+      <Button type="submit" busy={save.isPending} disabled={value.trim() !== "" && cents === null}>
+        Set
+      </Button>
+    </form>
   );
 }

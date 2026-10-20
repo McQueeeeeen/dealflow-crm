@@ -1,6 +1,6 @@
 "use client";
 
-import { IconBriefcase, IconScale, IconTrophy } from "@tabler/icons-react";
+import { IconBriefcase, IconScale, IconSnowflake, IconTrophy } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
@@ -16,15 +16,16 @@ import {
   Loading,
   PageHeader,
   Panel,
+  Pill,
   Stat,
   TickMeter,
   cx,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
-import { parseDay, percent, shortDate } from "@/lib/format";
+import { parseDay, percent, quietDays, shortDate } from "@/lib/format";
 import { stageHeat } from "@/lib/heat";
 import { useMoney } from "@/lib/hooks";
-import { keys, useMe, useMyTasks, useStages } from "@/lib/queries";
+import { keys, useMe, useMyTasks, useStages, useTargets } from "@/lib/queries";
 import type { BoardColumn, Deal, Page, Summary, Task } from "@/lib/types";
 import { SECTION } from "@/lib/transitions";
 
@@ -85,7 +86,10 @@ export default function TodayPage() {
       />
       <MyNumbers />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <FollowUps onAdd={() => setAdding(true)} />
+        <div className="grid gap-6">
+          <FollowUps onAdd={() => setAdding(true)} />
+          <GoingCold />
+        </div>
         <div className="grid gap-6">
           <StageBreakdown />
           <ClosingSoon />
@@ -115,6 +119,7 @@ function MyNumbers() {
     queryFn: () => get<Summary>(`/analytics/summary${query({ owner_id: me?.id })}`),
     enabled: !!me,
   });
+  const target = useTargets().data?.rows.find((r) => r.user_id === me?.id);
   if (!summary.data) return null;
   const s = summary.data;
   const weightedShare = s.weighted_pipeline_cents / Math.max(s.open_pipeline_cents, 1);
@@ -153,13 +158,31 @@ function MyNumbers() {
           </span>
         }
         meter={
-          <TickMeter
-            label={`Win rate ${percent(s.win_rate_90d)}`}
-            value={s.win_rate_90d ?? 0}
-            color="var(--won)"
-          />
+          target?.target_cents ? (
+            <TickMeter
+              label={`${fmt(target.won_cents)} won of a ${fmt(target.target_cents)} target`}
+              segments={[
+                { value: target.won_cents, color: "var(--won)" },
+                {
+                  value: target.weighted_cents,
+                  color: "color-mix(in oklch, var(--won) 35%, transparent)",
+                },
+              ]}
+              max={target.target_cents}
+            />
+          ) : (
+            <TickMeter
+              label={`Win rate ${percent(s.win_rate_90d)}`}
+              value={s.win_rate_90d ?? 0}
+              color="var(--won)"
+            />
+          )
         }
-        note={`${s.won_this_month_count} ${s.won_this_month_count === 1 ? "deal" : "deals"}, ${percent(s.win_rate_90d)} win rate over 90 days`}
+        note={
+          target?.target_cents
+            ? `${percent(target.won_cents / target.target_cents)} of your ${fmt(target.target_cents, { compact: true })} target, ${fmt(target.weighted_cents, { compact: true })} more likely this month`
+            : `${s.won_this_month_count} ${s.won_this_month_count === 1 ? "deal" : "deals"}, ${percent(s.win_rate_90d)} win rate over 90 days`
+        }
       />
     </div>
   );
@@ -250,16 +273,69 @@ function TaskSections({ tasks }: { tasks: Task[] }) {
   );
 }
 
-function ClosingSoon() {
+function useMyOpenDeals() {
   const me = useMe().data;
-  const stages = useStages().data ?? [];
-  const fmt = useMoney();
-  const deals = useQuery({
+  return useQuery({
     queryKey: keys.deals({ owner: me?.id, status: "open", view: "today" }),
     queryFn: () =>
       get<Page<Deal>>(`/deals${query({ owner_id: me?.id, status: "open", per_page: 100 })}`),
     enabled: !!me,
   });
+}
+
+function GoingCold() {
+  const me = useMe().data;
+  const fmt = useMoney();
+  const deals = useMyOpenDeals();
+  const cold = (deals.data?.data ?? [])
+    .map((deal) => ({ deal, days: quietDays(deal, me?.stale_after_days) }))
+    .filter((c): c is { deal: Deal; days: number } => c.days !== null)
+    .sort((a, b) => b.days - a.days);
+  return (
+    <Panel>
+      <div className="flex items-center gap-2 px-4 pt-4">
+        <IconSnowflake size={18} stroke={1.75} className="text-open" aria-hidden="true" />
+        <h2 className="text-title font-semibold">Going Cold</h2>
+        {cold.length > 0 ? <Pill tone="open">{cold.length}</Pill> : null}
+      </div>
+      <p className="text-meta text-muted px-4 pt-1">
+        Your open deals with no activity for {me?.stale_after_days ?? 14} days or more.
+      </p>
+      {deals.isPending ? (
+        <Loading label="Loading deals…" />
+      ) : deals.isError ? (
+        <ErrorState error={deals.error} onRetry={() => deals.refetch()} />
+      ) : cold.length === 0 ? (
+        <p className="text-body text-muted px-4 py-6">Every open deal has moved recently.</p>
+      ) : (
+        <ul className="row-list mt-1">
+          {cold.map(({ deal, days }) => (
+            <li key={deal.id}>
+              <DealLink deal={deal} className="hover:bg-hover flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <DealName deal={deal} className="block truncate font-medium" />
+                  <p className="text-meta text-muted mt-1 truncate">
+                    {deal.stage_name}
+                    {deal.company_name ? `, ${deal.company_name}` : ""}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="num font-medium">{fmt(deal.value_cents)}</p>
+                  <p className="num text-meta text-open">{days} days quiet</p>
+                </div>
+              </DealLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+function ClosingSoon() {
+  const stages = useStages().data ?? [];
+  const fmt = useMoney();
+  const deals = useMyOpenDeals();
 
   const now = new Date();
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);

@@ -1,5 +1,6 @@
 "use client";
 
+import { IconSnowflake } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -14,7 +15,7 @@ import { TaskFormDialog } from "@/components/task-form";
 import { TaskRow } from "@/components/task-list";
 import { Button, ErrorState, Loading, Panel, Person, RecordView } from "@/components/ui";
 import { del, get, query } from "@/lib/api";
-import { dateTime, shortDate } from "@/lib/format";
+import { dateTime, quietDays, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
 import { canModify, isManager, keys, useMe } from "@/lib/queries";
 import type { Deal, Page, StageChange, Task } from "@/lib/types";
@@ -88,6 +89,7 @@ function DealView({ deal }: { deal: Deal }) {
       </header>
 
       <StageRail deal={deal} editable={editable} />
+      <GoingCold deal={deal} />
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
@@ -231,5 +233,23 @@ function StageHistory({ dealId }: { dealId: string }) {
         </ol>
       )}
     </Panel>
+  );
+}
+
+function GoingCold({ deal }: { deal: Deal }) {
+  const me = useMe().data;
+  const days = quietDays(deal, me?.stale_after_days);
+  if (days === null) return null;
+  return (
+    <p className="rounded-card border-line bg-open-soft text-body mt-4 flex items-start gap-3 border px-4 py-3">
+      <IconSnowflake size={18} stroke={1.75} className="text-open mt-0.5 shrink-0" aria-hidden="true" />
+      <span>
+        <span className="font-medium">Going cold.</span>{" "}
+        <span className="text-muted">
+          No notes, completed follow-ups or changes for {days} days. Log a call or schedule the
+          next step to warm it up.
+        </span>
+      </span>
+    </p>
   );
 }

@@ -33,6 +33,14 @@ const variants: Record<Variant, string> = {
   danger: "bg-surface text-critical border-critical hover:bg-critical-soft",
 };
 
+export function buttonClass(variant: Variant = "secondary"): string {
+  return cx(
+    "rounded-control text-body inline-flex min-h-11 items-center justify-center gap-2 border px-4 font-medium transition-colors sm:min-h-9",
+    "disabled:cursor-not-allowed disabled:opacity-55",
+    variants[variant],
+  );
+}
+
 export const Button = forwardRef<
   HTMLButtonElement,
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; busy?: boolean }
@@ -40,12 +48,7 @@ export const Button = forwardRef<
   return (
     <button
       ref={ref}
-      className={cx(
-        "rounded-control text-body inline-flex min-h-11 items-center justify-center gap-2 border px-4 font-medium transition-colors sm:min-h-9",
-        "disabled:cursor-not-allowed disabled:opacity-55",
-        variants[variant],
-        className,
-      )}
+      className={cx(buttonClass(variant), className)}
       disabled={disabled || busy}
       aria-busy={busy || undefined}
       {...props}
@@ -278,6 +281,7 @@ export function TickMeter({
   value = 0,
   color = "var(--accent)",
   segments,
+  max,
   ticks = 32,
   className,
 }: {
@@ -285,22 +289,18 @@ export function TickMeter({
   value?: number;
   color?: string;
   segments?: { value: number; color: string }[];
+  max?: number;
   ticks?: number;
   className?: string;
 }) {
   const parts = segments ?? [{ value: Math.min(Math.max(value, 0), 1), color }];
-  const scale = segments
-    ? Math.max(
-        parts.reduce((sum, p) => sum + p.value, 0),
-        1,
-      )
-    : 1;
-  let reached = 0;
-  const fills = parts.flatMap((p) => {
-    const start = Math.round((reached / scale) * ticks);
-    reached += p.value;
-    return Array<string>(Math.round((reached / scale) * ticks) - start).fill(p.color);
-  });
+  const total = parts.reduce((sum, p) => sum + p.value, 0);
+  const scale = Math.max(max ?? (segments ? total : 1), total, segments ? 1 : 0);
+  const ends = parts.map((_, k) => parts.slice(0, k + 1).reduce((sum, p) => sum + p.value, 0));
+  const fills = Array.from(
+    { length: ticks },
+    (_, i) => parts[ends.findIndex((end) => end >= ((i + 0.5) / ticks) * scale)]?.color,
+  );
   return (
     <span
       role="img"
