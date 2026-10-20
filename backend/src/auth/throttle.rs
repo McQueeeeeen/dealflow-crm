@@ -17,7 +17,10 @@ impl LoginThrottle {
     pub fn record_failure(&self, email: &str) {
         let mut failures = self.0.lock().unwrap();
         failures.retain(|_, (_, since)| since.elapsed() < WINDOW);
-        failures.entry(email.to_owned()).or_insert((0, Instant::now())).0 += 1;
+        failures
+            .entry(email.to_owned())
+            .or_insert((0, Instant::now()))
+            .0 += 1;
     }
 
     pub fn clear(&self, email: &str) {
