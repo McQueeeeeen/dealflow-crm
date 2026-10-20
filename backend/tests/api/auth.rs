@@ -108,6 +108,28 @@ async fn login_rejects_bad_credentials_with_one_message(pool: PgPool) {
 }
 
 #[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn repeated_failed_logins_lock_the_account_temporarily(pool: PgPool) {
+    let app = TestApp::new(pool);
+    app.register("Acme", "owner@acme.test").await;
+    let attempt = |password: &'static str| {
+        app.request(
+            Method::POST,
+            "/api/v1/auth/login",
+            None,
+            Some(json!({ "email": "owner@acme.test", "password": password })),
+        )
+    };
+    for _ in 0..10 {
+        attempt("wrong-password-123")
+            .await
+            .assert_status(StatusCode::UNAUTHORIZED);
+    }
+    let locked = attempt(PASSWORD).await;
+    locked.assert_status(StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(locked.error_code(), "too_many_attempts");
+}
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
 async fn missing_or_forged_token_is_rejected(pool: PgPool) {
     let app = TestApp::new(pool);
     let res = app.request(Method::GET, "/api/v1/deals", None, None).await;
