@@ -346,7 +346,8 @@ async fn seed_deals(
         let stage = *path.last().expect("path starts with a stage");
         let expected_close: Option<NaiveDate> = match outcome {
             None => {
-                let date = Utc::now().date_naive() + Days::new(rng.gen_range(if rng.gen_bool(0.3) { 0..10 } else { 10..150 }));
+                let date = Utc::now().date_naive()
+                    + Days::new(rng.gen_range(if rng.gen_bool(0.3) { 0..10 } else { 10..150 }));
                 let date = if rng.gen_bool(0.1) {
                     date - Days::new(60)
                 } else {
