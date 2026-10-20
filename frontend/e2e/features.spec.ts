@@ -11,7 +11,7 @@ test("the command palette finds a company despite a typo", async ({ page }) => {
   await page.keyboard.press("ControlOrMeta+k");
   const input = page.getByRole("combobox", { name: "Search deals, companies and people" });
   await expect(input).toBeFocused();
-  await input.fill("copperleef");
+  await input.fill("copperleef foods");
   const option = page.getByRole("option", { name: /Copperleaf Foods/ });
   await expect(option).toBeVisible();
   await page.keyboard.press("Enter");
@@ -59,7 +59,7 @@ test("contacts import from CSV after a checked preview", async ({ page }, info) 
   await expect(dialog.getByText("first name is required")).toBeVisible();
   await dialog.getByRole("button", { name: "Import 1 Rows" }).click();
   await expect(dialog.getByText("Import done.")).toBeVisible();
-  await dialog.getByRole("button", { name: "Close" }).click();
+  await dialog.getByRole("button", { name: "Done" }).click();
 
   await page.getByRole("searchbox", { name: "Search contacts" }).fill(email);
   await expect(page.getByRole("link", { name: "Ava Stone" })).toBeVisible();
