@@ -3,11 +3,11 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Serialize;
-use utoipa::ToSchema;
+use serde_json::json;
 
 pub type AppResult<T> = Result<T, AppError>;
 
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FieldError {
     pub field: String,
     pub message: String,
@@ -35,19 +35,6 @@ pub enum AppError {
     Internal(#[from] anyhow::Error),
 }
 
-#[derive(Serialize, ToSchema)]
-pub struct ErrorBody {
-    pub error: ErrorDetail,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct ErrorDetail {
-    pub code: &'static str,
-    pub message: String,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub fields: Vec<FieldError>,
-}
-
 impl AppError {
     pub fn validation(field: &str, message: &str) -> Self {
         Self::Validation(vec![FieldError {
@@ -72,9 +59,6 @@ impl AppError {
     }
 }
 
-/// Translates constraint violations into client errors. Constraint names come from the
-/// migrations, so a referenced row that is missing (or belongs to another tenant, which
-/// the composite foreign keys treat the same way) surfaces as a field-level 422.
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
         if let sqlx::Error::Database(db) = &err {
@@ -129,20 +113,13 @@ impl IntoResponse for AppError {
             Self::Validation(fields) => fields,
             _ => Vec::new(),
         };
-        let body = ErrorBody {
-            error: ErrorDetail {
-                code,
-                message,
-                fields,
-            },
-        };
+        let body = json!({ "error": { "code": code, "message": message, "fields": fields } });
         (status, Json(body)).into_response()
     }
 }
 
 impl From<JsonRejection> for AppError {
     fn from(rejection: JsonRejection) -> Self {
-        // Well-formed JSON of the wrong shape is a validation problem; anything else is malformed.
         if rejection.status() == StatusCode::UNPROCESSABLE_ENTITY {
             Self::validation("body", &rejection.body_text())
         } else {

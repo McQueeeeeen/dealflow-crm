@@ -4,7 +4,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Days, NaiveDate, NaiveTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::auth::AuthUser;
@@ -21,59 +20,47 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/leaderboard", get(leaderboard))
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct OwnerQuery {
-    /// Restrict the report to one owner's deals.
     pub owner_id: Option<Uuid>,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct PeriodQuery {
-    /// Start of the reporting window. Defaults to 180 days ago.
     pub from: Option<NaiveDate>,
     pub owner_id: Option<Uuid>,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct ForecastQuery {
-    /// Number of calendar months to project, including the current one (1 to 12).
     pub months: Option<i32>,
     pub owner_id: Option<Uuid>,
 }
 
-#[derive(Serialize, ToSchema, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct Summary {
     pub open_deals_count: i64,
     pub open_pipeline_cents: i64,
-    /// Open pipeline weighted by each stage's win probability.
     pub weighted_pipeline_cents: i64,
     pub won_this_month_cents: i64,
     pub won_this_month_count: i64,
-    /// Won divided by won plus lost, for deals closed in the last 90 days.
     pub win_rate_90d: Option<f64>,
-    /// Mean days from creation to win, for deals won in the last 180 days.
     pub avg_days_to_win: Option<f64>,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize)]
 pub struct Funnel {
     pub from: NaiveDate,
-    /// Deals created since `from`.
     pub cohort_size: i64,
     pub stages: Vec<FunnelStage>,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize)]
 pub struct FunnelStage {
     pub stage_id: Uuid,
     pub name: String,
     pub kind: StageKind,
-    /// Deals from the cohort that reached this stage or any later one.
     pub reached: i64,
-    /// Share of the previous step that made it here. Absent for the first step.
     pub conversion_from_previous: Option<f64>,
 }
 
@@ -85,25 +72,22 @@ struct FunnelRow {
     reached: i64,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize)]
 pub struct Forecast {
     pub months: Vec<ForecastMonth>,
-    /// Open deals whose expected close date has already passed.
     pub overdue_cents: i64,
-    /// Open deals with no expected close date.
     pub undated_cents: i64,
 }
 
-#[derive(Serialize, ToSchema, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct ForecastMonth {
-    /// First day of the month.
     pub month: NaiveDate,
     pub deals: i64,
     pub total_cents: i64,
     pub weighted_cents: i64,
 }
 
-#[derive(Serialize, ToSchema, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct LeaderboardRow {
     pub user_id: Uuid,
     pub full_name: String,
@@ -114,12 +98,6 @@ pub struct LeaderboardRow {
     pub win_rate: Option<f64>,
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/analytics/summary", tag = "analytics",
-    params(OwnerQuery),
-    responses((status = 200, body = Summary)),
-    security(("bearer" = []))
-)]
 pub async fn summary(
     State(state): State<AppState>,
     user: AuthUser,
@@ -163,12 +141,6 @@ fn default_from() -> NaiveDate {
     Utc::now().date_naive() - Days::new(180)
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/analytics/funnel", tag = "analytics",
-    params(PeriodQuery),
-    responses((status = 200, description = "Stage-to-stage conversion for a cohort of deals", body = Funnel)),
-    security(("bearer" = []))
-)]
 pub async fn funnel(
     State(state): State<AppState>,
     user: AuthUser,
@@ -186,10 +158,6 @@ pub async fn funnel(
     .bind(query.owner_id)
     .fetch_one(&state.pool)
     .await?;
-
-    // A deal "reached" an open stage if it ever sat in that stage or a later open one,
-    // so skipping a stage on the board still counts as passing through it. Won deals
-    // reached every open stage.
     let rows: Vec<FunnelRow> = sqlx::query_as(
         "WITH cohort AS (
             SELECT id FROM deals
@@ -244,12 +212,6 @@ fn ratio(numerator: i64, denominator: i64) -> Option<f64> {
     (denominator > 0).then(|| numerator as f64 / denominator as f64)
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/analytics/forecast", tag = "analytics",
-    params(ForecastQuery),
-    responses((status = 200, description = "Open pipeline by expected close month", body = Forecast)),
-    security(("bearer" = []))
-)]
 pub async fn forecast(
     State(state): State<AppState>,
     user: AuthUser,
@@ -305,15 +267,6 @@ pub async fn forecast(
     }))
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/analytics/leaderboard", tag = "analytics",
-    params(PeriodQuery),
-    responses(
-        (status = 200, description = "Active users ranked by won value in the window", body = Vec<LeaderboardRow>),
-        (status = 403, description = "Managers and admins only", body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn leaderboard(
     State(state): State<AppState>,
     user: AuthUser,

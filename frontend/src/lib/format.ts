@@ -28,7 +28,6 @@ const dateYearFmt = new Intl.DateTimeFormat("en-US", {
 const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
 const monthFmt = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
 
-/** Dates without a time ("2026-10-31") are calendar days, so parse them as local midnight. */
 export function parseDay(value: string): Date {
   const [y, m, d] = value.split("-").map(Number);
   return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
@@ -72,7 +71,6 @@ export function fullName(c: { first_name: string; last_name: string }): string {
   return `${c.first_name} ${c.last_name}`.trim();
 }
 
-/** Turns "12,500.50" or "12500" into cents; returns null for anything that is not an amount. */
 export function parseMoneyInput(raw: string): number | null {
   const cleaned = raw.replace(/[\s,]/g, "");
   if (cleaned === "") return 0;

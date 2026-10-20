@@ -31,13 +31,6 @@ pub fn router() -> Router<AppState> {
         .merge(analytics::router())
 }
 
-#[utoipa::path(
-    get, path = "/health", tag = "system",
-    responses(
-        (status = 200, description = "API and database are reachable"),
-        (status = 503, description = "Database is unreachable"),
-    )
-)]
 pub async fn health(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
     match sqlx::query("SELECT 1").execute(&state.pool).await {
         Ok(_) => (StatusCode::OK, Json(json!({ "status": "ok" }))),

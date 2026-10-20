@@ -1,6 +1,5 @@
 FROM rust:1-bookworm AS build
 WORKDIR /app
-# Build dependencies first so source edits do not invalidate that layer.
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir -p src/bin && echo "fn main() {}" > src/main.rs && echo "fn main() {}" > src/bin/seed.rs \
     && touch src/lib.rs && cargo build --release --locked && rm -rf src

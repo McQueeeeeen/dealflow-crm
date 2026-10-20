@@ -13,7 +13,6 @@ export function useMoney() {
   );
 }
 
-/** Delays a fast-changing value, e.g. a search box, so each keystroke does not hit the API. */
 export function useDebounced<T>(value: T, delay = 250): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {

@@ -13,8 +13,6 @@ async fn reps_edit_only_their_own_deals(pool: PgPool) {
 
     let admins_deal = app.create_deal(&admin, json!({ "title": "Admin's" })).await;
     let reps_deal = app.create_deal(&rep, json!({ "title": "Rep's" })).await;
-
-    // Reading is open to the whole team.
     app.get(&format!("/api/v1/deals/{}", admins_deal.id()), &rep)
         .await
         .assert_status(StatusCode::OK);

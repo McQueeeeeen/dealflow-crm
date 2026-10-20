@@ -85,8 +85,6 @@ function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cx(
-                // The underline sits on the header's bottom edge so the current page reads as
-                // a tab of the workspace.
                 "text-body relative inline-flex min-h-12 items-center px-3 whitespace-nowrap transition-colors sm:min-h-14",
                 active
                   ? "text-ink after:bg-accent font-medium after:absolute after:inset-x-3 after:bottom-0 after:h-0.5"

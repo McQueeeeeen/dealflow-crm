@@ -1,27 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 
 import { OwnerOptions } from "@/components/owner-select";
 import { CompanySelect } from "@/components/record-pickers";
-import { Button, Dialog, Field, FormError, Select, TextInput, fieldError } from "@/components/ui";
+import { Dialog, Field, ModalForm, Select, TextInput, fieldError } from "@/components/ui";
 import { post, put } from "@/lib/api";
 import { useMe } from "@/lib/queries";
 import type { Company, Contact } from "@/lib/types";
-
-function Actions({ onClose, busy, label }: { onClose: () => void; busy: boolean; label: string }) {
-  return (
-    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-      <Button type="button" variant="quiet" onClick={onClose}>
-        Cancel
-      </Button>
-      <Button type="submit" variant="primary" busy={busy}>
-        {label}
-      </Button>
-    </div>
-  );
-}
 
 interface CompanyProps {
   open: boolean;
@@ -69,13 +56,12 @@ function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
     setValues((v) => ({ ...v, [key]: e.target.value }));
 
   return (
-    <form
-      onSubmit={(e: FormEvent) => {
-        e.preventDefault();
-        save.mutate();
-      }}
-      noValidate
-      className="flex flex-col gap-4"
+    <ModalForm
+      onSubmit={() => save.mutate()}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel={company ? "Save company" : "Add company"}
     >
       <Field label="Company name" error={fieldError(error, "name")}>
         {(p) => <TextInput {...p} value={values.name} onChange={set("name")} autoFocus />}
@@ -102,13 +88,7 @@ function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
           </Select>
         )}
       </Field>
-      <FormError error={error} />
-      <Actions
-        onClose={onClose}
-        busy={save.isPending}
-        label={company ? "Save company" : "Add company"}
-      />
-    </form>
+    </ModalForm>
   );
 }
 
@@ -165,13 +145,12 @@ function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
     setValues((v) => ({ ...v, [key]: e.target.value }));
 
   return (
-    <form
-      onSubmit={(e: FormEvent) => {
-        e.preventDefault();
-        save.mutate();
-      }}
-      noValidate
-      className="flex flex-col gap-4"
+    <ModalForm
+      onSubmit={() => save.mutate()}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel={contact ? "Save contact" : "Add contact"}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="First name" error={fieldError(error, "first_name")}>
@@ -216,12 +195,6 @@ function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
           </Select>
         )}
       </Field>
-      <FormError error={error} />
-      <Actions
-        onClose={onClose}
-        busy={save.isPending}
-        label={contact ? "Save contact" : "Add contact"}
-      />
-    </form>
+    </ModalForm>
   );
 }

@@ -12,6 +12,8 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 
+import Link from "next/link";
+
 import { ApiError } from "@/lib/api";
 
 export function cx(...classes: (string | false | null | undefined)[]): string {
@@ -102,7 +104,6 @@ export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
   return <textarea className={cx(control, "min-h-24 py-2", className)} {...props} />;
 }
 
-/** Native <dialog>: focus trapping, Escape to close and inert background come for free. */
 export function Dialog({
   open,
   onClose,
@@ -282,4 +283,69 @@ export function Pagination({
       </div>
     </nav>
   );
+}
+
+export function ModalForm({
+  onSubmit,
+  onClose,
+  error,
+  busy,
+  submitLabel,
+  children,
+}: {
+  onSubmit: () => void;
+  onClose: () => void;
+  error: unknown;
+  busy: boolean;
+  submitLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <form
+      noValidate
+      className="flex flex-col gap-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+    >
+      {children}
+      <FormError error={error} />
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button type="button" variant="quiet" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="primary" busy={busy}>
+          {submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export function Missing({ title, href, back }: { title: string; href: string; back: string }) {
+  return (
+    <div className="py-12 text-center">
+      <p className="text-lead font-medium">{title}</p>
+      <Link href={href} className="text-accent mt-4 inline-block underline underline-offset-4">
+        {back}
+      </Link>
+    </div>
+  );
+}
+
+export function RecordView<T>({
+  query,
+  missing,
+  children,
+}: {
+  query: { isPending: boolean; isError: boolean; error: unknown; data: T | undefined; refetch: () => unknown };
+  missing: { title: string; href: string; back: string };
+  children: (data: T) => ReactNode;
+}) {
+  if (query.isPending) return <Loading label="Loading…" />;
+  if (query.error instanceof ApiError && query.error.status === 404) return <Missing {...missing} />;
+  if (query.isError || query.data === undefined)
+    return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
+  return <>{children(query.data)}</>;
 }

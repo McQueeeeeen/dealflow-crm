@@ -13,7 +13,6 @@ export function Providers({ children }: { children: ReactNode }) {
           queries: {
             staleTime: 15_000,
             refetchOnWindowFocus: true,
-            // Client errors will not fix themselves on retry.
             retry: (count, error) =>
               !(error instanceof ApiError && error.status < 500) && count < 2,
           },

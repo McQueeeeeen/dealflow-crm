@@ -8,8 +8,6 @@ import {
   watchErrors,
 } from "./helpers";
 
-// Visits every screen in both themes: renders, has no console errors, passes axe, and on
-// phones never scrolls sideways (the pipeline board scrolls inside its own container).
 for (const scheme of ["light", "dark"] as const) {
   test(`every screen renders cleanly in ${scheme} mode`, async ({ page }, info) => {
     await page.emulateMedia({ colorScheme: scheme });
@@ -37,7 +35,6 @@ for (const scheme of ["light", "dark"] as const) {
       await shot(page, info, `${scheme}-${screen.name}`);
     }
 
-    // Detail pages, reached the way a person would: by following links.
     await page.goto("/companies");
     await page.locator("table a").first().click();
     await page.waitForURL(/\/companies\/[0-9a-f-]+$/);

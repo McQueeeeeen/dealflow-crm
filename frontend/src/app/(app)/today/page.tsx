@@ -63,7 +63,6 @@ export default function TodayPage() {
   );
 }
 
-/** One sentence of the caller's own numbers instead of a row of stat cards. */
 function MyNumbers() {
   const me = useMe().data;
   const fmt = useMoney();

@@ -7,7 +7,6 @@ type Theme = "light" | "dark";
 const STORAGE_KEY = "dealflow-theme";
 const CHANGE_EVENT = "dealflow-theme-change";
 
-/** Runs before paint (inlined in the document head) so a stored choice never flashes. */
 export const themeBootScript = `try{var t=localStorage.getItem("${STORAGE_KEY}");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 function currentTheme(): Theme {
@@ -35,7 +34,6 @@ export function ThemeToggle() {
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      // Private browsing can block storage; the choice still applies to this page.
     }
     window.dispatchEvent(new Event(CHANGE_EVENT));
   }

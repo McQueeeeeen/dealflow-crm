@@ -3,8 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 const REFRESH_COOKIE = "df_refresh";
 const PUBLIC_PAGES = ["/login", "/register"];
 
-// Routing only: a missing session cookie sends people to sign in. The API still checks every
-// request, so this is a convenience, not the security boundary.
 export function proxy(req: NextRequest) {
   const signedIn = req.cookies.has(REFRESH_COOKIE);
   const { pathname, search } = req.nextUrl;

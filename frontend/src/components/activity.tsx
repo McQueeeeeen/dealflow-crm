@@ -25,7 +25,6 @@ const FIELD_LABELS: Record<string, string> = {
   completed_at: "completion",
 };
 
-/** Change history from the audit log, written as sentences rather than raw diffs. */
 export function ActivityPanel({ entityType, entityId }: { entityType: string; entityId: string }) {
   const entries = useQuery({
     queryKey: keys.audit({ entityType, entityId }),

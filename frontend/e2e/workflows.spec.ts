@@ -20,8 +20,11 @@ test("a deal moves to the next stage with the keyboard", async ({ page }, info) 
   const moved = page.waitForResponse(
     (res) => res.url().includes("/move") && res.request().method() === "POST",
   );
+  const announcer = page.locator("[aria-live]").filter({ hasText: title });
   await page.keyboard.press("Space");
+  await expect(announcer).toContainText(`Picked up ${title}`);
   await page.keyboard.press("ArrowRight");
+  await expect(announcer).toContainText("is over Qualified");
   await page.keyboard.press("Space");
   expect((await moved).status()).toBe(200);
 

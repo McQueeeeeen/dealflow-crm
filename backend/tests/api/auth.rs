@@ -139,8 +139,6 @@ async fn refresh_rotates_the_token(pool: PgPool) {
     first.assert_status(StatusCode::OK);
     let rotated = first.body["refresh_token"].as_str().unwrap().to_owned();
     assert_ne!(rotated, session.refresh);
-
-    // Presenting the old token again right away is a benign race and must not end the session.
     refresh(&app, &session.refresh)
         .await
         .assert_status(StatusCode::UNAUTHORIZED);
@@ -155,8 +153,6 @@ async fn replaying_a_spent_refresh_token_revokes_the_whole_session(pool: PgPool)
         .as_str()
         .unwrap()
         .to_owned();
-
-    // Move the rotation outside the grace window, as if an attacker replayed a stolen token later.
     sqlx::query(
         "UPDATE refresh_tokens SET used_at = now() - interval '1 minute' WHERE used_at IS NOT NULL",
     )

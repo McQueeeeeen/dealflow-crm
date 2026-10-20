@@ -10,8 +10,8 @@ import { DealFormDialog } from "@/components/deal-form";
 import { LinkedDeals } from "@/components/deal-list";
 import { NotesPanel } from "@/components/notes";
 import { CompanyFormDialog, ContactFormDialog } from "@/components/record-forms";
-import { Button, ErrorState, Loading, Panel } from "@/components/ui";
-import { ApiError, del, get, query } from "@/lib/api";
+import { Button, ErrorState, Loading, Panel, RecordView } from "@/components/ui";
+import { del, get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
 import { canModify, isManager, keys, useMe } from "@/lib/queries";
@@ -19,27 +19,12 @@ import type { Company, Contact, Page } from "@/lib/types";
 
 export default function CompanyPage() {
   const { id } = useParams<{ id: string }>();
-  const company = useQuery({
-    queryKey: keys.company(id),
-    queryFn: () => get<Company>(`/companies/${id}`),
-  });
-  if (company.isPending) return <Loading label="Loading company…" />;
-  if (company.isError) {
-    return company.error instanceof ApiError && company.error.status === 404 ? (
-      <div className="py-12 text-center">
-        <p className="text-lead font-medium">This company no longer exists</p>
-        <Link
-          href="/companies"
-          className="text-accent mt-4 inline-block underline underline-offset-4"
-        >
-          Back to companies
-        </Link>
-      </div>
-    ) : (
-      <ErrorState error={company.error} onRetry={() => company.refetch()} />
-    );
-  }
-  return <CompanyView company={company.data} />;
+  const company = useQuery({ queryKey: keys.company(id), queryFn: () => get<Company>(`/companies/${id}`) });
+  return (
+    <RecordView query={company} missing={{ title: "This company no longer exists", href: "/companies", back: "Back to companies" }}>
+      {(company) => <CompanyView company={company} />}
+    </RecordView>
+  );
 }
 
 function CompanyView({ company }: { company: Company }) {

@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::audit;
@@ -26,7 +25,7 @@ pub fn router() -> Router<AppState> {
         )
 }
 
-#[derive(Debug, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct Contact {
     pub id: Uuid,
     pub first_name: String,
@@ -53,7 +52,7 @@ struct ContactFields {
     owner_id: Uuid,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct ContactInput {
     pub first_name: String,
     #[serde(default)]
@@ -62,14 +61,11 @@ pub struct ContactInput {
     pub phone: Option<String>,
     pub job_title: Option<String>,
     pub company_id: Option<Uuid>,
-    /// Defaults to the caller. Sales reps can only assign themselves.
     pub owner_id: Option<Uuid>,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct ContactQuery {
-    /// Case-insensitive substring match on name or email.
     pub q: Option<String>,
     pub company_id: Option<Uuid>,
     pub owner_id: Option<Uuid>,
@@ -95,12 +91,6 @@ const FILTER: &str = "
 const RETURNING_FIELDS: &str =
     "first_name, last_name, email, phone, job_title, company_id, owner_id";
 
-#[utoipa::path(
-    get, path = "/api/v1/contacts", tag = "contacts",
-    params(ContactQuery),
-    responses((status = 200, body = Page<Contact>)),
-    security(("bearer" = []))
-)]
 pub async fn list_contacts(
     State(state): State<AppState>,
     user: AuthUser,
@@ -142,12 +132,6 @@ async fn fetch_contact(pool: &sqlx::PgPool, org_id: Uuid, id: Uuid) -> AppResult
     .ok_or(AppError::NotFound("contact"))
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/contacts/{id}", tag = "contacts",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, body = Contact), (status = 404, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn get_contact(
     State(state): State<AppState>,
     user: AuthUser,
@@ -187,12 +171,6 @@ fn validate(req: ContactInput) -> AppResult<(CleanInput, Option<Uuid>)> {
     Ok((input, req.owner_id))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/contacts", tag = "contacts",
-    request_body = ContactInput,
-    responses((status = 201, body = Contact), (status = 422, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn create_contact(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -234,17 +212,6 @@ pub async fn create_contact(
     Ok((StatusCode::CREATED, Json(contact)))
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/contacts/{id}", tag = "contacts",
-    params(("id" = Uuid, Path)),
-    request_body = ContactInput,
-    responses(
-        (status = 200, body = Contact),
-        (status = 403, body = crate::error::ErrorBody),
-        (status = 404, body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn update_contact(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -302,12 +269,6 @@ pub async fn update_contact(
     Ok(Json(fetch_contact(&state.pool, actor.org_id, id).await?))
 }
 
-#[utoipa::path(
-    delete, path = "/api/v1/contacts/{id}", tag = "contacts",
-    params(("id" = Uuid, Path)),
-    responses((status = 204), (status = 403, description = "Managers and admins only", body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn delete_contact(
     State(state): State<AppState>,
     actor: AuthUser,

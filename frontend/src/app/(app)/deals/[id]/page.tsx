@@ -11,7 +11,7 @@ import { NotesPanel } from "@/components/notes";
 import { StageTrack } from "@/components/stage-track";
 import { TaskFormDialog } from "@/components/task-form";
 import { TaskRow } from "@/components/task-list";
-import { Button, ErrorState, Loading, Panel, Select } from "@/components/ui";
+import { Button, ErrorState, Loading, Panel, RecordView, Select } from "@/components/ui";
 import { ApiError, del, get, post, query } from "@/lib/api";
 import { dateTime, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
@@ -21,25 +21,11 @@ import type { Deal, Page, StageChange, Task } from "@/lib/types";
 export default function DealPage() {
   const { id } = useParams<{ id: string }>();
   const deal = useQuery({ queryKey: keys.deal(id), queryFn: () => get<Deal>(`/deals/${id}`) });
-
-  if (deal.isPending) return <Loading label="Loading deal…" />;
-  if (deal.isError) {
-    return deal.error instanceof ApiError && deal.error.status === 404 ? (
-      <div className="py-12 text-center">
-        <p className="text-lead font-medium">This deal no longer exists</p>
-        <p className="text-muted mt-1">It may have been deleted by a manager.</p>
-        <Link
-          href="/pipeline"
-          className="text-accent mt-4 inline-block underline underline-offset-4"
-        >
-          Back to the pipeline
-        </Link>
-      </div>
-    ) : (
-      <ErrorState error={deal.error} onRetry={() => deal.refetch()} />
-    );
-  }
-  return <DealView deal={deal.data} />;
+  return (
+    <RecordView query={deal} missing={{ title: "This deal no longer exists", href: "/pipeline", back: "Back to the pipeline" }}>
+      {(deal) => <DealView deal={deal} />}
+    </RecordView>
+  );
 }
 
 function DealView({ deal }: { deal: Deal }) {
@@ -164,7 +150,6 @@ function DealView({ deal }: { deal: Deal }) {
   );
 }
 
-/** Keyboard- and touch-friendly alternative to dragging on the board. */
 function MoveControl({ deal }: { deal: Deal }) {
   const stages = useStages().data ?? [];
   const client = useQueryClient();

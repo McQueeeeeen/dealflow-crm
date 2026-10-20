@@ -3,7 +3,6 @@
 import { Select } from "@/components/ui";
 import { useMe, useUsers } from "@/lib/queries";
 
-/** Filter control: everyone, just me, or a specific teammate. */
 export function OwnerFilter({
   value,
   onChange,
@@ -33,7 +32,6 @@ export function OwnerFilter({
   );
 }
 
-/** Owner picker inside forms. Sales reps can only assign themselves, so they see one option. */
 export function OwnerOptions() {
   const me = useMe().data;
   const users = useUsers().data ?? [];

@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::audit;
@@ -23,7 +22,7 @@ pub fn router() -> Router<AppState> {
         .route("/users/{id}", put(update_user))
 }
 
-#[derive(Debug, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct User {
     pub id: Uuid,
     pub email: String,
@@ -33,16 +32,15 @@ pub struct User {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct CreateUser {
     pub email: String,
     pub full_name: String,
     pub role: Role,
-    /// Initial password, shared with the teammate out of band.
     pub password: String,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct UpdateUser {
     pub full_name: String,
     pub role: Role,
@@ -51,11 +49,6 @@ pub struct UpdateUser {
 
 const USER_COLUMNS: &str = "id, email, full_name, role, is_active, created_at";
 
-#[utoipa::path(
-    get, path = "/api/v1/users", tag = "users",
-    responses((status = 200, body = Vec<User>)),
-    security(("bearer" = []))
-)]
 pub async fn list_users(
     State(state): State<AppState>,
     user: AuthUser,
@@ -70,16 +63,6 @@ pub async fn list_users(
     Ok(Json(users))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/users", tag = "users",
-    request_body = CreateUser,
-    responses(
-        (status = 201, body = User),
-        (status = 403, description = "Admins only", body = crate::error::ErrorBody),
-        (status = 422, body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn create_user(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -126,17 +109,6 @@ pub async fn create_user(
     Ok((StatusCode::CREATED, Json(created)))
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/users/{id}", tag = "users",
-    params(("id" = Uuid, Path)),
-    request_body = UpdateUser,
-    responses(
-        (status = 200, body = User),
-        (status = 403, body = crate::error::ErrorBody),
-        (status = 404, body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn update_user(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -148,7 +120,6 @@ pub async fn update_user(
     Validator::new()
         .required("full_name", full_name, 120)
         .finish()?;
-    // Guards against an admin locking everyone, including themselves, out of settings.
     if id == actor.user_id && (req.role != Role::Admin || !req.is_active) {
         return Err(AppError::Conflict(
             "you cannot remove your own admin access".into(),

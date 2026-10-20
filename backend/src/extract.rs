@@ -1,5 +1,3 @@
-//! Extractor wrappers that turn axum's plain-text rejections into the API's JSON error shape.
-
 use axum::extract::{FromRequest, FromRequestParts};
 
 use crate::error::AppError;

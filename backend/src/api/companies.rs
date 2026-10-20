@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::audit;
@@ -26,7 +25,7 @@ pub fn router() -> Router<AppState> {
         )
 }
 
-#[derive(Debug, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct Company {
     pub id: Uuid,
     pub name: String,
@@ -41,7 +40,6 @@ pub struct Company {
     pub updated_at: DateTime<Utc>,
 }
 
-/// The columns an update can change; used for audit diffs.
 #[derive(Debug, Serialize, FromRow)]
 struct CompanyFields {
     name: String,
@@ -50,19 +48,16 @@ struct CompanyFields {
     owner_id: Uuid,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct CompanyInput {
     pub name: String,
     pub domain: Option<String>,
     pub industry: Option<String>,
-    /// Defaults to the caller. Sales reps can only assign themselves.
     pub owner_id: Option<Uuid>,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct CompanyQuery {
-    /// Case-insensitive substring match on the name or domain.
     pub q: Option<String>,
     pub owner_id: Option<Uuid>,
     pub page: Option<u32>,
@@ -88,12 +83,6 @@ const FILTER: &str = "
       AND ($2::text IS NULL OR c.name ILIKE $2 OR c.domain ILIKE $2)
       AND ($3::uuid IS NULL OR c.owner_id = $3)";
 
-#[utoipa::path(
-    get, path = "/api/v1/companies", tag = "companies",
-    params(CompanyQuery),
-    responses((status = 200, body = Page<Company>)),
-    security(("bearer" = []))
-)]
 pub async fn list_companies(
     State(state): State<AppState>,
     user: AuthUser,
@@ -132,12 +121,6 @@ pub async fn fetch_company(pool: &sqlx::PgPool, org_id: Uuid, id: Uuid) -> AppRe
     .ok_or(AppError::NotFound("company"))
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/companies/{id}", tag = "companies",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, body = Company), (status = 404, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn get_company(
     State(state): State<AppState>,
     user: AuthUser,
@@ -166,12 +149,6 @@ fn validate(req: CompanyInput) -> AppResult<(CleanInput, Option<Uuid>)> {
     Ok((input, req.owner_id))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/companies", tag = "companies",
-    request_body = CompanyInput,
-    responses((status = 201, body = Company), (status = 422, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn create_company(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -210,17 +187,6 @@ pub async fn create_company(
     Ok((StatusCode::CREATED, Json(company)))
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/companies/{id}", tag = "companies",
-    params(("id" = Uuid, Path)),
-    request_body = CompanyInput,
-    responses(
-        (status = 200, body = Company),
-        (status = 403, body = crate::error::ErrorBody),
-        (status = 404, body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn update_company(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -274,12 +240,6 @@ pub async fn update_company(
     Ok(Json(fetch_company(&state.pool, actor.org_id, id).await?))
 }
 
-#[utoipa::path(
-    delete, path = "/api/v1/companies/{id}", tag = "companies",
-    params(("id" = Uuid, Path)),
-    responses((status = 204), (status = 403, description = "Managers and admins only", body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn delete_company(
     State(state): State<AppState>,
     actor: AuthUser,

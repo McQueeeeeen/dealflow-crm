@@ -144,7 +144,6 @@ impl TestApp {
             .await
     }
 
-    /// Creates a new organization and returns its admin's session.
     pub async fn register(&self, org: &str, email: &str) -> Session {
         let res = self
             .request(
@@ -176,7 +175,6 @@ impl TestApp {
         session_from(&res.body)
     }
 
-    /// Adds a teammate to the admin's organization and signs them in.
     pub async fn add_user(&self, admin: &Session, email: &str, role: &str) -> Session {
         self.post(
             "/api/v1/users",

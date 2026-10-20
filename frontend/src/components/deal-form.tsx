@@ -1,11 +1,11 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 
 import { OwnerOptions } from "@/components/owner-select";
 import { CompanySelect, ContactSelect } from "@/components/record-pickers";
-import { Button, Dialog, Field, FormError, Select, TextInput, fieldError } from "@/components/ui";
+import { Dialog, Field, ModalForm, Select, TextInput, fieldError } from "@/components/ui";
 import { ApiError, post, put } from "@/lib/api";
 import { centsToInput, parseMoneyInput } from "@/lib/format";
 import { useMe, useStages } from "@/lib/queries";
@@ -22,7 +22,6 @@ interface Props {
 export function DealFormDialog(props: Props) {
   return (
     <Dialog open={props.open} onClose={props.onClose} title={props.deal ? "Edit deal" : "New deal"}>
-      {/* Remounting resets the form each time the dialog opens. */}
       {props.open ? <DealForm {...props} /> : null}
     </Dialog>
   );
@@ -63,8 +62,7 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
     },
   });
 
-  function submit(e: FormEvent) {
-    e.preventDefault();
+  function submit() {
     const cents = parseMoneyInput(values.value);
     if (cents === null) {
       setValueError("Enter an amount like 12500 or 12,500.50");
@@ -85,10 +83,15 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
   const set = (key: keyof typeof values) => (value: string) =>
     setValues((v) => ({ ...v, [key]: value }));
   const error = save.error;
-  const conflict = error instanceof ApiError && error.status === 409;
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <ModalForm
+      onSubmit={submit}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel={deal ? "Save deal" : "Create deal"}
+    >
       <Field label="Deal name" error={fieldError(error, "title")}>
         {(p) => (
           <TextInput
@@ -166,27 +169,6 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
           </Select>
         )}
       </Field>
-
-      {conflict ? (
-        <p
-          role="alert"
-          className="rounded-control bg-critical-soft text-body text-critical px-3 py-2"
-        >
-          Someone else changed this deal while you were editing. Close this form to load their
-          version, then make your change again.
-        </p>
-      ) : (
-        <FormError error={error} />
-      )}
-
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="quiet" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" busy={save.isPending}>
-          {deal ? "Save deal" : "Create deal"}
-        </Button>
-      </div>
-    </form>
+    </ModalForm>
   );
 }

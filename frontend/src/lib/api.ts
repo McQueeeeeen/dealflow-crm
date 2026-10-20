@@ -17,7 +17,6 @@ export class ApiError extends Error {
 
 let refreshing: Promise<boolean> | null = null;
 
-/** One refresh at a time per tab; concurrent 401s wait for the same rotation. */
 function refreshSession(): Promise<boolean> {
   refreshing ??= fetch("/api/auth/refresh", { method: "POST" })
     .then((res) => res.ok)
@@ -43,7 +42,6 @@ async function send(path: string, init: RequestInit): Promise<Response> {
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   let res = await send(path, init);
   if (res.status === 401) {
-    // Another tab may have rotated the cookies already, so retry once either way.
     await refreshSession();
     res = await send(path, init);
     if (res.status === 401) {

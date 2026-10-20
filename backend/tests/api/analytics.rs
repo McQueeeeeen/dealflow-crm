@@ -12,8 +12,6 @@ async fn summary_weights_open_pipeline_by_stage_probability(pool: PgPool) {
     let proposal = app.stage_id(&admin, "Proposal").await;
     let won = app.stage_id(&admin, "Won").await;
     let lost = app.stage_id(&admin, "Lost").await;
-
-    // Lead is 10%, Proposal is 50%.
     app.create_deal(&admin, json!({ "title": "A", "value_cents": 1000 }))
         .await;
     app.create_deal(

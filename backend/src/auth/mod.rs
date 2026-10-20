@@ -11,8 +11,6 @@ use crate::error::AppError;
 use crate::models::Role;
 use crate::state::AppState;
 
-/// The authenticated caller. Role and active flag are re-read from the database on every
-/// request, so demoting or deactivating a user takes effect before their token expires.
 #[derive(Debug, Clone, Copy)]
 pub struct AuthUser {
     pub user_id: Uuid,

@@ -43,8 +43,6 @@ async fn records_of_another_organization_behave_as_missing(pool: PgPool) {
     assert_eq!(listed.body["total"], 0);
     let audit = app.get("/api/v1/audit", &globex).await;
     assert_eq!(audit.body["total"], 0);
-
-    // The original is untouched.
     let original = app.get(&deal_url, &acme).await;
     assert_eq!(original.body["title"], "Acme secret deal");
 }

@@ -20,7 +20,6 @@ impl Validator {
         self
     }
 
-    /// Expects an already trimmed value.
     pub fn required(&mut self, field: &str, value: &str, max_chars: usize) -> &mut Self {
         if value.is_empty() {
             self.check(false, field, "is required")
@@ -58,7 +57,6 @@ impl Validator {
     }
 }
 
-/// Trims the value and maps blank input to `None`, so optional text fields never store "".
 pub fn clean(value: Option<String>) -> Option<String> {
     value.map(|v| v.trim().to_owned()).filter(|v| !v.is_empty())
 }
@@ -67,8 +65,6 @@ pub fn normalize_email(value: &str) -> String {
     value.trim().to_lowercase()
 }
 
-/// A deliberately loose check: one `@`, a dot in the domain, no whitespace. Real
-/// verification happens when someone actually emails the address.
 fn is_plausible_email(value: &str) -> bool {
     if value.len() > 254 || value.chars().any(char::is_whitespace) {
         return false;
@@ -85,7 +81,6 @@ fn is_plausible_email(value: &str) -> bool {
     }
 }
 
-/// Builds an ILIKE pattern for a substring search, escaping the wildcard characters.
 pub fn like_pattern(search: &str) -> String {
     let mut escaped = String::with_capacity(search.len() + 2);
     escaped.push('%');

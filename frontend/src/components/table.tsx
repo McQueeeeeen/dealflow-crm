@@ -6,7 +6,6 @@ export interface Column<T> {
   header: string;
   cell: (row: T) => ReactNode;
   align?: "right";
-  /** Columns that can be dropped on narrow screens without losing the row's meaning. */
   hideBelow?: "sm" | "md" | "lg";
 }
 

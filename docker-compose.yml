@@ -1,5 +1,3 @@
-# Full stack on one machine: `docker compose up --build`, then open http://localhost:3000.
-# Load demo data with `docker compose run --rm seed`.
 services:
   db:
     image: postgres:16
