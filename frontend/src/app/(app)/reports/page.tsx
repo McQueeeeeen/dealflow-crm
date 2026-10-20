@@ -122,7 +122,7 @@ function SummaryStrip({ owner }: { owner: string }) {
     },
   ];
   return (
-    <dl className="rounded-control border-line bg-surface grid grid-cols-2 overflow-hidden border sm:grid-cols-3 lg:grid-cols-5">
+    <dl className="rounded-card border-line bg-surface grid grid-cols-2 overflow-hidden border sm:grid-cols-3 lg:grid-cols-5">
       {figures.map((f) => (
         <div key={f.label} className="border-line p-4 not-last:border-b sm:border-r lg:border-b-0">
           <dt className="text-meta text-muted">{f.label}</dt>
