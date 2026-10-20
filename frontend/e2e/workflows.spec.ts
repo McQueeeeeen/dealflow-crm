@@ -85,3 +85,13 @@ test("signing out ends the session", async ({ page }) => {
   await page.goto("/today");
   await page.waitForURL(/\/login/);
 });
+
+test("the stage rail moves a deal from its page", async ({ page }) => {
+  await page.goto("/pipeline");
+  await page.getByRole("region", { name: "Lead" }).locator("article a").first().click();
+  await page.waitForURL(/\/deals\//);
+  const rail = page.getByRole("region", { name: "Stage" });
+  await rail.getByRole("button", { name: "Move to Proposal" }).click();
+  await expect(rail.locator('[aria-current="step"]')).toContainText("Proposal");
+  await expect(page.getByText("50% likely to close.")).toBeVisible();
+});
