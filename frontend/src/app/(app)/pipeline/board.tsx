@@ -3,14 +3,12 @@
 import {
   DndContext,
   DragOverlay,
-  KeyboardSensor,
   MouseSensor,
   TouchSensor,
   closestCorners,
   useDroppable,
   useSensor,
   useSensors,
-  type Announcements,
   type DragEndEvent,
   type DragStartEvent,
   type UniqueIdentifier,
@@ -18,14 +16,13 @@ import {
 import {
   SortableContext,
   arrayMove,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState, type KeyboardEventHandler, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
@@ -117,10 +114,10 @@ export function Board({
   const client = useQueryClient();
   const [active, setActive] = useState<Deal | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [status, setStatus] = useState("");
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const move = useMutation({
@@ -152,8 +149,10 @@ export function Board({
         cols?.map((c) => ({ ...c, deals: c.deals.map((d) => (d.id === saved.id ? saved : d)) })),
       );
       client.setQueryData(["deal", saved.id], saved);
+      setStatus(`${saved.title} moved to ${saved.stage_name}.`);
     },
-    onSettled: (_data, err) => {
+    onSettled: (_data, err, m) => {
+      document.querySelector<HTMLElement>(`[data-handle="${m.deal.id}"]`)?.focus();
       if (err) client.invalidateQueries({ queryKey });
       client.invalidateQueries({ queryKey: ["analytics"] });
       client.invalidateQueries({ queryKey: ["deals"] });
@@ -162,19 +161,12 @@ export function Board({
 
   const dealById = (id: UniqueIdentifier) =>
     columns.flatMap((c) => c.deals).find((d) => d.id === id);
-  const stageName = (id: UniqueIdentifier | undefined) =>
-    columns.find((c) => c.stage.id === id || c.deals.some((d) => d.id === id))?.stage.name ?? "";
-
-  const announcements: Announcements = {
-    onDragStart: ({ active }) => `Picked up ${dealById(active.id)?.title ?? "deal"}.`,
-    onDragOver: ({ active, over }) =>
-      over ? `${dealById(active.id)?.title ?? "Deal"} is over ${stageName(over.id)}.` : undefined,
-    onDragEnd: ({ active, over }) =>
-      over
-        ? `${dealById(active.id)?.title ?? "Deal"} moved to ${stageName(over.id)}.`
-        : "Move cancelled.",
-    onDragCancel: () => "Move cancelled.",
-  };
+  function step(deal: Deal, by: number) {
+    const target = columns[columns.findIndex((c) => c.stage.id === deal.stage_id) + by];
+    if (target) {
+      move.mutate({ deal, stageId: target.stage.id, position: positionBetween(undefined, target.deals[0]) });
+    }
+  }
 
   function onDragStart(event: DragStartEvent) {
     setActive(dealById(event.active.id) ?? null);
@@ -203,28 +195,27 @@ export function Board({
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onDragCancel={() => setActive(null)}
-        accessibility={{
-          announcements,
-          screenReaderInstructions: {
-            draggable:
-              "Press space or enter to pick up a deal. Use the arrow keys to move it between stages, then press space or enter to drop it, or escape to cancel.",
-          },
-        }}
       >
         <div className="-mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
           {columns.map((column) => (
-            <Column key={column.stage.id} column={column} />
+            <Column key={column.stage.id} column={column} onStep={step} />
           ))}
         </div>
         <DragOverlay dropAnimation={null}>
           {active ? <DealCard deal={active} floating /> : null}
         </DragOverlay>
       </DndContext>
+      <p role="status" className="sr-only">
+        {status}
+      </p>
+      <p id="board-keys" className="sr-only">
+        Press the left or right arrow key to move this deal to the previous or next stage.
+      </p>
     </>
   );
 }
 
-function Column({ column }: { column: BoardColumn }) {
+function Column({ column, onStep }: { column: BoardColumn; onStep: Step }) {
   const fmt = useMoney();
   const { setNodeRef, isOver } = useDroppable({ id: column.stage.id, data: { type: "column" } });
   const { stage } = column;
@@ -262,7 +253,7 @@ function Column({ column }: { column: BoardColumn }) {
           className="flex min-h-24 flex-col gap-2 p-2 sm:max-h-[calc(100dvh-17rem)] sm:overflow-y-auto"
         >
           {column.deals.map((deal) => (
-            <SortableDeal key={deal.id} deal={deal} />
+            <SortableDeal key={deal.id} deal={deal} onStep={onStep} />
           ))}
           {column.deals.length === 0 ? (
             <li className="text-meta text-muted px-2 py-6 text-center">Drop a deal here</li>
@@ -273,26 +264,22 @@ function Column({ column }: { column: BoardColumn }) {
   );
 }
 
-function SortableDeal({ deal }: { deal: Deal }) {
+type Step = (deal: Deal, by: number) => void;
+
+function SortableDeal({ deal, onStep }: { deal: Deal; onStep: Step }) {
   const me = useMe().data;
   const movable = canModify(me, deal.owner_id);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: deal.id, disabled: !movable });
-  const { onKeyDown, ...pointerListeners } = listeners ?? {};
+  const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: deal.id,
+    disabled: !movable,
+  });
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cx(isDragging && "opacity-40")}
-      {...pointerListeners}
+      {...listeners}
     >
       <DealCard
         deal={deal}
@@ -300,20 +287,19 @@ function SortableDeal({ deal }: { deal: Deal }) {
           movable ? (
             <button
               type="button"
-              ref={setActivatorNodeRef}
-              {...attributes}
-              onKeyDown={onKeyDown as KeyboardEventHandler | undefined}
-              aria-roledescription="draggable deal"
+              data-handle={deal.id}
               aria-label={`Move ${deal.title}`}
+              aria-describedby="board-keys"
+              onKeyDown={(e) => {
+                const by = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+                if (by) {
+                  e.preventDefault();
+                  onStep(deal, by);
+                }
+              }}
               className="rounded-control text-muted hover:bg-hover hover:text-ink -mt-1 -mr-1 inline-flex size-8 shrink-0 cursor-grab items-center justify-center"
             >
-              <svg
-                width="10"
-                height="14"
-                viewBox="0 0 10 14"
-                aria-hidden="true"
-                fill="currentColor"
-              >
+              <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true" fill="currentColor">
                 <circle cx="2.5" cy="2.5" r="1.25" />
                 <circle cx="7.5" cy="2.5" r="1.25" />
                 <circle cx="2.5" cy="7" r="1.25" />
