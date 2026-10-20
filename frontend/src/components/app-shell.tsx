@@ -13,6 +13,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
+import { CommandPalette, SearchButton } from "@/components/command-palette";
+import { LiveProvider, LiveStatus } from "@/components/live";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, Button, ErrorState, Loading, cx } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/format";
@@ -59,6 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const section = items.find((item) => isActive(pathname, item.href));
 
   return (
+    <LiveProvider me={me.data.id}>
     <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <a
         href="#main"
@@ -73,6 +76,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           style={{ viewTransitionName: "app-header" }}
         >
           <Brand me={me.data} />
+          <div className="mt-3">
+            <SearchButton />
+          </div>
           <nav aria-label="Main" className="border-line mt-3 border-t pt-3">
             <NavLinks items={items} pathname={pathname} due={due} vertical />
           </nav>
@@ -91,6 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2 px-4">
             <Brand me={me.data} />
             <div className="ml-auto flex items-center gap-1">
+              <SearchButton compact />
               <ThemeToggle compact />
               <AccountMenu me={me.data} />
             </div>
@@ -104,6 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="border-line text-muted hidden h-14 items-center gap-2 border-b px-8 lg:flex">
             <section.icon size={18} stroke={1.75} aria-hidden="true" />
             <span>{section.label}</span>
+            <LiveStatus me={me.data.id} />
           </div>
         ) : null}
 
@@ -111,7 +119,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      <CommandPalette />
     </div>
+    </LiveProvider>
   );
 }
 

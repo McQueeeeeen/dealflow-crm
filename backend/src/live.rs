@@ -6,6 +6,7 @@ use std::time::Duration;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive, Sse};
+use axum::response::IntoResponse;
 use axum::routing::{get, put};
 use axum::Router;
 use serde::{Deserialize, Serialize};
@@ -131,7 +132,7 @@ pub fn router() -> Router<AppState> {
 async fn stream(
     State(state): State<AppState>,
     user: AuthUser,
-) -> AppResult<Sse<ReceiverStream<Result<Event, Infallible>>>> {
+) -> AppResult<impl IntoResponse> {
     let name: String = sqlx::query_scalar("SELECT full_name FROM users WHERE id = $1")
         .bind(user.user_id)
         .fetch_one(&state.pool)
@@ -139,7 +140,7 @@ async fn stream(
     let hub = state.hub.clone();
     let conn = Uuid::now_v7();
     let mut signals = hub.signals.subscribe();
-    let (tx, rx) = mpsc::channel(32);
+    let (tx, rx) = mpsc::channel::<Result<Event, Infallible>>(32);
     let viewer = Viewer {
         user_id: user.user_id,
         name,

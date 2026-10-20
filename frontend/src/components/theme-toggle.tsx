@@ -21,23 +21,23 @@ function subscribe(onChange: () => void) {
   return () => window.removeEventListener(CHANGE_EVENT, onChange);
 }
 
+export function toggleTheme() {
+  const next: Theme = currentTheme() === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try {
+    localStorage.setItem(STORAGE_KEY, next);
+  } catch {}
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
 export function ThemeToggle({ compact }: { compact?: boolean }) {
   const theme = useSyncExternalStore(subscribe, currentTheme, () => null);
   const ThemeIcon = theme === "light" ? IconMoon : IconSun;
 
-  function toggle() {
-    const next: Theme = currentTheme() === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem(STORAGE_KEY, next);
-    } catch {}
-    window.dispatchEvent(new Event(CHANGE_EVENT));
-  }
-
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={toggleTheme}
       className="text-body text-muted hover:bg-hover hover:text-ink flex min-h-10 items-center gap-3 rounded-lg px-3 font-medium"
       aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
     >

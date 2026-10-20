@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { get, query } from "./api";
-import type { Me, Page, Stage, Task, User } from "./types";
+import type { Me, Page, Stage, Targets, Task, User } from "./types";
 
 export const keys = {
   me: ["me"] as const,
@@ -50,6 +50,13 @@ export function useMyTasks() {
     queryFn: () =>
       get<Page<Task>>(`/tasks${query({ assignee_id: me?.id, status: "open", per_page: 100 })}`),
     enabled: !!me,
+  });
+}
+
+export function useTargets(month?: string) {
+  return useQuery({
+    queryKey: ["targets", month ?? "current"],
+    queryFn: () => get<Targets>(`/targets${query({ month })}`),
   });
 }
 

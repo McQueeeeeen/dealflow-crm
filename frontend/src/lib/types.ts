@@ -9,6 +9,7 @@ export interface Me {
   organization_id: string;
   organization_name: string;
   currency: string;
+  stale_after_days: number;
 }
 
 export interface Page<T> {
@@ -84,6 +85,7 @@ export interface Deal {
   version: number;
   created_at: string;
   updated_at: string;
+  last_activity_at: string;
 }
 
 export interface BoardColumn {
@@ -189,4 +191,44 @@ export interface LeaderboardRow {
 export interface FieldError {
   field: string;
   message: string;
+}
+
+export interface Hit {
+  id: string;
+  title: string;
+  detail: string | null;
+}
+
+export interface SearchResults {
+  deals: Hit[];
+  companies: Hit[];
+  contacts: Hit[];
+}
+
+export interface TargetRow {
+  user_id: string;
+  full_name: string;
+  target_cents: number | null;
+  won_cents: number;
+  weighted_cents: number;
+}
+
+export interface Targets {
+  month: string;
+  rows: TargetRow[];
+}
+
+export interface ImportReport {
+  dry_run: boolean;
+  created: number;
+  updated: number;
+  unchanged: number;
+  companies_created: number;
+  errors: { row: number; message: string }[];
+}
+
+export interface Viewer {
+  user_id: string;
+  name: string;
+  view: string | null;
 }

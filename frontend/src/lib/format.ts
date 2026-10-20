@@ -87,3 +87,13 @@ export const ROLE_LABELS: Record<string, string> = {
   manager: "Manager",
   sales_rep: "Sales rep",
 };
+
+export function quietDays(
+  deal: { stage_kind: string; last_activity_at: string },
+  staleAfter: number | undefined,
+  now = Date.now(),
+): number | null {
+  if (deal.stage_kind !== "open" || staleAfter === undefined) return null;
+  const days = Math.floor((now - new Date(deal.last_activity_at).getTime()) / 86_400_000);
+  return days >= staleAfter ? days : null;
+}

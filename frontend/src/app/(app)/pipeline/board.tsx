@@ -20,14 +20,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconGripVertical } from "@tabler/icons-react";
+import { IconGripVertical, IconSnowflake } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { DealLink, DealName } from "@/components/deal-link";
 import { Avatar, cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
-import { parseDay, shortDate } from "@/lib/format";
+import { parseDay, quietDays, shortDate } from "@/lib/format";
 import { stageHeat } from "@/lib/heat";
 import { useMoney } from "@/lib/hooks";
 import { canModify, useMe } from "@/lib/queries";
@@ -341,6 +341,7 @@ function DealCard({
 }) {
   const fmt = useMoney();
   const me = useMe().data;
+  const quiet = quietDays(deal, me?.stale_after_days);
   const slipped =
     deal.stage_kind === "open" &&
     deal.expected_close_date !== null &&
@@ -371,6 +372,16 @@ function DealCard({
       <div className="mt-2 flex items-baseline justify-between gap-2">
         <span className="num font-medium">{fmt(deal.value_cents)}</span>
         <span className="text-meta text-muted flex items-baseline gap-2">
+          {quiet !== null ? (
+            <span
+              className="text-open flex items-center gap-1 self-center font-medium"
+              title={`No activity for ${quiet} days`}
+            >
+              <IconSnowflake size={14} stroke={2} aria-hidden="true" />
+              <span className="num">{quiet}d</span>
+              <span className="sr-only"> without activity</span>
+            </span>
+          ) : null}
           {deal.expected_close_date && deal.stage_kind === "open" ? (
             <span className={cx("num", slipped && "text-critical font-medium")}>
               {shortDate(deal.expected_close_date)}
