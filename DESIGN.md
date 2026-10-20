@@ -45,13 +45,18 @@ No uppercase labels.
   month), not a stats dashboard. Reports live on their own page for managers.
 - Lists are tables with hairline rows, not cards. Cards appear only on the pipeline board,
   where a deal is a physical thing you drag.
+- Working surfaces (lists, follow-ups, notes) sit on white sheets. Reference sections
+  (details, stage path, history, people) sit directly on the canvas under a top rule, so the
+  page does not turn into a grid of identical boxes.
+- Money leads: stage columns show their total value first and the deal count second.
 - Left-aligned text, right-aligned amounts.
 
 ## Identity motif
 
 The **stage track**: a row of short segments, one per open stage, filled up to where the
 deal currently is. It appears in every deal list outside the board (Today, company and
-contact pages) and, larger, in the deal page header. The board leaves it out because the
+contact pages) and, as the stage rail, across the deal page: full width, named
+segments that move the deal when clicked. The board leaves it out because the
 column already says the stage. It is information (how far along this deal is), repeated
 so the product has one recognizable gesture.
 

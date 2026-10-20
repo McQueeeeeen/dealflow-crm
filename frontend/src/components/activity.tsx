@@ -35,7 +35,7 @@ export function ActivityPanel({ entityType, entityId }: { entityType: string; en
   });
 
   return (
-    <Panel>
+    <Panel quiet>
       <h2 className="text-title px-4 pt-4 font-semibold">History</h2>
       {entries.isPending ? (
         <Loading label="Loading history…" />

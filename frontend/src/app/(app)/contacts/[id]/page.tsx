@@ -156,7 +156,7 @@ function ContactView({ contact }: { contact: Contact }) {
           <NotesPanel parent={{ contact_id: contact.id }} />
         </div>
         <div className="flex flex-col gap-6">
-          <Panel>
+          <Panel quiet>
             <h2 className="text-title px-4 pt-4 font-semibold">Deals</h2>
             <div className="border-line mt-2 border-t">
               <LinkedDeals filter={{ contact_id: contact.id }} />

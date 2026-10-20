@@ -8,14 +8,14 @@ import { useState } from "react";
 import { ActivityPanel } from "@/components/activity";
 import { DealFormDialog } from "@/components/deal-form";
 import { NotesPanel } from "@/components/notes";
-import { StageTrack } from "@/components/stage-track";
+import { StageRail } from "@/components/stage-rail";
 import { TaskFormDialog } from "@/components/task-form";
 import { TaskRow } from "@/components/task-list";
-import { Button, ErrorState, Loading, Panel, RecordView, Select } from "@/components/ui";
-import { ApiError, del, get, post, query } from "@/lib/api";
+import { Button, ErrorState, Loading, Panel, RecordView } from "@/components/ui";
+import { del, get, query } from "@/lib/api";
 import { dateTime, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
-import { canModify, isManager, keys, useMe, useStages } from "@/lib/queries";
+import { canModify, isManager, keys, useMe } from "@/lib/queries";
 import type { Deal, Page, StageChange, Task } from "@/lib/types";
 
 export default function DealPage() {
@@ -37,20 +37,10 @@ export default function DealPage() {
 
 function DealView({ deal }: { deal: Deal }) {
   const me = useMe().data;
-  const stages = useStages().data ?? [];
   const fmt = useMoney();
   const [editing, setEditing] = useState(false);
   const [addingTask, setAddingTask] = useState(false);
   const editable = canModify(me, deal.owner_id);
-  const openStages = stages.filter((s) => s.kind === "open");
-  const stepIndex = openStages.findIndex((s) => s.id === deal.stage_id);
-
-  const status =
-    deal.stage_kind === "won"
-      ? `Won ${deal.closed_at ? shortDate(deal.closed_at) : ""}`
-      : deal.stage_kind === "lost"
-        ? `Lost ${deal.closed_at ? shortDate(deal.closed_at) : ""}`
-        : `${deal.stage_name}, stage ${stepIndex + 1} of ${openStages.length}, ${deal.probability}% likely to close`;
 
   return (
     <>
@@ -75,20 +65,7 @@ function DealView({ deal }: { deal: Deal }) {
               "No company linked"
             )}
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="num text-display font-semibold">{fmt(deal.value_cents)}</span>
-            <span className="text-body text-muted flex items-center gap-3">
-              <StageTrack
-                stages={stages}
-                stageId={deal.stage_id}
-                kind={deal.stage_kind}
-                size="lg"
-              />
-              <span className={deal.stage_kind === "won" ? "text-accent font-medium" : undefined}>
-                {status}
-              </span>
-            </span>
-          </div>
+          <p className="num text-display mt-4 font-semibold">{fmt(deal.value_cents)}</p>
         </div>
         {editable ? (
           <div className="flex flex-wrap gap-2">
@@ -102,7 +79,7 @@ function DealView({ deal }: { deal: Deal }) {
         )}
       </header>
 
-      {editable ? <MoveControl key={deal.stage_id} deal={deal} /> : null}
+      <StageRail deal={deal} editable={editable} />
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
@@ -110,7 +87,7 @@ function DealView({ deal }: { deal: Deal }) {
           <NotesPanel parent={{ deal_id: deal.id }} />
         </div>
         <div className="flex flex-col gap-6">
-          <Panel>
+          <Panel quiet>
             <h2 className="text-title px-4 pt-4 font-semibold">Details</h2>
             <dl className="text-body grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4">
               <dt className="text-muted">Contact</dt>
@@ -154,74 +131,6 @@ function DealView({ deal }: { deal: Deal }) {
         link={{ dealId: deal.id }}
       />
     </>
-  );
-}
-
-function MoveControl({ deal }: { deal: Deal }) {
-  const stages = useStages().data ?? [];
-  const client = useQueryClient();
-  const [target, setTarget] = useState(deal.stage_id);
-  const move = useMutation({
-    mutationFn: (stageId: string) =>
-      post<Deal>(`/deals/${deal.id}/move`, { stage_id: stageId, version: deal.version }),
-    onSuccess: (saved) => {
-      client.setQueryData(keys.deal(deal.id), saved);
-      for (const key of [
-        ["board"],
-        ["deals"],
-        ["analytics"],
-        ["audit"],
-        ["deal", deal.id, "stage-history"],
-      ]) {
-        client.invalidateQueries({ queryKey: key });
-      }
-    },
-    onError: (err) => {
-      if (err instanceof ApiError && err.status === 409) {
-        client.invalidateQueries({ queryKey: keys.deal(deal.id) });
-      }
-    },
-  });
-  const won = stages.find((s) => s.kind === "won");
-  const lost = stages.find((s) => s.kind === "lost");
-
-  return (
-    <Panel className="flex flex-wrap items-center gap-3 p-3">
-      <label className="flex items-center gap-2">
-        <span className="text-muted">Stage</span>
-        <Select value={target} onChange={(e) => setTarget(e.target.value)} className="w-auto">
-          {stages.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </Select>
-      </label>
-      <Button
-        onClick={() => move.mutate(target)}
-        disabled={target === deal.stage_id}
-        busy={move.isPending}
-      >
-        Move deal
-      </Button>
-      {deal.stage_kind === "open" && won && lost ? (
-        <div className="flex gap-2 sm:ml-auto">
-          <Button variant="primary" onClick={() => move.mutate(won.id)} disabled={move.isPending}>
-            Mark as won
-          </Button>
-          <Button variant="danger" onClick={() => move.mutate(lost.id)} disabled={move.isPending}>
-            Mark as lost
-          </Button>
-        </div>
-      ) : null}
-      {move.isError ? (
-        <p role="alert" className="text-body text-critical w-full">
-          {move.error instanceof ApiError && move.error.status === 409
-            ? "Someone changed this deal a moment ago. The page has been refreshed, try again."
-            : "The move did not save. Try again."}
-        </p>
-      ) : null}
-    </Panel>
   );
 }
 
@@ -289,7 +198,7 @@ function StageHistory({ dealId }: { dealId: string }) {
     queryFn: () => get<StageChange[]>(`/deals/${dealId}/stage-history`),
   });
   return (
-    <Panel>
+    <Panel quiet>
       <h2 className="text-title px-4 pt-4 font-semibold">Stage path</h2>
       {history.isPending ? (
         <Loading label="Loading stage path…" />

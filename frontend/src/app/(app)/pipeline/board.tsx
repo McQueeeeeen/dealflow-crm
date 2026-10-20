@@ -246,9 +246,13 @@ function Column({ column, onStep }: { column: BoardColumn; onStep: Step }) {
             {stage.kind === "open" ? `${stage.probability}%` : null}
           </span>
         </h2>
-        <p className="num text-meta text-muted mt-0.5">
-          {column.count} {column.count === 1 ? "deal" : "deals"},{" "}
-          {fmt(column.total_value_cents, { compact: true })}
+        <p className="num mt-1 flex items-baseline justify-between gap-2">
+          <span className="text-lead font-semibold">
+            {fmt(column.total_value_cents, { compact: true })}
+          </span>
+          <span className="text-meta text-muted">
+            {column.count} {column.count === 1 ? "deal" : "deals"}
+          </span>
         </p>
       </header>
       <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
