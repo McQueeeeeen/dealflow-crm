@@ -1,22 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, IBM_Plex_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { themeBootScript } from "@/components/theme-toggle";
 
 import "./globals.css";
 
-const plex = IBM_Plex_Sans({
+const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex",
-  display: "swap",
-});
-
-const display = Archivo({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  variable: "--font-manrope",
   display: "swap",
 });
 
@@ -27,14 +19,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f5f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#14161b" },
+    { media: "(prefers-color-scheme: light)", color: "#eef1f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#12151c" },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plex.variable} ${display.variable}`} suppressHydrationWarning>
+    <html lang="en" className={manrope.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>

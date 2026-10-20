@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { cx } from "@/components/ui";
 import { monthLabel, percent } from "@/lib/format";
+import { WON_HEAT, heat } from "@/lib/heat";
 import { useMoney } from "@/lib/hooks";
 import type { ForecastMonth, FunnelStage } from "@/lib/types";
 
@@ -11,7 +12,7 @@ export function FunnelChart({ stages, cohort }: { stages: FunnelStage[]; cohort:
   const max = Math.max(cohort, 1);
   return (
     <ol className="flex flex-col gap-3">
-      {stages.map((stage) => {
+      {stages.map((stage, i) => {
         const share = stage.reached / max;
         return (
           <li
@@ -22,11 +23,12 @@ export function FunnelChart({ stages, cohort }: { stages: FunnelStage[]; cohort:
             <div className="flex min-w-0 items-center gap-3">
               <div className="h-5 min-w-0 flex-1">
                 <div
-                  className={cx(
-                    "h-full rounded-r-[4px]",
-                    stage.kind === "won" ? "bg-accent" : "bg-accent/70",
-                  )}
-                  style={{ width: `${Math.max(share * 100, stage.reached > 0 ? 1.5 : 0)}%` }}
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.max(share * 100, stage.reached > 0 ? 1.5 : 0)}%`,
+                    backgroundColor:
+                      stage.kind === "won" ? WON_HEAT : heat(i / Math.max(stages.length - 2, 1)),
+                  }}
                 />
               </div>
               <span className="num text-meta text-muted w-28 shrink-0 sm:w-36">
@@ -54,11 +56,15 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
     <div>
       <div className="text-meta text-muted mb-6 flex flex-wrap gap-x-5 gap-y-1">
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="bg-track inline-block size-3 rounded-[2px]" />
+          <span aria-hidden="true" className="bg-track inline-block size-3 rounded-full" />
           Full value of open deals
         </span>
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="bg-accent inline-block size-3 rounded-[2px]" />
+          <span
+            aria-hidden="true"
+            className="inline-block size-3 rounded-full"
+            style={{ backgroundColor: heat(1) }}
+          />
           Weighted by stage probability
         </span>
       </div>
@@ -99,14 +105,15 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
                 >
                   <span
                     className={cx(
-                      "bg-track relative block w-full max-w-6 rounded-t-[4px]",
+                      "bg-track relative block w-full max-w-6 rounded-t-lg",
                       focus === i && "brightness-95",
                     )}
                     style={{ height: `${(m.total_cents / max) * 100}%` }}
                   >
                     <span
-                      className="bg-accent absolute inset-x-0 bottom-0 block rounded-t-[4px]"
+                      className="absolute inset-x-0 bottom-0 block rounded-t-lg"
                       style={{
+                        backgroundColor: heat(1),
                         height:
                           m.total_cents > 0 ? `${(m.weighted_cents / m.total_cents) * 100}%` : 0,
                       }}
