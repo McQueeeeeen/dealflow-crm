@@ -1,6 +1,6 @@
 "use client";
 
-import { IconX } from "@tabler/icons-react";
+import { IconX, type Icon } from "@tabler/icons-react";
 import {
   forwardRef,
   useEffect,
@@ -245,19 +245,105 @@ export function Stat({
   label,
   value,
   note,
+  icon: StatIcon,
+  meter,
 }: {
   label: string;
   value: ReactNode;
   note?: ReactNode;
+  icon?: Icon;
+  meter?: ReactNode;
 }) {
   return (
     <div className="rounded-card border-line bg-surface shadow-highlight flex min-w-0 flex-col gap-2 border p-4 sm:gap-3 sm:p-5">
-      <p className="text-body text-muted font-medium">{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-body text-muted font-medium">{label}</p>
+        {StatIcon ? (
+          <span className="border-line bg-row text-muted shadow-highlight hidden size-8 shrink-0 items-center justify-center rounded-lg border sm:inline-flex">
+            <StatIcon size={16} stroke={1.75} aria-hidden="true" />
+          </span>
+        ) : null}
+      </div>
       <p className="num text-title sm:text-display truncate font-semibold tracking-tight">
         {value}
       </p>
+      {meter}
       {note ? <p className="text-meta text-muted">{note}</p> : null}
     </div>
+  );
+}
+
+export function TickMeter({
+  label,
+  value = 0,
+  color = "var(--accent)",
+  segments,
+  ticks = 32,
+  className,
+}: {
+  label: string;
+  value?: number;
+  color?: string;
+  segments?: { value: number; color: string }[];
+  ticks?: number;
+  className?: string;
+}) {
+  const parts = segments ?? [{ value: Math.min(Math.max(value, 0), 1), color }];
+  const scale = segments ? Math.max(parts.reduce((sum, p) => sum + p.value, 0), 1) : 1;
+  let reached = 0;
+  const fills = parts.flatMap((p) => {
+    const start = Math.round((reached / scale) * ticks);
+    reached += p.value;
+    return Array<string>(Math.round((reached / scale) * ticks) - start).fill(p.color);
+  });
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      className={cx("flex h-4 justify-between gap-[2px] overflow-hidden", className)}
+    >
+      {Array.from({ length: ticks }, (_, i) => (
+        <span
+          key={i}
+          className={cx("w-[3px] shrink-0 rounded-full", !fills[i] && "bg-track")}
+          style={fills[i] ? { backgroundColor: fills[i] } : undefined}
+        />
+      ))}
+    </span>
+  );
+}
+
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+export function Avatar({ name, large }: { name: string; large?: boolean }) {
+  const hue = [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 17);
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold",
+        large ? "text-meta size-8" : "size-6 text-[0.625rem]",
+      )}
+      style={{ backgroundColor: `oklch(0.45 0.1 ${hue})`, color: `oklch(0.96 0.03 ${hue})` }}
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+export function Person({ name, children }: { name: string; children?: ReactNode }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-2">
+      <Avatar name={name} />
+      <span className="truncate">{children ?? name}</span>
+    </span>
   );
 }
 

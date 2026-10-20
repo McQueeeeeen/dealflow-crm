@@ -16,6 +16,7 @@ import {
   PageHeader,
   Pagination,
   Panel,
+  Person,
   TextInput,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
@@ -133,7 +134,7 @@ export default function ContactsPage() {
                   cell: (c) => <span className="num whitespace-nowrap">{c.phone}</span>,
                   hideBelow: "lg",
                 },
-                { header: "Owner", cell: (c) => c.owner_name, hideBelow: "lg" },
+                { header: "Owner", cell: (c) => <Person name={c.owner_name} />, hideBelow: "lg" },
               ]}
             />
             <Pagination

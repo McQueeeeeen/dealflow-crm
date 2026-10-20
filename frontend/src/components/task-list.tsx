@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useId, useState } from "react";
 
 import { TaskFormDialog } from "@/components/task-form";
-import { cx } from "@/components/ui";
+import { Person, cx } from "@/components/ui";
 import { del, post } from "@/lib/api";
 import { isOverdue, relativeDue } from "@/lib/format";
 import { canModify, useMe } from "@/lib/queries";
@@ -86,7 +86,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
               {task.contact_name}
             </Link>
           ) : null}
-          {task.assignee_id !== me?.id ? <span>{task.assignee_name}</span> : null}
+          {task.assignee_id !== me?.id ? <Person name={task.assignee_name} /> : null}
         </p>
         {toggle.isError || remove.isError ? (
           <p role="alert" className="text-meta text-critical mt-1">

@@ -25,7 +25,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { DealLink, DealName } from "@/components/deal-link";
-import { cx } from "@/components/ui";
+import { Avatar, cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
 import { parseDay, shortDate } from "@/lib/format";
 import { stageHeat } from "@/lib/heat";
@@ -377,7 +377,9 @@ function DealCard({
             </span>
           ) : null}
           {deal.owner_id !== me?.id ? (
-            <span title={deal.owner_name}>{deal.owner_name.split(" ")[0]}</span>
+            <span title={deal.owner_name} className="self-center">
+              <Avatar name={deal.owner_name} />
+            </span>
           ) : null}
         </span>
       </div>
