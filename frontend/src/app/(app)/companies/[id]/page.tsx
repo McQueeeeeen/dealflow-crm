@@ -19,9 +19,19 @@ import type { Company, Contact, Page } from "@/lib/types";
 
 export default function CompanyPage() {
   const { id } = useParams<{ id: string }>();
-  const company = useQuery({ queryKey: keys.company(id), queryFn: () => get<Company>(`/companies/${id}`) });
+  const company = useQuery({
+    queryKey: keys.company(id),
+    queryFn: () => get<Company>(`/companies/${id}`),
+  });
   return (
-    <RecordView query={company} missing={{ title: "This company no longer exists", href: "/companies", back: "Back to companies" }}>
+    <RecordView
+      query={company}
+      missing={{
+        title: "This company no longer exists",
+        href: "/companies",
+        back: "Back to companies",
+      }}
+    >
       {(company) => <CompanyView company={company} />}
     </RecordView>
   );

@@ -22,7 +22,14 @@ export default function DealPage() {
   const { id } = useParams<{ id: string }>();
   const deal = useQuery({ queryKey: keys.deal(id), queryFn: () => get<Deal>(`/deals/${id}`) });
   return (
-    <RecordView query={deal} missing={{ title: "This deal no longer exists", href: "/pipeline", back: "Back to the pipeline" }}>
+    <RecordView
+      query={deal}
+      missing={{
+        title: "This deal no longer exists",
+        href: "/pipeline",
+        back: "Back to the pipeline",
+      }}
+    >
       {(deal) => <DealView deal={deal} />}
     </RecordView>
   );
