@@ -94,7 +94,7 @@ function ContactView({ contact }: { contact: Contact }) {
             {contact.email ? (
               <a
                 href={`mailto:${contact.email}`}
-                className="text-accent underline underline-offset-4"
+                className="text-link underline underline-offset-4"
               >
                 {contact.email}
               </a>
@@ -102,7 +102,7 @@ function ContactView({ contact }: { contact: Contact }) {
             {contact.phone ? (
               <a
                 href={`tel:${contact.phone.replace(/\s/g, "")}`}
-                className="num text-accent underline underline-offset-4"
+                className="num text-link underline underline-offset-4"
               >
                 {contact.phone}
               </a>
@@ -149,7 +149,7 @@ function ContactView({ contact }: { contact: Contact }) {
             ) : tasks.data.data.length === 0 ? (
               <p className="text-body text-muted px-4 py-6">No follow-ups with this person.</p>
             ) : (
-              <ul className="divide-line border-line mt-2 divide-y border-t">
+              <ul className="row-list mt-1">
                 {tasks.data.data.map((task) => (
                   <TaskRow key={task.id} task={task} showLinks={false} />
                 ))}

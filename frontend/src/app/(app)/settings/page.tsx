@@ -324,7 +324,7 @@ function PipelineSection() {
       ) : stages.isError ? (
         <ErrorState error={stages.error} onRetry={() => stages.refetch()} />
       ) : (
-        <ol className="divide-line border-line divide-y border-t">
+        <ol className="row-list">
           {stages.data.map((stage, i, list) => (
             <li key={stage.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">

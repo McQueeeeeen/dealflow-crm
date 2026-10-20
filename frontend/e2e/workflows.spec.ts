@@ -68,14 +68,12 @@ test("a note is added to a deal and appears in its history", async ({ page }, in
 });
 
 test("the theme toggle switches and remembers the theme", async ({ page }) => {
-  await page.emulateMedia({ colorScheme: "light" });
-  await page.reload();
-  await page.getByRole("button", { name: "Switch to dark theme" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("button", { name: "Switch to light theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
 test("signing out ends the session", async ({ page }) => {

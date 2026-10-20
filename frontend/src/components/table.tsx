@@ -21,17 +21,17 @@ export function Table<T extends { id: string }>({
   caption: string;
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="text-body w-full border-collapse text-left">
+    <div className="overflow-x-auto px-2">
+      <table className="text-body w-full border-separate border-spacing-y-1.5 text-left">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-line border-b">
+          <tr>
             {columns.map((col) => (
               <th
                 key={col.header}
                 scope="col"
                 className={cx(
-                  "text-meta text-muted px-4 py-2.5 font-medium whitespace-nowrap",
+                  "text-meta text-muted px-4 pt-1 pb-0.5 font-medium whitespace-nowrap",
                   col.align === "right" && "text-right",
                   col.hideBelow && hide[col.hideBelow],
                 )}
@@ -41,14 +41,14 @@ export function Table<T extends { id: string }>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-line divide-y">
+        <tbody>
           {rows.map((row) => (
-            <tr key={row.id} className="hover:bg-hover">
+            <tr key={row.id} className="group">
               {columns.map((col) => (
                 <td
                   key={col.header}
                   className={cx(
-                    "px-4 py-3 align-top",
+                    "bg-row group-hover:bg-hover px-4 py-3 align-middle transition-colors first:rounded-l-lg last:rounded-r-lg",
                     col.align === "right" && "num text-right whitespace-nowrap",
                     col.hideBelow && hide[col.hideBelow],
                   )}

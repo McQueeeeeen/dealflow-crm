@@ -11,7 +11,7 @@ export default function NotFound() {
       <Link
         transitionTypes={SECTION}
         href="/today"
-        className="text-accent font-medium underline underline-offset-4"
+        className="text-link font-medium underline underline-offset-4"
       >
         Back to today&apos;s work
       </Link>

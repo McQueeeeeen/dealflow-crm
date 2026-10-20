@@ -20,6 +20,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { IconGripVertical } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type CSSProperties, type ReactNode } from "react";
 
@@ -241,13 +242,12 @@ function Column({ column, color, onStep }: { column: BoardColumn; color: string;
       aria-labelledby={`stage-${stage.id}`}
       style={{ "--heat": color } as CSSProperties}
       className={cx(
-        "rounded-card flex w-[78vw] max-w-72 shrink-0 snap-start flex-col border bg-[color-mix(in_oklch,var(--heat)_8%,var(--canvas))] sm:w-72",
-        isOver ? "border-[var(--heat)]" : "border-transparent",
+        "rounded-card bg-surface shadow-highlight flex w-[78vw] max-w-72 shrink-0 snap-start flex-col border sm:w-72",
+        isOver ? "border-[var(--heat)]" : "border-line",
       )}
     >
-      <header className="px-3 pt-3 pb-2">
-        <span aria-hidden="true" className="block h-1.5 rounded-full bg-[var(--heat)]" />
-        <h2 id={`stage-${stage.id}`} className="mt-3 flex items-center justify-between gap-2">
+      <header className="border-line border-b px-3.5 pt-3.5 pb-3">
+        <h2 id={`stage-${stage.id}`} className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2 font-semibold">
             <span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--heat)]" />
             {stage.name}
@@ -257,7 +257,7 @@ function Column({ column, color, onStep }: { column: BoardColumn; color: string;
           </span>
         </h2>
         <p className="num mt-1 flex items-baseline justify-between gap-2">
-          <span className="text-title font-display">
+          <span className="text-title font-semibold">
             {fmt(column.total_value_cents, { compact: true })}
           </span>
           <span className="text-meta text-muted">
@@ -321,20 +321,7 @@ function SortableDeal({ deal, onStep }: { deal: Deal; onStep: Step }) {
               }}
               className="rounded-control text-muted hover:bg-hover hover:text-ink -mt-1 -mr-1 inline-flex size-8 shrink-0 cursor-grab items-center justify-center"
             >
-              <svg
-                width="10"
-                height="14"
-                viewBox="0 0 10 14"
-                aria-hidden="true"
-                fill="currentColor"
-              >
-                <circle cx="2.5" cy="2.5" r="1.25" />
-                <circle cx="7.5" cy="2.5" r="1.25" />
-                <circle cx="2.5" cy="7" r="1.25" />
-                <circle cx="7.5" cy="7" r="1.25" />
-                <circle cx="2.5" cy="11.5" r="1.25" />
-                <circle cx="7.5" cy="11.5" r="1.25" />
-              </svg>
+              <IconGripVertical size={16} stroke={1.75} aria-hidden="true" />
             </button>
           ) : null
         }
@@ -361,8 +348,8 @@ function DealCard({
   return (
     <article
       className={cx(
-        "rounded-card bg-surface shadow-card p-3.5",
-        floating ? "shadow-float rotate-1 cursor-grabbing" : "hover:shadow-card-hover cursor-grab",
+        "border-line bg-row shadow-highlight rounded-xl border p-3.5",
+        floating ? "shadow-float rotate-1 cursor-grabbing" : "hover:border-line-strong cursor-grab",
       )}
     >
       <div className="flex items-start justify-between gap-2">

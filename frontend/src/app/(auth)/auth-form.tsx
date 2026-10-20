@@ -81,13 +81,18 @@ export function AuthForm({ mode, demo }: Props) {
             const last = i === STAGES.length - 1;
             return (
               <li key={stage} className="min-w-0">
-                <span
-                  className="rail-fill block h-2.5 rounded-full"
-                  style={{
-                    animationDelay: `${i * 140}ms`,
-                    backgroundColor: last ? WON_HEAT : heat(i / (STAGES.length - 2)),
-                  }}
-                />
+                <span aria-hidden="true" className="flex gap-1">
+                  {[0, 1, 2, 3].map((t) => (
+                    <span
+                      key={t}
+                      className="rail-fill block h-9 w-1.5 rounded-full"
+                      style={{
+                        animationDelay: `${(i * 4 + t) * 35}ms`,
+                        backgroundColor: last ? WON_HEAT : heat(i / (STAGES.length - 2)),
+                      }}
+                    />
+                  ))}
+                </span>
                 <span
                   className={cx(
                     "text-meta mt-2 block truncate",
@@ -105,7 +110,7 @@ export function AuthForm({ mode, demo }: Props) {
       <form
         onSubmit={submit}
         noValidate
-        className="rounded-card border-line bg-surface shadow-card flex flex-col gap-4 border p-5 sm:p-6"
+        className="rounded-card border-line bg-surface shadow-highlight flex flex-col gap-4 border p-5 sm:p-6"
       >
         {!isLogin ? (
           <>
@@ -187,7 +192,7 @@ export function AuthForm({ mode, demo }: Props) {
           {isLogin ? "New team? " : "Already have an account? "}
           <Link
             href={isLogin ? "/register" : "/login"}
-            className="text-accent font-medium underline underline-offset-4"
+            className="text-link font-medium underline underline-offset-4"
           >
             {isLogin ? "Create a workspace" : "Sign In"}
           </Link>

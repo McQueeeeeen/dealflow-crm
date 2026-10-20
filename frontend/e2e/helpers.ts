@@ -6,7 +6,7 @@ export async function signInAsDemo(page: Page) {
   await page.getByRole("button", { name: "Fill In the Demo Account" }).click();
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL("**/today");
-  await expect(page.getByRole("heading", { level: 1, name: "Today" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Welcome back/ })).toBeVisible();
 }
 
 export function watchErrors(page: Page): string[] {
