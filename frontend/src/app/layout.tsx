@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans } from "next/font/google";
+import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { themeBootScript } from "@/components/theme-toggle";
@@ -10,6 +10,13 @@ const plex = IBM_Plex_Sans({
   subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "600"],
   variable: "--font-plex",
+  display: "swap",
+});
+
+const serif = Source_Serif_4({
+  subsets: ["latin", "cyrillic"],
+  axes: ["opsz"],
+  variable: "--font-source-serif",
   display: "swap",
 });
 
@@ -27,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={plex.variable} suppressHydrationWarning>
+    <html lang="en" className={`${plex.variable} ${serif.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>

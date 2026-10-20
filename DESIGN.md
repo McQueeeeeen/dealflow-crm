@@ -30,13 +30,16 @@ Two colors beyond neutrals. Charts use the evergreen ramp only.
 
 ## Type
 
-IBM Plex Sans for everything, with tabular figures on every amount and date. Plex was drawn
-for business software: compact, mechanical numerals that line up in columns, and a lower
-x-height than the usual UI defaults, which keeps dense tables calm. One family, weights 400,
-500 and 600.
+Two families with separate jobs.
 
-Scale (1.2 ratio, 15px base): 12.5 / 15 / 18 / 21.6 / 26. Sentence case everywhere.
-No uppercase labels.
+- Source Serif 4 is the voice of the product: page titles, the wordmark and money that matters
+  (deal value, stage totals, report figures, the Today summary). Sales is about money moving,
+  and a serif with lining figures reads like a statement or a ledger, not a form.
+- IBM Plex Sans does the work: tables, forms, buttons, labels. Drawn for business software,
+  with compact numerals that line up in columns. Tabular figures on every amount and date.
+
+Scale (1.2 ratio, 15px base): 12.5 / 15 / 18 / 21.6 / 34, and 48 for the sign-in headline.
+Sentence case everywhere. No uppercase labels.
 
 ## Layout
 
@@ -67,5 +70,6 @@ the page: a card being dragged and open dialogs. Everything else is flat with ha
 
 ## Motion
 
-Hover and focus states, the drag preview, and dialog open. Nothing moves on its own.
+Hover and focus states, the drag preview, and dialog open. One orchestrated moment: the stage
+rail on the sign-in page fills once, stage by stage, to show what the product does.
 `prefers-reduced-motion` turns transitions off.

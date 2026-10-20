@@ -247,7 +247,7 @@ function Column({ column, onStep }: { column: BoardColumn; onStep: Step }) {
           </span>
         </h2>
         <p className="num mt-1 flex items-baseline justify-between gap-2">
-          <span className="text-lead font-semibold">
+          <span className="text-lead font-serif font-semibold">
             {fmt(column.total_value_cents, { compact: true })}
           </span>
           <span className="text-meta text-muted">

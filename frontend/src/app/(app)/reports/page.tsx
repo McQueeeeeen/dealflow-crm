@@ -120,7 +120,7 @@ function SummaryStrip({ owner }: { owner: string }) {
       {figures.map((f) => (
         <div key={f.label} className="border-line p-4 not-last:border-b sm:border-r lg:border-b-0">
           <dt className="text-meta text-muted">{f.label}</dt>
-          <dd className="text-title mt-1 font-semibold">{f.value}</dd>
+          <dd className="text-title mt-1 font-serif font-semibold">{f.value}</dd>
           <dd className="text-meta text-muted">{f.note}</dd>
         </div>
       ))}
