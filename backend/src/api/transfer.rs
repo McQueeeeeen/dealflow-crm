@@ -43,7 +43,16 @@ const CONTACT_EXPORT: (&[&str], &str) = (
 );
 
 const DEAL_EXPORT: (&[&str], &str) = (
-    &["Title", "Value", "Stage", "Company", "Contact", "Owner", "Expected close", "Closed"],
+    &[
+        "Title",
+        "Value",
+        "Stage",
+        "Company",
+        "Contact",
+        "Owner",
+        "Expected close",
+        "Closed",
+    ],
     "SELECT ARRAY[d.title, to_char(d.value_cents / 100.0, 'FM999999999999990.00'), s.name, co.name,
                   trim(ct.first_name || ' ' || ct.last_name), u.full_name,
                   d.expected_close_date::text, to_char(d.closed_at, 'YYYY-MM-DD')]
@@ -97,7 +106,10 @@ pub async fn export(
     Ok((
         [
             (CONTENT_TYPE, "text/csv; charset=utf-8".to_owned()),
-            (CONTENT_DISPOSITION, format!("attachment; filename=\"{filename}\"")),
+            (
+                CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{filename}\""),
+            ),
         ],
         body,
     )
@@ -206,7 +218,10 @@ fn check_size(rows: usize) -> AppResult<()> {
     }
 }
 
-async fn finish(tx: Transaction<'_, Postgres>, report: ImportReport) -> AppResult<Json<ImportReport>> {
+async fn finish(
+    tx: Transaction<'_, Postgres>,
+    report: ImportReport,
+) -> AppResult<Json<ImportReport>> {
     if report.dry_run {
         tx.rollback().await?;
     } else {
@@ -282,7 +297,15 @@ async fn insert_company(
     .fetch_one(&mut *conn)
     .await?;
     let snapshot = audit::snapshot(&fields);
-    audit::record(conn, actor, EntityType::Company, id, AuditAction::Created, snapshot).await?;
+    audit::record(
+        conn,
+        actor,
+        EntityType::Company,
+        id,
+        AuditAction::Created,
+        snapshot,
+    )
+    .await?;
     Ok(id)
 }
 
@@ -302,12 +325,11 @@ async fn upsert_company(
             "matches a company owned by someone else".into(),
         )));
     }
-    let before: CompanySnapshot = sqlx::query_as(
-        "SELECT name, domain, industry FROM companies WHERE id = $1 FOR UPDATE",
-    )
-    .bind(id)
-    .fetch_one(&mut *conn)
-    .await?;
+    let before: CompanySnapshot =
+        sqlx::query_as("SELECT name, domain, industry FROM companies WHERE id = $1 FOR UPDATE")
+            .bind(id)
+            .fetch_one(&mut *conn)
+            .await?;
     let after: CompanySnapshot = sqlx::query_as(
         "UPDATE companies SET domain = coalesce($2, domain), industry = coalesce($3, industry),
                 updated_at = now()
@@ -366,7 +388,11 @@ pub async fn import_contacts(
                 continue;
             }
         };
-        if let Some(name) = row.company.map(|c| c.trim().to_owned()).filter(|c| !c.is_empty()) {
+        if let Some(name) = row
+            .company
+            .map(|c| c.trim().to_owned())
+            .filter(|c| !c.is_empty())
+        {
             let key = name.to_lowercase();
             let id = match companies_by_name.get(&key) {
                 Some(id) => *id,
@@ -435,7 +461,15 @@ async fn upsert_contact(
         .fetch_one(&mut *conn)
         .await?;
         let snapshot = audit::snapshot(&fields);
-        audit::record(conn, actor, EntityType::Contact, id, AuditAction::Created, snapshot).await?;
+        audit::record(
+            conn,
+            actor,
+            EntityType::Contact,
+            id,
+            AuditAction::Created,
+            snapshot,
+        )
+        .await?;
         return Ok(Ok(Outcome::Created));
     };
     if !actor.can_modify(owner_id) {

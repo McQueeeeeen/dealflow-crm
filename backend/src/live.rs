@@ -145,7 +145,9 @@ async fn stream(
         name,
         view: None,
     };
-    hub.update(user.org_id, |map| map.insert(conn, (user.org_id, viewer)).is_none());
+    hub.update(user.org_id, |map| {
+        map.insert(conn, (user.org_id, viewer)).is_none()
+    });
 
     tokio::spawn(async move {
         let mut open = tx
@@ -194,14 +196,19 @@ async fn set_view(
     ApiJson(req): ApiJson<ViewUpdate>,
 ) -> AppResult<StatusCode> {
     if req.view.as_ref().is_some_and(|v| v.chars().count() > 80) {
-        return Err(AppError::validation("view", "must be at most 80 characters"));
+        return Err(AppError::validation(
+            "view",
+            "must be at most 80 characters",
+        ));
     }
-    state.hub.update(user.org_id, |map| match map.get_mut(&req.connection) {
-        Some((_, viewer)) if viewer.user_id == user.user_id && viewer.view != req.view => {
-            viewer.view = req.view;
-            true
-        }
-        _ => false,
-    });
+    state
+        .hub
+        .update(user.org_id, |map| match map.get_mut(&req.connection) {
+            Some((_, viewer)) if viewer.user_id == user.user_id && viewer.view != req.view => {
+                viewer.view = req.view;
+                true
+            }
+            _ => false,
+        });
     Ok(StatusCode::NO_CONTENT)
 }
