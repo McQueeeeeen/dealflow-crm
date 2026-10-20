@@ -20,16 +20,13 @@ test("a deal moves to the next stage with the keyboard", async ({ page }, info) 
   const moved = page.waitForResponse(
     (res) => res.url().includes("/move") && res.request().method() === "POST",
   );
-  const announcer = page.locator("[aria-live]").filter({ hasText: title });
-  await page.keyboard.press("Space");
-  await expect(announcer).toContainText(title);
   await page.keyboard.press("ArrowRight");
-  await expect(announcer).toContainText("is over Qualified");
-  await page.keyboard.press("Space");
   expect((await moved).status()).toBe(200);
 
   await expect(qualified.getByRole("link", { name: title, exact: true })).toBeVisible();
   await expect(lead.getByRole("link", { name: title, exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: `Move ${title}` })).toBeFocused();
+  await expect(page.getByRole("status").filter({ hasText: `${title} moved to Qualified.` })).toBeAttached();
   expect(errors).toEqual([]);
 });
 
