@@ -139,7 +139,9 @@ function MyNumbers() {
         label="Weighted by stage"
         icon={IconScale}
         value={fmt(s.weighted_pipeline_cents)}
-        meter={<TickMeter label={`${percent(weightedShare)} of open value`} value={weightedShare} />}
+        meter={
+          <TickMeter label={`${percent(weightedShare)} of open value`} value={weightedShare} />
+        }
         note={`${percent(weightedShare)} of your open value`}
       />
       <Stat

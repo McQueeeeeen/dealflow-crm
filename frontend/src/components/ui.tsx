@@ -289,7 +289,12 @@ export function TickMeter({
   className?: string;
 }) {
   const parts = segments ?? [{ value: Math.min(Math.max(value, 0), 1), color }];
-  const scale = segments ? Math.max(parts.reduce((sum, p) => sum + p.value, 0), 1) : 1;
+  const scale = segments
+    ? Math.max(
+        parts.reduce((sum, p) => sum + p.value, 0),
+        1,
+      )
+    : 1;
   let reached = 0;
   const fills = parts.flatMap((p) => {
     const start = Math.round((reached / scale) * ticks);
