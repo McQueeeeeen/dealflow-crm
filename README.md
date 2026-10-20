@@ -9,6 +9,9 @@ TypeScript.
 [![CI](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/ci.yml)
 [![E2E](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/e2e.yml/badge.svg)](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/e2e.yml)
 
+**Live demo: https://dealflow-crm-demo.vercel.app**. Use "Fill in the demo account" on the
+sign-in page. The demo workspace is reset every night.
+
 ![Pipeline board](docs/screenshots/pipeline.png)
 
 ## What it does
@@ -89,6 +92,13 @@ single workspace currency, so sums are exact.
 
 **Errors have one shape.** Every failure is `{"error": {"code", "message", "fields"}}`.
 Constraint violations are mapped to field-level validation errors by constraint name.
+
+## Deployment
+
+One Vercel project runs two services (see `vercel.json`): the Next.js app is public, and the
+Rust API is a private container that only the web service can reach, through a service binding
+that sets `API_URL`. PostgreSQL is Neon from the Vercel Marketplace. A scheduled workflow
+re-seeds the demo workspace every night.
 
 ## Running it
 
