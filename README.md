@@ -27,7 +27,7 @@ sign-in page. The demo workspace is reset every night.
 
 | Today | Reports, dark theme |
 |---|---|
-| ![Today](docs/screenshots/today.png) | ![Reports](docs/screenshots/reports-dark.png) |
+| ![Today](docs/screenshots/today.png) | ![Reports](docs/screenshots/reports-light.png) |
 | **Deal** | **Phone** |
 | ![Deal](docs/screenshots/deal.png) | ![Phone](docs/screenshots/mobile-today.png) |
 
