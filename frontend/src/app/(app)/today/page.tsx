@@ -17,7 +17,12 @@ import type { Deal, Page, Summary, Task } from "@/lib/types";
 function groupTasks(tasks: Task[], now = new Date()) {
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const endOfWeek = new Date(endOfToday.getTime() + 6 * 86_400_000);
-  const groups = { overdue: [] as Task[], today: [] as Task[], week: [] as Task[], later: [] as Task[] };
+  const groups = {
+    overdue: [] as Task[],
+    today: [] as Task[],
+    week: [] as Task[],
+    later: [] as Task[],
+  };
   for (const task of tasks) {
     const due = task.due_at ? new Date(task.due_at) : null;
     if (!due) groups.later.push(task);
@@ -70,16 +75,16 @@ function MyNumbers() {
   if (!summary.data) return null;
   const s = summary.data;
   return (
-    <p className="max-w-3xl text-lead text-muted">
-      You have{" "}
-      <strong className="num font-semibold text-ink">{fmt(s.open_pipeline_cents)}</strong> open
-      across <span className="num">{s.open_deals_count}</span>{" "}
+    <p className="text-lead text-muted max-w-3xl">
+      You have <strong className="num text-ink font-semibold">{fmt(s.open_pipeline_cents)}</strong>{" "}
+      open across <span className="num">{s.open_deals_count}</span>{" "}
       {s.open_deals_count === 1 ? "deal" : "deals"}, about{" "}
-      <strong className="num font-semibold text-ink">{fmt(s.weighted_pipeline_cents)}</strong> once
+      <strong className="num text-ink font-semibold">{fmt(s.weighted_pipeline_cents)}</strong> once
       weighted by stage.{" "}
       {s.won_this_month_count > 0 ? (
         <>
-          You closed <strong className="num font-semibold text-accent">{fmt(s.won_this_month_cents)}</strong>{" "}
+          You closed{" "}
+          <strong className="num text-accent font-semibold">{fmt(s.won_this_month_cents)}</strong>{" "}
           this month.
         </>
       ) : (
@@ -100,7 +105,7 @@ function FollowUps({ onAdd }: { onAdd: () => void }) {
 
   return (
     <Panel>
-      <h2 className="px-4 pt-4 text-title font-semibold">Your follow-ups</h2>
+      <h2 className="text-title px-4 pt-4 font-semibold">Your follow-ups</h2>
       {tasks.isPending ? (
         <Loading label="Loading your follow-ups…" />
       ) : tasks.isError ? (
@@ -156,7 +161,7 @@ function ClosingSoon() {
           Open pipeline
         </Link>
       </div>
-      <p className="px-4 pt-1 text-meta text-muted">
+      <p className="text-meta text-muted px-4 pt-1">
         Your open deals expected to close by the end of the month, including ones that slipped.
       </p>
       {deals.isPending ? (
@@ -169,18 +174,18 @@ function ClosingSoon() {
           body="Set an expected close date on a deal to plan the month around it."
         />
       ) : (
-        <ul className="mt-3 divide-y divide-line border-t border-line">
+        <ul className="divide-line border-line mt-3 divide-y border-t">
           {dated.map((deal) => {
             const slipped = parseDay(deal.expected_close_date!) < startOfToday;
             return (
               <li key={deal.id}>
                 <Link
                   href={`/deals/${deal.id}`}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-hover"
+                  className="hover:bg-hover flex items-center gap-3 px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{deal.title}</p>
-                    <p className="mt-1 flex items-center gap-2 text-meta text-muted">
+                    <p className="text-meta text-muted mt-1 flex items-center gap-2">
                       <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} />
                       <span className="truncate">{deal.company_name ?? deal.stage_name}</span>
                     </p>

@@ -15,8 +15,11 @@ export function FunnelChart({ stages, cohort }: { stages: FunnelStage[]; cohort:
       {stages.map((stage) => {
         const share = stage.reached / max;
         return (
-          <li key={stage.stage_id} className="grid grid-cols-[7.5rem_1fr] items-center gap-3 sm:grid-cols-[9rem_1fr]">
-            <span className="truncate text-body">{stage.name}</span>
+          <li
+            key={stage.stage_id}
+            className="grid grid-cols-[7.5rem_1fr] items-center gap-3 sm:grid-cols-[9rem_1fr]"
+          >
+            <span className="text-body truncate">{stage.name}</span>
             <div className="flex min-w-0 items-center gap-3">
               <div className="h-5 min-w-0 flex-1">
                 <div
@@ -27,8 +30,8 @@ export function FunnelChart({ stages, cohort }: { stages: FunnelStage[]; cohort:
                   style={{ width: `${Math.max(share * 100, stage.reached > 0 ? 1.5 : 0)}%` }}
                 />
               </div>
-              <span className="num w-28 shrink-0 text-meta text-muted sm:w-36">
-                <span className="font-medium text-ink">{stage.reached}</span>
+              <span className="num text-meta text-muted w-28 shrink-0 sm:w-36">
+                <span className="text-ink font-medium">{stage.reached}</span>
                 {stage.conversion_from_previous !== null
                   ? `, ${percent(stage.conversion_from_previous)} of previous`
                   : " deals"}
@@ -54,13 +57,13 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1 text-meta text-muted">
+      <div className="text-meta text-muted mb-3 flex flex-wrap gap-x-5 gap-y-1">
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="inline-block size-3 rounded-[2px] bg-track" />
+          <span aria-hidden="true" className="bg-track inline-block size-3 rounded-[2px]" />
           Full value of open deals
         </span>
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="inline-block size-3 rounded-[2px] bg-accent" />
+          <span aria-hidden="true" className="bg-accent inline-block size-3 rounded-[2px]" />
           Weighted by stage probability
         </span>
       </div>
@@ -71,19 +74,19 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
             {ticks.map((t) => (
               <span
                 key={t}
-                className="num absolute right-0 -translate-y-1/2 text-meta text-muted"
+                className="num text-meta text-muted absolute right-0 -translate-y-1/2"
                 style={{ bottom: `${(t / max) * 100}%` }}
               >
                 {fmt(t, { compact: true })}
               </span>
             ))}
           </div>
-          <div className="relative h-48 border-b border-line">
+          <div className="border-line relative h-48 border-b">
             {ticks.slice(1).map((t) => (
               <div
                 key={t}
                 aria-hidden="true"
-                className="absolute inset-x-0 border-t border-line"
+                className="border-line absolute inset-x-0 border-t"
                 style={{ bottom: `${(t / max) * 100}%` }}
               />
             ))}
@@ -92,7 +95,7 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
                 <button
                   key={m.month}
                   type="button"
-                  className="group relative flex h-full flex-1 items-end justify-center rounded-control focus-visible:outline-offset-0"
+                  className="group rounded-control relative flex h-full flex-1 items-end justify-center focus-visible:outline-offset-0"
                   onMouseEnter={() => setFocus(i)}
                   onMouseLeave={() => setFocus(null)}
                   onFocus={() => setFocus(i)}
@@ -100,12 +103,18 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
                   aria-label={`${monthLabel(m.month)}: ${m.deals} deals, ${fmt(m.total_cents)} full value, ${fmt(m.weighted_cents)} weighted`}
                 >
                   <span
-                    className={cx("relative block w-full max-w-6 rounded-t-[4px] bg-track", focus === i && "brightness-95")}
+                    className={cx(
+                      "bg-track relative block w-full max-w-6 rounded-t-[4px]",
+                      focus === i && "brightness-95",
+                    )}
                     style={{ height: `${(m.total_cents / max) * 100}%` }}
                   >
                     <span
-                      className="absolute inset-x-0 bottom-0 block rounded-t-[4px] bg-accent"
-                      style={{ height: m.total_cents > 0 ? `${(m.weighted_cents / m.total_cents) * 100}%` : 0 }}
+                      className="bg-accent absolute inset-x-0 bottom-0 block rounded-t-[4px]"
+                      style={{
+                        height:
+                          m.total_cents > 0 ? `${(m.weighted_cents / m.total_cents) * 100}%` : 0,
+                      }}
                     />
                   </span>
                 </button>
@@ -117,20 +126,24 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
           <span />
           <div className="flex justify-around gap-1">
             {months.map((m) => (
-              <span key={m.month} className="flex-1 text-center text-meta whitespace-nowrap text-muted">
+              <span
+                key={m.month}
+                className="text-meta text-muted flex-1 text-center whitespace-nowrap"
+              >
                 {monthLabel(m.month).split(" ")[0]}
               </span>
             ))}
           </div>
         </div>
 
-        <p aria-live="polite" className="num mt-3 min-h-6 text-body">
+        <p aria-live="polite" className="num text-body mt-3 min-h-6">
           {active ? (
             <>
               <span className="font-medium">{monthLabel(active.month)}</span>
               <span className="text-muted">
                 {": "}
-                {active.deals} {active.deals === 1 ? "deal" : "deals"}, {fmt(active.total_cents)} full value,{" "}
+                {active.deals} {active.deals === 1 ? "deal" : "deals"}, {fmt(active.total_cents)}{" "}
+                full value,{" "}
               </span>
               <span className="font-medium">{fmt(active.weighted_cents)} weighted</span>
             </>
@@ -141,17 +154,17 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
       </div>
 
       <details className="mt-3">
-        <summary className="cursor-pointer text-body text-accent">Show as a table</summary>
-        <table className="mt-2 w-full text-body">
+        <summary className="text-body text-accent cursor-pointer">Show as a table</summary>
+        <table className="text-body mt-2 w-full">
           <thead>
-            <tr className="border-b border-line text-left text-meta text-muted">
+            <tr className="border-line text-meta text-muted border-b text-left">
               <th className="py-2 font-medium">Month</th>
               <th className="py-2 text-right font-medium">Deals</th>
               <th className="py-2 text-right font-medium">Full value</th>
               <th className="py-2 text-right font-medium">Weighted</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line">
+          <tbody className="divide-line divide-y">
             {months.map((m) => (
               <tr key={m.month} className="num">
                 <td className="py-2">{monthLabel(m.month)}</td>

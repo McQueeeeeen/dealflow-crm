@@ -78,14 +78,20 @@ function TeamSection() {
                 <div className={cx(!u.is_active && "text-muted")}>
                   <p className="font-medium">
                     {u.full_name}
-                    {u.id === me?.id ? <span className="font-normal text-muted"> (you)</span> : null}
+                    {u.id === me?.id ? (
+                      <span className="text-muted font-normal"> (you)</span>
+                    ) : null}
                   </p>
-                  <p className="text-meta break-all text-muted">{u.email}</p>
+                  <p className="text-meta text-muted break-all">{u.email}</p>
                 </div>
               ),
             },
             { header: "Role", cell: (u) => (u.is_active ? ROLE_LABELS[u.role] : "Deactivated") },
-            { header: "Added", cell: (u) => <span className="num">{shortDate(u.created_at)}</span>, hideBelow: "md" },
+            {
+              header: "Added",
+              cell: (u) => <span className="num">{shortDate(u.created_at)}</span>,
+              hideBelow: "md",
+            },
             {
               header: "Actions",
               align: "right",
@@ -111,7 +117,11 @@ function TeamSection() {
 
 function RoleSelect(props: { id: string; value: Role; onChange: (role: Role) => void }) {
   return (
-    <Select id={props.id} value={props.value} onChange={(e) => props.onChange(e.target.value as Role)}>
+    <Select
+      id={props.id}
+      value={props.value}
+      onChange={(e) => props.onChange(e.target.value as Role)}
+    >
       <option value="sales_rep">Sales rep</option>
       <option value="manager">Manager</option>
       <option value="admin">Admin</option>
@@ -121,7 +131,12 @@ function RoleSelect(props: { id: string; value: Role; onChange: (role: Role) => 
 
 function AddUserForm({ onClose }: { onClose: () => void }) {
   const client = useQueryClient();
-  const [values, setValues] = useState({ full_name: "", email: "", role: "sales_rep" as Role, password: "" });
+  const [values, setValues] = useState({
+    full_name: "",
+    email: "",
+    role: "sales_rep" as Role,
+    password: "",
+  });
   const save = useMutation({
     mutationFn: () => post<User>("/users", values),
     onSuccess: () => {
@@ -141,16 +156,32 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
     >
       <Field label="Full name" error={fieldError(error, "full_name")}>
         {(p) => (
-          <TextInput {...p} value={values.full_name} onChange={(e) => setValues((v) => ({ ...v, full_name: e.target.value }))} autoFocus />
+          <TextInput
+            {...p}
+            value={values.full_name}
+            onChange={(e) => setValues((v) => ({ ...v, full_name: e.target.value }))}
+            autoFocus
+          />
         )}
       </Field>
       <Field label="Work email" error={fieldError(error, "email")}>
         {(p) => (
-          <TextInput {...p} type="email" value={values.email} onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))} />
+          <TextInput
+            {...p}
+            type="email"
+            value={values.email}
+            onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
+          />
         )}
       </Field>
       <Field label="Role">
-        {(p) => <RoleSelect id={p.id} value={values.role} onChange={(role) => setValues((v) => ({ ...v, role }))} />}
+        {(p) => (
+          <RoleSelect
+            id={p.id}
+            value={values.role}
+            onChange={(role) => setValues((v) => ({ ...v, role }))}
+          />
+        )}
       </Field>
       <Field
         label="Initial password"
@@ -182,7 +213,11 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
 
 function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
   const client = useQueryClient();
-  const [values, setValues] = useState({ full_name: user.full_name, role: user.role, is_active: user.is_active });
+  const [values, setValues] = useState({
+    full_name: user.full_name,
+    role: user.role,
+    is_active: user.is_active,
+  });
   const save = useMutation({
     mutationFn: () => put<User>(`/users/${user.id}`, values),
     onSuccess: () => {
@@ -202,11 +237,21 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
     >
       <Field label="Full name" error={fieldError(error, "full_name")}>
         {(p) => (
-          <TextInput {...p} value={values.full_name} onChange={(e) => setValues((v) => ({ ...v, full_name: e.target.value }))} />
+          <TextInput
+            {...p}
+            value={values.full_name}
+            onChange={(e) => setValues((v) => ({ ...v, full_name: e.target.value }))}
+          />
         )}
       </Field>
       <Field label="Role">
-        {(p) => <RoleSelect id={p.id} value={values.role} onChange={(role) => setValues((v) => ({ ...v, role }))} />}
+        {(p) => (
+          <RoleSelect
+            id={p.id}
+            value={values.role}
+            onChange={(role) => setValues((v) => ({ ...v, role }))}
+          />
+        )}
       </Field>
       <label className="flex min-h-11 items-center gap-3">
         <input
@@ -217,7 +262,7 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
         />
         <span>
           Active
-          <span className="block text-meta text-muted">
+          <span className="text-meta text-muted block">
             Deactivating signs them out everywhere. Their records stay.
           </span>
         </span>
@@ -235,7 +280,11 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
   );
 }
 
-const KIND_LABELS: Record<StageKind, string> = { open: "Open", won: "Closes as won", lost: "Closes as lost" };
+const KIND_LABELS: Record<StageKind, string> = {
+  open: "Open",
+  won: "Closes as won",
+  lost: "Closes as lost",
+};
 
 function PipelineSection() {
   const stages = useStages();
@@ -253,7 +302,8 @@ function PipelineSection() {
     mutationFn: (id: string) => del(`/stages/${id}`),
     onMutate: () => setProblem(null),
     onSuccess: () => client.invalidateQueries({ queryKey: keys.stages }),
-    onError: (err) => setProblem(err instanceof ApiError ? err.message : "Could not delete the stage."),
+    onError: (err) =>
+      setProblem(err instanceof ApiError ? err.message : "Could not delete the stage."),
   });
 
   function shift(list: Stage[], index: number, by: number) {
@@ -273,7 +323,10 @@ function PipelineSection() {
         <Button onClick={() => setAdding(true)}>Add stage</Button>
       </div>
       {problem ? (
-        <p role="alert" className="mx-4 mb-3 rounded-control bg-critical-soft px-3 py-2 text-body text-critical">
+        <p
+          role="alert"
+          className="rounded-control bg-critical-soft text-body text-critical mx-4 mb-3 px-3 py-2"
+        >
           {problem}
         </p>
       ) : null}
@@ -282,7 +335,7 @@ function PipelineSection() {
       ) : stages.isError ? (
         <ErrorState error={stages.error} onRetry={() => stages.refetch()} />
       ) : (
-        <ol className="divide-y divide-line border-t border-line">
+        <ol className="divide-line border-line divide-y border-t">
           {stages.data.map((stage, i, list) => (
             <li key={stage.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
@@ -345,7 +398,9 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
   const save = useMutation({
     mutationFn: () => {
       const body = { name: values.name, probability: Number(values.probability) };
-      return stage ? put<Stage>(`/stages/${stage.id}`, body) : post<Stage>("/stages", { ...body, kind: values.kind });
+      return stage
+        ? put<Stage>(`/stages/${stage.id}`, body)
+        : post<Stage>("/stages", { ...body, kind: values.kind });
     },
     onSuccess: () => {
       client.invalidateQueries({ queryKey: keys.stages });
@@ -364,7 +419,14 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
       }}
     >
       <Field label="Stage name" error={fieldError(error, "name")}>
-        {(p) => <TextInput {...p} value={values.name} onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))} autoFocus />}
+        {(p) => (
+          <TextInput
+            {...p}
+            value={values.name}
+            onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
+            autoFocus
+          />
+        )}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Win probability (%)" error={fieldError(error, "probability")}>
@@ -383,7 +445,11 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
         {!stage ? (
           <Field label="Type">
             {(p) => (
-              <Select {...p} value={values.kind} onChange={(e) => setValues((v) => ({ ...v, kind: e.target.value as StageKind }))}>
+              <Select
+                {...p}
+                value={values.kind}
+                onChange={(e) => setValues((v) => ({ ...v, kind: e.target.value as StageKind }))}
+              >
                 <option value="open">Open</option>
                 <option value="won">Closes as won</option>
                 <option value="lost">Closes as lost</option>

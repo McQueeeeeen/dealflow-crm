@@ -91,11 +91,19 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
       <Field label="Deal name" error={fieldError(error, "title")}>
         {(p) => (
-          <TextInput {...p} value={values.title} onChange={(e) => set("title")(e.target.value)} autoFocus />
+          <TextInput
+            {...p}
+            value={values.title}
+            onChange={(e) => set("title")(e.target.value)}
+            autoFocus
+          />
         )}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={`Value (${me?.currency ?? "USD"})`} error={valueError ?? fieldError(error, "value_cents")}>
+        <Field
+          label={`Value (${me?.currency ?? "USD"})`}
+          error={valueError ?? fieldError(error, "value_cents")}
+        >
           {(p) => (
             <TextInput
               {...p}
@@ -121,7 +129,11 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
       {!deal ? (
         <Field label="Stage" error={fieldError(error, "stage_id")}>
           {(p) => (
-            <Select {...p} value={values.stage_id} onChange={(e) => set("stage_id")(e.target.value)}>
+            <Select
+              {...p}
+              value={values.stage_id}
+              onChange={(e) => set("stage_id")(e.target.value)}
+            >
               <option value="">First stage of the pipeline</option>
               {stages.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -156,7 +168,10 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
       </Field>
 
       {conflict ? (
-        <p role="alert" className="rounded-control bg-critical-soft px-3 py-2 text-body text-critical">
+        <p
+          role="alert"
+          className="rounded-control bg-critical-soft text-body text-critical px-3 py-2"
+        >
           Someone else changed this deal while you were editing. Close this form to load their
           version, then make your change again.
         </p>

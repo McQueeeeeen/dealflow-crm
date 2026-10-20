@@ -40,8 +40,8 @@ export function NotesPanel({ parent }: { parent: Parent }) {
 
   return (
     <Panel>
-      <h2 className="px-4 pt-4 text-title font-semibold">Notes</h2>
-      <form onSubmit={submit} className="flex flex-col gap-2 border-b border-line p-4">
+      <h2 className="text-title px-4 pt-4 font-semibold">Notes</h2>
+      <form onSubmit={submit} className="border-line flex flex-col gap-2 border-b p-4">
         <label htmlFor="note-body" className="sr-only">
           New note
         </label>
@@ -56,7 +56,7 @@ export function NotesPanel({ parent }: { parent: Parent }) {
         />
         <FormError error={add.error} />
         <div className="flex items-center justify-between gap-3">
-          <span className="hidden text-meta text-muted sm:inline">Ctrl or Cmd + Enter to save</span>
+          <span className="text-meta text-muted hidden sm:inline">Ctrl or Cmd + Enter to save</span>
           <Button type="submit" busy={add.isPending} disabled={!body.trim()}>
             Save note
           </Button>
@@ -67,21 +67,21 @@ export function NotesPanel({ parent }: { parent: Parent }) {
       ) : notes.isError ? (
         <ErrorState error={notes.error} onRetry={() => notes.refetch()} />
       ) : notes.data.data.length === 0 ? (
-        <p className="px-4 py-6 text-body text-muted">
+        <p className="text-body text-muted px-4 py-6">
           No notes yet. Notes are shared with everyone in your workspace.
         </p>
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="divide-line divide-y">
           {notes.data.data.map((note) => (
             <li key={note.id} className="px-4 py-3">
-              <p className="whitespace-pre-wrap break-words">{note.body}</p>
-              <p className="mt-1 flex items-center gap-3 text-meta text-muted">
+              <p className="break-words whitespace-pre-wrap">{note.body}</p>
+              <p className="text-meta text-muted mt-1 flex items-center gap-3">
                 <span>{note.author_name}</span>
                 <span className="num">{dateTime(note.created_at)}</span>
                 {canModify(me, note.author_id) ? (
                   <button
                     type="button"
-                    className="ml-auto min-h-11 rounded-control px-2 hover:bg-critical-soft hover:text-critical sm:min-h-7"
+                    className="rounded-control hover:bg-critical-soft hover:text-critical ml-auto min-h-11 px-2 sm:min-h-7"
                     onClick={() => {
                       if (window.confirm("Delete this note?")) remove.mutate(note.id);
                     }}

@@ -43,15 +43,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-dvh">
       <a
         href="#main"
-        className="sr-only rounded-control bg-surface px-3 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
+        className="rounded-control bg-surface sr-only px-3 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-30 border-b border-line bg-surface">
+      <header className="border-line bg-surface sticky top-0 z-30 border-b">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 sm:px-6">
           <Link href="/today" className="flex min-h-14 items-baseline gap-2 py-2">
             <span className="text-lead font-semibold tracking-tight">DealFlow</span>
-            <span className="hidden max-w-48 truncate text-meta text-muted md:inline">
+            <span className="text-meta text-muted hidden max-w-48 truncate md:inline">
               {me.data.organization_name}
             </span>
           </Link>
@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <AccountMenu me={me.data} />
           </div>
         </div>
-        <nav aria-label="Main" className="overflow-x-auto border-t border-line px-2 sm:hidden">
+        <nav aria-label="Main" className="border-line overflow-x-auto border-t px-2 sm:hidden">
           <NavLinks items={items} pathname={pathname} />
         </nav>
       </header>
@@ -87,9 +87,9 @@ function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
               className={cx(
                 // The underline sits on the header's bottom edge so the current page reads as
                 // a tab of the workspace.
-                "relative inline-flex min-h-12 items-center px-3 text-body whitespace-nowrap transition-colors sm:min-h-14",
+                "text-body relative inline-flex min-h-12 items-center px-3 whitespace-nowrap transition-colors sm:min-h-14",
                 active
-                  ? "font-medium text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent"
+                  ? "text-ink after:bg-accent font-medium after:absolute after:inset-x-3 after:bottom-0 after:h-0.5"
                   : "text-muted hover:text-ink",
               )}
             >
@@ -127,11 +127,11 @@ function AccountMenu({ me }: { me: Me }) {
         aria-expanded={open}
         aria-controls="account-menu"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-body hover:bg-hover sm:min-h-9"
+        className="rounded-control text-body hover:bg-hover inline-flex min-h-11 items-center gap-2 px-2 sm:min-h-9"
       >
         <span
           aria-hidden="true"
-          className="inline-flex size-7 items-center justify-center rounded-full bg-accent-soft text-meta font-semibold text-accent"
+          className="bg-accent-soft text-meta text-accent inline-flex size-7 items-center justify-center rounded-full font-semibold"
         >
           {initials(me.full_name)}
         </span>
@@ -141,19 +141,14 @@ function AccountMenu({ me }: { me: Me }) {
       {open ? (
         <div
           id="account-menu"
-          className="absolute right-0 z-40 mt-2 w-64 rounded-control border border-line bg-raised p-3 shadow-float"
+          className="rounded-control border-line bg-raised shadow-float absolute right-0 z-40 mt-2 w-64 border p-3"
         >
           <p className="font-medium">{me.full_name}</p>
-          <p className="truncate text-meta text-muted">{me.email}</p>
-          <p className="mt-1 text-meta text-muted">
+          <p className="text-meta text-muted truncate">{me.email}</p>
+          <p className="text-meta text-muted mt-1">
             {ROLE_LABELS[me.role]} at {me.organization_name}
           </p>
-          <Button
-            type="button"
-            className="mt-3 w-full"
-            onClick={signOut}
-            busy={signingOut}
-          >
+          <Button type="button" className="mt-3 w-full" onClick={signOut} busy={signingOut}>
             Sign out
           </Button>
         </div>

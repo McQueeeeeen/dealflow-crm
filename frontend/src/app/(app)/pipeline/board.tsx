@@ -50,7 +50,12 @@ interface Move {
   position: number;
 }
 
-function planMove(columns: BoardColumn[], activeId: UniqueIdentifier, overId: UniqueIdentifier, overIsColumn: boolean): Move | null {
+function planMove(
+  columns: BoardColumn[],
+  activeId: UniqueIdentifier,
+  overId: UniqueIdentifier,
+  overIsColumn: boolean,
+): Move | null {
   const source = columns.find((c) => c.deals.some((d) => d.id === activeId));
   const target = overIsColumn
     ? columns.find((c) => c.stage.id === overId)
@@ -62,13 +67,20 @@ function planMove(columns: BoardColumn[], activeId: UniqueIdentifier, overId: Un
   let index: number;
   if (source === target) {
     const oldIndex = source.deals.findIndex((d) => d.id === activeId);
-    const newIndex = overIsColumn ? source.deals.length - 1 : source.deals.findIndex((d) => d.id === overId);
+    const newIndex = overIsColumn
+      ? source.deals.length - 1
+      : source.deals.findIndex((d) => d.id === overId);
     if (oldIndex === newIndex) return null;
     ordered = arrayMove(source.deals, oldIndex, newIndex);
     index = newIndex;
   } else {
     const rest = target.deals.filter((d) => d.id !== activeId);
-    index = overIsColumn ? rest.length : Math.max(0, rest.findIndex((d) => d.id === overId));
+    index = overIsColumn
+      ? rest.length
+      : Math.max(
+          0,
+          rest.findIndex((d) => d.id === overId),
+        );
     ordered = [...rest.slice(0, index), deal, ...rest.slice(index)];
   }
   return {
@@ -96,7 +108,13 @@ function applyMove(columns: BoardColumn[], move: Move): BoardColumn[] {
   });
 }
 
-export function Board({ columns, queryKey }: { columns: BoardColumn[]; queryKey: readonly unknown[] }) {
+export function Board({
+  columns,
+  queryKey,
+}: {
+  columns: BoardColumn[];
+  queryKey: readonly unknown[];
+}) {
   const client = useQueryClient();
   const [active, setActive] = useState<Deal | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -174,7 +192,10 @@ export function Board({ columns, queryKey }: { columns: BoardColumn[]; queryKey:
   return (
     <>
       {problem ? (
-        <p role="alert" className="mb-4 rounded-control bg-critical-soft px-3 py-2 text-body text-critical">
+        <p
+          role="alert"
+          className="rounded-control bg-critical-soft text-body text-critical mb-4 px-3 py-2"
+        >
           {problem}
         </p>
       ) : null}
@@ -213,11 +234,11 @@ function Column({ column }: { column: BoardColumn }) {
     <section
       aria-labelledby={`stage-${stage.id}`}
       className={cx(
-        "flex w-[78vw] max-w-72 shrink-0 snap-start flex-col rounded-control border bg-canvas sm:w-72",
+        "rounded-control bg-canvas flex w-[78vw] max-w-72 shrink-0 snap-start flex-col border sm:w-72",
         isOver ? "border-accent" : "border-line",
       )}
     >
-      <header className="border-b border-line px-3 py-2.5">
+      <header className="border-line border-b px-3 py-2.5">
         <h2 id={`stage-${stage.id}`} className="flex items-baseline justify-between gap-2">
           <span
             className={cx(
@@ -232,8 +253,9 @@ function Column({ column }: { column: BoardColumn }) {
             {stage.kind === "open" ? `${stage.probability}%` : null}
           </span>
         </h2>
-        <p className="num mt-0.5 text-meta text-muted">
-          {column.count} {column.count === 1 ? "deal" : "deals"}, {fmt(column.total_value_cents, { compact: true })}
+        <p className="num text-meta text-muted mt-0.5">
+          {column.count} {column.count === 1 ? "deal" : "deals"},{" "}
+          {fmt(column.total_value_cents, { compact: true })}
         </p>
       </header>
       <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
@@ -242,7 +264,7 @@ function Column({ column }: { column: BoardColumn }) {
             <SortableDeal key={deal.id} deal={deal} />
           ))}
           {column.deals.length === 0 ? (
-            <li className="px-2 py-6 text-center text-meta text-muted">Drop a deal here</li>
+            <li className="text-meta text-muted px-2 py-6 text-center">Drop a deal here</li>
           ) : null}
         </ul>
       </SortableContext>
@@ -284,9 +306,15 @@ function SortableDeal({ deal }: { deal: Deal }) {
               onKeyDown={onKeyDown}
               aria-roledescription="draggable deal"
               aria-label={`Move ${deal.title}`}
-              className="-mt-1 -mr-1 inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-control text-muted hover:bg-hover hover:text-ink"
+              className="rounded-control text-muted hover:bg-hover hover:text-ink -mt-1 -mr-1 inline-flex size-8 shrink-0 cursor-grab items-center justify-center"
             >
-              <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true" fill="currentColor">
+              <svg
+                width="10"
+                height="14"
+                viewBox="0 0 10 14"
+                aria-hidden="true"
+                fill="currentColor"
+              >
                 <circle cx="2.5" cy="2.5" r="1.25" />
                 <circle cx="7.5" cy="2.5" r="1.25" />
                 <circle cx="2.5" cy="7" r="1.25" />
@@ -320,8 +348,8 @@ function DealCard({
   return (
     <article
       className={cx(
-        "rounded-control border border-line bg-surface p-3",
-        floating ? "rotate-1 cursor-grabbing shadow-float" : "cursor-grab hover:border-line-strong",
+        "rounded-control border-line bg-surface border p-3",
+        floating ? "shadow-float rotate-1 cursor-grabbing" : "hover:border-line-strong cursor-grab",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -334,16 +362,20 @@ function DealCard({
         </Link>
         {handle}
       </div>
-      {deal.company_name ? <p className="mt-0.5 truncate text-meta text-muted">{deal.company_name}</p> : null}
+      {deal.company_name ? (
+        <p className="text-meta text-muted mt-0.5 truncate">{deal.company_name}</p>
+      ) : null}
       <div className="mt-2 flex items-baseline justify-between gap-2">
         <span className="num font-medium">{fmt(deal.value_cents)}</span>
-        <span className="flex items-baseline gap-2 text-meta text-muted">
+        <span className="text-meta text-muted flex items-baseline gap-2">
           {deal.expected_close_date && deal.stage_kind === "open" ? (
-            <span className={cx("num", slipped && "font-medium text-critical")}>
+            <span className={cx("num", slipped && "text-critical font-medium")}>
               {shortDate(deal.expected_close_date)}
             </span>
           ) : null}
-          {deal.owner_id !== me?.id ? <span title={deal.owner_name}>{deal.owner_name.split(" ")[0]}</span> : null}
+          {deal.owner_id !== me?.id ? (
+            <span title={deal.owner_name}>{deal.owner_name.split(" ")[0]}</span>
+          ) : null}
         </span>
       </div>
     </article>

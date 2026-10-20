@@ -46,9 +46,9 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
       />
       <div className="min-w-0 flex-1">
         <p className={cx("break-words", checked && "text-muted line-through")}>{task.title}</p>
-        <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-meta text-muted">
+        <p className="text-meta text-muted mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
           {task.due_at ? (
-            <span className={cx("num", overdue && "font-medium text-critical")}>
+            <span className={cx("num", overdue && "text-critical font-medium")}>
               {overdue ? "Overdue, " : ""}
               {relativeDue(task.due_at)}
             </span>
@@ -56,19 +56,25 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
             <span>No due date</span>
           )}
           {showLinks && task.deal_id ? (
-            <Link href={`/deals/${task.deal_id}`} className="underline underline-offset-2 hover:text-ink">
+            <Link
+              href={`/deals/${task.deal_id}`}
+              className="hover:text-ink underline underline-offset-2"
+            >
               {task.deal_title}
             </Link>
           ) : null}
           {showLinks && task.contact_id ? (
-            <Link href={`/contacts/${task.contact_id}`} className="underline underline-offset-2 hover:text-ink">
+            <Link
+              href={`/contacts/${task.contact_id}`}
+              className="hover:text-ink underline underline-offset-2"
+            >
               {task.contact_name}
             </Link>
           ) : null}
           {task.assignee_id !== me?.id ? <span>{task.assignee_name}</span> : null}
         </p>
         {toggle.isError || remove.isError ? (
-          <p role="alert" className="mt-1 text-meta text-critical">
+          <p role="alert" className="text-meta text-critical mt-1">
             That change did not save. Try again.
           </p>
         ) : null}
@@ -78,7 +84,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="min-h-11 rounded-control px-2 text-meta text-muted hover:bg-hover hover:text-ink sm:min-h-8"
+            className="rounded-control text-meta text-muted hover:bg-hover hover:text-ink min-h-11 px-2 sm:min-h-8"
           >
             Edit
           </button>
@@ -87,7 +93,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
             onClick={() => {
               if (window.confirm(`Delete "${task.title}"?`)) remove.mutate();
             }}
-            className="min-h-11 rounded-control px-2 text-meta text-muted hover:bg-critical-soft hover:text-critical sm:min-h-8"
+            className="rounded-control text-meta text-muted hover:bg-critical-soft hover:text-critical min-h-11 px-2 sm:min-h-8"
           >
             Delete
           </button>
@@ -98,20 +104,28 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
   );
 }
 
-export function TaskGroup({ title, tasks, tone }: { title: string; tasks: Task[]; tone?: "critical" }) {
+export function TaskGroup({
+  title,
+  tasks,
+  tone,
+}: {
+  title: string;
+  tasks: Task[];
+  tone?: "critical";
+}) {
   if (tasks.length === 0) return null;
   return (
     <div>
       <h3
         className={cx(
-          "flex items-baseline gap-2 border-b border-line px-4 pt-4 pb-2 text-body font-semibold",
+          "border-line text-body flex items-baseline gap-2 border-b px-4 pt-4 pb-2 font-semibold",
           tone === "critical" && "text-critical",
         )}
       >
         {title}
-        <span className="num text-meta font-normal text-muted">{tasks.length}</span>
+        <span className="num text-meta text-muted font-normal">{tasks.length}</span>
       </h3>
-      <ul className="divide-y divide-line">
+      <ul className="divide-line divide-y">
         {tasks.map((task) => (
           <TaskRow key={task.id} task={task} />
         ))}

@@ -3,7 +3,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 
-import { Button, Dialog, Field, FormError, Select, TextArea, TextInput, fieldError } from "@/components/ui";
+import {
+  Button,
+  Dialog,
+  Field,
+  FormError,
+  Select,
+  TextArea,
+  TextInput,
+  fieldError,
+} from "@/components/ui";
 import { post, put } from "@/lib/api";
 import { useMe, useUsers } from "@/lib/queries";
 import type { Task } from "@/lib/types";
@@ -17,7 +26,11 @@ interface Props {
 
 export function TaskFormDialog(props: Props) {
   return (
-    <Dialog open={props.open} onClose={props.onClose} title={props.task ? "Edit follow-up" : "New follow-up"}>
+    <Dialog
+      open={props.open}
+      onClose={props.onClose}
+      title={props.task ? "Edit follow-up" : "New follow-up"}
+    >
       {props.open ? <TaskForm {...props} /> : null}
     </Dialog>
   );

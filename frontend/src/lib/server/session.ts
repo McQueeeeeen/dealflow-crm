@@ -59,7 +59,12 @@ export async function forwardJson(path: string, body: unknown): Promise<Response
 
 export function unavailable(): NextResponse {
   return NextResponse.json(
-    { error: { code: "api_unavailable", message: "The CRM server is not reachable. Try again shortly." } },
+    {
+      error: {
+        code: "api_unavailable",
+        message: "The CRM server is not reachable. Try again shortly.",
+      },
+    },
     { status: 503 },
   );
 }

@@ -19,13 +19,19 @@ import type { Company, Contact, Page } from "@/lib/types";
 
 export default function CompanyPage() {
   const { id } = useParams<{ id: string }>();
-  const company = useQuery({ queryKey: keys.company(id), queryFn: () => get<Company>(`/companies/${id}`) });
+  const company = useQuery({
+    queryKey: keys.company(id),
+    queryFn: () => get<Company>(`/companies/${id}`),
+  });
   if (company.isPending) return <Loading label="Loading company…" />;
   if (company.isError) {
     return company.error instanceof ApiError && company.error.status === 404 ? (
       <div className="py-12 text-center">
         <p className="text-lead font-medium">This company no longer exists</p>
-        <Link href="/companies" className="mt-4 inline-block text-accent underline underline-offset-4">
+        <Link
+          href="/companies"
+          className="text-accent mt-4 inline-block underline underline-offset-4"
+        >
           Back to companies
         </Link>
       </div>
@@ -56,16 +62,20 @@ function CompanyView({ company }: { company: Company }) {
 
   return (
     <>
-      <Link href="/companies" className="text-body text-muted underline underline-offset-4 hover:text-ink">
+      <Link
+        href="/companies"
+        className="text-body text-muted hover:text-ink underline underline-offset-4"
+      >
         Companies
       </Link>
       <header className="mt-3 flex flex-wrap items-start justify-between gap-x-8 gap-y-4 pb-6">
         <div className="min-w-0">
           <h1 className="text-display font-semibold tracking-tight break-words">{company.name}</h1>
-          <p className="mt-1 text-muted">
-            {[company.industry, company.domain].filter(Boolean).join(", ") || "No industry or domain yet"}
+          <p className="text-muted mt-1">
+            {[company.industry, company.domain].filter(Boolean).join(", ") ||
+              "No industry or domain yet"}
           </p>
-          <p className="num mt-3 text-lead">
+          <p className="num text-lead mt-3">
             {company.open_deals_count > 0
               ? `${fmt(company.open_deals_value_cents)} open across ${company.open_deals_count} ${company.open_deals_count === 1 ? "deal" : "deals"}`
               : "No open deals"}
@@ -82,7 +92,10 @@ function CompanyView({ company }: { company: Company }) {
               variant="danger"
               busy={remove.isPending}
               onClick={() => {
-                if (window.confirm(`Delete ${company.name}? Its deals and contacts stay, unlinked.`)) remove.mutate();
+                if (
+                  window.confirm(`Delete ${company.name}? Its deals and contacts stay, unlinked.`)
+                )
+                  remove.mutate();
               }}
             >
               Delete
@@ -94,8 +107,8 @@ function CompanyView({ company }: { company: Company }) {
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
           <Panel>
-            <h2 className="px-4 pt-4 text-title font-semibold">Deals</h2>
-            <div className="mt-2 border-t border-line">
+            <h2 className="text-title px-4 pt-4 font-semibold">Deals</h2>
+            <div className="border-line mt-2 border-t">
               <LinkedDeals filter={{ company_id: company.id }} />
             </div>
           </Panel>
@@ -116,7 +129,11 @@ function CompanyView({ company }: { company: Company }) {
       </div>
 
       <CompanyFormDialog open={editing} onClose={() => setEditing(false)} company={company} />
-      <ContactFormDialog open={addingContact} onClose={() => setAddingContact(false)} companyId={company.id} />
+      <ContactFormDialog
+        open={addingContact}
+        onClose={() => setAddingContact(false)}
+        companyId={company.id}
+      />
       <DealFormDialog
         open={addingDeal}
         onClose={() => setAddingDeal(false)}
@@ -130,23 +147,31 @@ function CompanyView({ company }: { company: Company }) {
 function CompanyContacts({ companyId }: { companyId: string }) {
   const contacts = useQuery({
     queryKey: keys.contacts({ company: companyId }),
-    queryFn: () => get<Page<Contact>>(`/contacts${query({ company_id: companyId, per_page: 100 })}`),
+    queryFn: () =>
+      get<Page<Contact>>(`/contacts${query({ company_id: companyId, per_page: 100 })}`),
   });
   if (contacts.isPending) return <Loading label="Loading people…" />;
-  if (contacts.isError) return <ErrorState error={contacts.error} onRetry={() => contacts.refetch()} />;
+  if (contacts.isError)
+    return <ErrorState error={contacts.error} onRetry={() => contacts.refetch()} />;
   if (contacts.data.data.length === 0) {
-    return <p className="px-4 py-6 text-body text-muted">Nobody from this company yet.</p>;
+    return <p className="text-body text-muted px-4 py-6">Nobody from this company yet.</p>;
   }
   return (
-    <ul className="mt-2 divide-y divide-line border-t border-line">
+    <ul className="divide-line border-line mt-2 divide-y border-t">
       {contacts.data.data.map((c) => (
         <li key={c.id} className="px-4 py-3">
-          <Link href={`/contacts/${c.id}`} className="font-medium hover:underline hover:underline-offset-2">
+          <Link
+            href={`/contacts/${c.id}`}
+            className="font-medium hover:underline hover:underline-offset-2"
+          >
             {fullName(c)}
           </Link>
           {c.job_title ? <p className="text-meta text-muted">{c.job_title}</p> : null}
           {c.email ? (
-            <a href={`mailto:${c.email}`} className="text-meta text-accent underline underline-offset-2">
+            <a
+              href={`mailto:${c.email}`}
+              className="text-meta text-accent underline underline-offset-2"
+            >
               {c.email}
             </a>
           ) : null}

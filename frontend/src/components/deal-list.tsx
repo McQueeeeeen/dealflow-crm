@@ -12,7 +12,11 @@ import { keys, useStages } from "@/lib/queries";
 import type { Deal, Page } from "@/lib/types";
 
 /** Deals linked to a company or contact, open ones first. */
-export function LinkedDeals({ filter }: { filter: { company_id: string } | { contact_id: string } }) {
+export function LinkedDeals({
+  filter,
+}: {
+  filter: { company_id: string } | { contact_id: string };
+}) {
   const stages = useStages().data ?? [];
   const fmt = useMoney();
   const deals = useQuery({
@@ -23,19 +27,22 @@ export function LinkedDeals({ filter }: { filter: { company_id: string } | { con
   if (deals.isPending) return <Loading label="Loading deals…" />;
   if (deals.isError) return <ErrorState error={deals.error} onRetry={() => deals.refetch()} />;
   if (deals.data.data.length === 0) {
-    return <p className="px-4 py-6 text-body text-muted">No deals linked yet.</p>;
+    return <p className="text-body text-muted px-4 py-6">No deals linked yet.</p>;
   }
   const rank = { open: 0, won: 1, lost: 2 };
   const sorted = [...deals.data.data].sort((a, b) => rank[a.stage_kind] - rank[b.stage_kind]);
 
   return (
-    <ul className="divide-y divide-line">
+    <ul className="divide-line divide-y">
       {sorted.map((deal) => (
         <li key={deal.id}>
-          <Link href={`/deals/${deal.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-hover">
+          <Link
+            href={`/deals/${deal.id}`}
+            className="hover:bg-hover flex items-center gap-3 px-4 py-3"
+          >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{deal.title}</p>
-              <p className="mt-1 flex items-center gap-2 text-meta text-muted">
+              <p className="text-meta text-muted mt-1 flex items-center gap-2">
                 <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} />
                 {deal.stage_name}
                 {deal.closed_at ? `, ${shortDate(deal.closed_at)}` : ""}

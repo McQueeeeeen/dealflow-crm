@@ -37,19 +37,19 @@ export function ActivityPanel({ entityType, entityId }: { entityType: string; en
 
   return (
     <Panel>
-      <h2 className="px-4 pt-4 text-title font-semibold">History</h2>
+      <h2 className="text-title px-4 pt-4 font-semibold">History</h2>
       {entries.isPending ? (
         <Loading label="Loading history…" />
       ) : entries.isError ? (
         <ErrorState error={entries.error} onRetry={() => entries.refetch()} />
       ) : entries.data.data.length === 0 ? (
-        <p className="px-4 py-6 text-body text-muted">No recorded changes yet.</p>
+        <p className="text-body text-muted px-4 py-6">No recorded changes yet.</p>
       ) : (
         <ol className="flex flex-col gap-3 p-4">
           {entries.data.data.map((entry) => (
-            <li key={entry.id} className="border-l-2 border-line pl-3">
+            <li key={entry.id} className="border-line border-l-2 pl-3">
               <EntrySentence entry={entry} />
-              <p className="num mt-0.5 text-meta text-muted">{dateTime(entry.created_at)}</p>
+              <p className="num text-meta text-muted mt-0.5">{dateTime(entry.created_at)}</p>
             </li>
           ))}
         </ol>
@@ -66,7 +66,7 @@ function EntrySentence({ entry }: { entry: AuditEntry }) {
   return (
     <div>
       <p>{actor} changed:</p>
-      <ul className="mt-1 text-body text-muted">
+      <ul className="text-body text-muted mt-1">
         {fields.map(([field, change]) => (
           <li key={field}>
             <ChangeLine field={field} change={change as { from: unknown; to: unknown }} />

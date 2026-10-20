@@ -32,7 +32,11 @@ interface CompanyProps {
 
 export function CompanyFormDialog(props: CompanyProps) {
   return (
-    <Dialog open={props.open} onClose={props.onClose} title={props.company ? "Edit company" : "New company"}>
+    <Dialog
+      open={props.open}
+      onClose={props.onClose}
+      title={props.company ? "Edit company" : "New company"}
+    >
       {props.open ? <CompanyForm {...props} /> : null}
     </Dialog>
   );
@@ -49,7 +53,9 @@ function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
   });
   const save = useMutation({
     mutationFn: () =>
-      company ? put<Company>(`/companies/${company.id}`, values) : post<Company>("/companies", values),
+      company
+        ? put<Company>(`/companies/${company.id}`, values)
+        : post<Company>("/companies", values),
     onSuccess: (saved) => {
       client.invalidateQueries({ queryKey: ["companies"] });
       client.invalidateQueries({ queryKey: ["audit"] });
@@ -76,7 +82,14 @@ function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Website domain" error={fieldError(error, "domain")}>
-          {(p) => <TextInput {...p} value={values.domain} onChange={set("domain")} placeholder="example.com" />}
+          {(p) => (
+            <TextInput
+              {...p}
+              value={values.domain}
+              onChange={set("domain")}
+              placeholder="example.com"
+            />
+          )}
         </Field>
         <Field label="Industry" error={fieldError(error, "industry")}>
           {(p) => <TextInput {...p} value={values.industry} onChange={set("industry")} />}
@@ -90,7 +103,11 @@ function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
         )}
       </Field>
       <FormError error={error} />
-      <Actions onClose={onClose} busy={save.isPending} label={company ? "Save company" : "Add company"} />
+      <Actions
+        onClose={onClose}
+        busy={save.isPending}
+        label={company ? "Save company" : "Add company"}
+      />
     </form>
   );
 }
@@ -105,7 +122,11 @@ interface ContactProps {
 
 export function ContactFormDialog(props: ContactProps) {
   return (
-    <Dialog open={props.open} onClose={props.onClose} title={props.contact ? "Edit contact" : "New contact"}>
+    <Dialog
+      open={props.open}
+      onClose={props.onClose}
+      title={props.contact ? "Edit contact" : "New contact"}
+    >
       {props.open ? <ContactForm {...props} /> : null}
     </Dialog>
   );
@@ -126,7 +147,9 @@ function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
   const save = useMutation({
     mutationFn: () => {
       const body = { ...values, company_id: values.company_id || null };
-      return contact ? put<Contact>(`/contacts/${contact.id}`, body) : post<Contact>("/contacts", body);
+      return contact
+        ? put<Contact>(`/contacts/${contact.id}`, body)
+        : post<Contact>("/contacts", body);
     },
     onSuccess: (saved) => {
       client.invalidateQueries({ queryKey: ["contacts"] });
@@ -152,14 +175,22 @@ function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="First name" error={fieldError(error, "first_name")}>
-          {(p) => <TextInput {...p} value={values.first_name} onChange={set("first_name")} autoFocus />}
+          {(p) => (
+            <TextInput {...p} value={values.first_name} onChange={set("first_name")} autoFocus />
+          )}
         </Field>
         <Field label="Last name" error={fieldError(error, "last_name")}>
           {(p) => <TextInput {...p} value={values.last_name} onChange={set("last_name")} />}
         </Field>
         <Field label="Email" error={fieldError(error, "email")}>
           {(p) => (
-            <TextInput {...p} type="email" value={values.email} onChange={set("email")} placeholder="name@company.com" />
+            <TextInput
+              {...p}
+              type="email"
+              value={values.email}
+              onChange={set("email")}
+              placeholder="name@company.com"
+            />
           )}
         </Field>
         <Field label="Phone" error={fieldError(error, "phone")}>
@@ -186,7 +217,11 @@ function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
         )}
       </Field>
       <FormError error={error} />
-      <Actions onClose={onClose} busy={save.isPending} label={contact ? "Save contact" : "Add contact"} />
+      <Actions
+        onClose={onClose}
+        busy={save.isPending}
+        label={contact ? "Save contact" : "Add contact"}
+      />
     </form>
   );
 }

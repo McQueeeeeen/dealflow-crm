@@ -64,11 +64,19 @@ export default function ReportsPage() {
   );
 }
 
-function Section({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+function Section({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) {
   return (
     <Panel className="p-4 sm:p-5">
       <h2 className="text-title font-semibold">{title}</h2>
-      <p className="mt-1 mb-5 text-body text-muted">{subtitle}</p>
+      <p className="text-body text-muted mt-1 mb-5">{subtitle}</p>
       {children}
     </Panel>
   );
@@ -81,12 +89,25 @@ function SummaryStrip({ owner }: { owner: string }) {
     queryFn: () => get<Summary>(`/analytics/summary${query({ owner_id: owner })}`),
   });
   if (summary.isPending) return <Loading label="Loading figures…" />;
-  if (summary.isError) return <ErrorState error={summary.error} onRetry={() => summary.refetch()} />;
+  if (summary.isError)
+    return <ErrorState error={summary.error} onRetry={() => summary.refetch()} />;
   const s = summary.data;
   const figures = [
-    { label: "Open pipeline", value: fmt(s.open_pipeline_cents), note: `${s.open_deals_count} open deals` },
-    { label: "Weighted pipeline", value: fmt(s.weighted_pipeline_cents), note: "Value times stage probability" },
-    { label: "Won this month", value: fmt(s.won_this_month_cents), note: `${s.won_this_month_count} deals` },
+    {
+      label: "Open pipeline",
+      value: fmt(s.open_pipeline_cents),
+      note: `${s.open_deals_count} open deals`,
+    },
+    {
+      label: "Weighted pipeline",
+      value: fmt(s.weighted_pipeline_cents),
+      note: "Value times stage probability",
+    },
+    {
+      label: "Won this month",
+      value: fmt(s.won_this_month_cents),
+      note: `${s.won_this_month_count} deals`,
+    },
     { label: "Win rate", value: percent(s.win_rate_90d), note: "Closed deals, last 90 days" },
     {
       label: "Time to win",
@@ -95,11 +116,11 @@ function SummaryStrip({ owner }: { owner: string }) {
     },
   ];
   return (
-    <dl className="grid grid-cols-2 overflow-hidden rounded-control border border-line bg-surface sm:grid-cols-3 lg:grid-cols-5">
+    <dl className="rounded-control border-line bg-surface grid grid-cols-2 overflow-hidden border sm:grid-cols-3 lg:grid-cols-5">
       {figures.map((f) => (
         <div key={f.label} className="border-line p-4 not-last:border-b sm:border-r lg:border-b-0">
           <dt className="text-meta text-muted">{f.label}</dt>
-          <dd className="mt-1 text-title font-semibold">{f.value}</dd>
+          <dd className="text-title mt-1 font-semibold">{f.value}</dd>
           <dd className="text-meta text-muted">{f.note}</dd>
         </div>
       ))}
@@ -126,7 +147,10 @@ function FunnelSection({ owner, from }: { owner: string; from: string }) {
       ) : funnel.isError ? (
         <ErrorState error={funnel.error} onRetry={() => funnel.refetch()} />
       ) : funnel.data.cohort_size === 0 ? (
-        <EmptyState title="No deals created in this period" body="Pick a longer period or another owner." />
+        <EmptyState
+          title="No deals created in this period"
+          body="Pick a longer period or another owner."
+        />
       ) : (
         <FunnelChart stages={funnel.data.stages} cohort={funnel.data.cohort_size} />
       )}
@@ -153,9 +177,11 @@ function ForecastSection({ owner }: { owner: string }) {
         <>
           <ForecastChart months={forecast.data.months} />
           {forecast.data.overdue_cents > 0 || forecast.data.undated_cents > 0 ? (
-            <p className="num mt-4 text-body text-muted">
+            <p className="num text-body text-muted mt-4">
               Not in the chart:{" "}
-              <span className="text-critical">{fmt(forecast.data.overdue_cents)} past its expected date</span>
+              <span className="text-critical">
+                {fmt(forecast.data.overdue_cents)} past its expected date
+              </span>
               {" and "}
               {fmt(forecast.data.undated_cents)} with no date set.
             </p>
@@ -170,7 +196,8 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
   const fmt = useMoney();
   const board = useQuery({
     queryKey: keys.analytics("leaderboard", { from, owner }),
-    queryFn: () => get<LeaderboardRow[]>(`/analytics/leaderboard${query({ from, owner_id: owner })}`),
+    queryFn: () =>
+      get<LeaderboardRow[]>(`/analytics/leaderboard${query({ from, owner_id: owner })}`),
   });
   const top = Math.max(...(board.data ?? []).map((r) => r.won_cents), 1);
   return (
@@ -186,7 +213,10 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
               caption="Results by owner"
               rows={board.data.map((r) => ({ ...r, id: r.user_id }))}
               columns={[
-                { header: "Owner", cell: (r) => <span className="font-medium">{r.full_name}</span> },
+                {
+                  header: "Owner",
+                  cell: (r) => <span className="font-medium">{r.full_name}</span>,
+                },
                 {
                   header: "Won",
                   cell: (r) => (
@@ -194,7 +224,7 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
                       <span className="num w-24 shrink-0 text-right">{fmt(r.won_cents)}</span>
                       <span className="hidden h-3 flex-1 sm:block" aria-hidden="true">
                         <span
-                          className="block h-full rounded-r-[4px] bg-accent"
+                          className="bg-accent block h-full rounded-r-[4px]"
                           style={{ width: `${(r.won_cents / top) * 100}%` }}
                         />
                       </span>
@@ -203,7 +233,12 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
                 },
                 { header: "Deals won", cell: (r) => r.won_count, align: "right", hideBelow: "md" },
                 { header: "Win rate", cell: (r) => percent(r.win_rate), align: "right" },
-                { header: "Open pipeline", cell: (r) => fmt(r.open_pipeline_cents), align: "right", hideBelow: "sm" },
+                {
+                  header: "Open pipeline",
+                  cell: (r) => fmt(r.open_pipeline_cents),
+                  align: "right",
+                  hideBelow: "sm",
+                },
               ]}
             />
           </div>

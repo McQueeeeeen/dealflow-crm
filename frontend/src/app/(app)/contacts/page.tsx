@@ -94,7 +94,10 @@ export default function ContactsPage() {
                   header: "Name",
                   cell: (c) => (
                     <div className="min-w-0">
-                      <Link href={`/contacts/${c.id}`} className="font-medium hover:underline hover:underline-offset-2">
+                      <Link
+                        href={`/contacts/${c.id}`}
+                        className="font-medium hover:underline hover:underline-offset-2"
+                      >
                         {fullName(c)}
                       </Link>
                       {c.job_title ? <p className="text-meta text-muted">{c.job_title}</p> : null}
@@ -105,7 +108,10 @@ export default function ContactsPage() {
                   header: "Company",
                   cell: (c) =>
                     c.company_id ? (
-                      <Link href={`/companies/${c.company_id}`} className="hover:underline hover:underline-offset-2">
+                      <Link
+                        href={`/companies/${c.company_id}`}
+                        className="hover:underline hover:underline-offset-2"
+                      >
                         {c.company_name}
                       </Link>
                     ) : (
@@ -117,17 +123,29 @@ export default function ContactsPage() {
                   header: "Email",
                   cell: (c) =>
                     c.email ? (
-                      <a href={`mailto:${c.email}`} className="break-all text-accent underline underline-offset-2">
+                      <a
+                        href={`mailto:${c.email}`}
+                        className="text-accent break-all underline underline-offset-2"
+                      >
                         {c.email}
                       </a>
                     ) : null,
                   hideBelow: "md",
                 },
-                { header: "Phone", cell: (c) => <span className="num whitespace-nowrap">{c.phone}</span>, hideBelow: "lg" },
+                {
+                  header: "Phone",
+                  cell: (c) => <span className="num whitespace-nowrap">{c.phone}</span>,
+                  hideBelow: "lg",
+                },
                 { header: "Owner", cell: (c) => c.owner_name, hideBelow: "lg" },
               ]}
             />
-            <Pagination page={page} perPage={contacts.data.per_page} total={contacts.data.total} onPage={setPage} />
+            <Pagination
+              page={page}
+              perPage={contacts.data.per_page}
+              total={contacts.data.total}
+              onPage={setPage}
+            />
           </>
         )}
       </Panel>

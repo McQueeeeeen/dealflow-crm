@@ -35,7 +35,7 @@ export const Button = forwardRef<
     <button
       ref={ref}
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-control border px-4 text-body font-medium transition-colors sm:min-h-9",
+        "rounded-control text-body inline-flex min-h-11 items-center justify-center gap-2 border px-4 font-medium transition-colors sm:min-h-9",
         "disabled:cursor-not-allowed disabled:opacity-55",
         variants[variant],
         className,
@@ -61,13 +61,17 @@ export function Field({
   label: string;
   error?: string;
   hint?: string;
-  children: (props: { id: string; "aria-invalid"?: boolean; "aria-describedby"?: string }) => ReactNode;
+  children: (props: {
+    id: string;
+    "aria-invalid"?: boolean;
+    "aria-describedby"?: string;
+  }) => ReactNode;
 }) {
   const id = useId();
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-meta font-medium text-muted">
+      <label htmlFor={id} className="text-meta text-muted font-medium">
         {label}
       </label>
       {children({ id, "aria-invalid": error ? true : undefined, "aria-describedby": describedBy })}
@@ -126,7 +130,7 @@ export function Dialog({
       onClose={onClose}
       aria-labelledby="dialog-title"
       className={cx(
-        "m-auto w-[calc(100%-2rem)] rounded-dialog border border-line bg-raised p-0 text-ink shadow-float",
+        "rounded-dialog border-line bg-raised text-ink shadow-float m-auto w-[calc(100%-2rem)] border p-0",
         wide ? "max-w-2xl" : "max-w-lg",
       )}
     >
@@ -139,7 +143,7 @@ export function Dialog({
             <button
               type="button"
               onClick={onClose}
-              className="-mt-1 -mr-2 inline-flex size-11 items-center justify-center rounded-control text-muted hover:bg-hover sm:size-9"
+              className="rounded-control text-muted hover:bg-hover -mt-1 -mr-2 inline-flex size-11 items-center justify-center sm:size-9"
               aria-label="Close"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
@@ -167,7 +171,7 @@ export function PageHeader({
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 pb-6">
       <div className="min-w-0">
         <h1 className="text-display font-semibold tracking-tight">{title}</h1>
-        {description ? <p className="mt-1 text-body text-muted">{description}</p> : null}
+        {description ? <p className="text-body text-muted mt-1">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>
@@ -176,7 +180,7 @@ export function PageHeader({
 
 export function Panel({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <section className={cx("rounded-control border border-line bg-surface", className)}>
+    <section className={cx("rounded-control border-line bg-surface border", className)}>
       {children}
     </section>
   );
@@ -184,7 +188,7 @@ export function Panel({ className, children }: { className?: string; children: R
 
 export function Loading({ label }: { label: string }) {
   return (
-    <p role="status" className="px-4 py-10 text-center text-body text-muted">
+    <p role="status" className="text-body text-muted px-4 py-10 text-center">
       {label}
     </p>
   );
@@ -217,7 +221,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
       <p className="text-lead font-medium">{title}</p>
-      {body ? <p className="max-w-md text-body text-muted">{body}</p> : null}
+      {body ? <p className="text-body text-muted max-w-md">{body}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );
@@ -232,7 +236,7 @@ export function FormError({ error }: { error: unknown }) {
         : error.message
       : "Could not save. Check your connection and try again.";
   return (
-    <p role="alert" className="rounded-control bg-critical-soft px-3 py-2 text-body text-critical">
+    <p role="alert" className="rounded-control bg-critical-soft text-body text-critical px-3 py-2">
       {message}
     </p>
   );
@@ -256,7 +260,10 @@ export function Pagination({
   const pages = Math.max(1, Math.ceil(total / perPage));
   if (pages <= 1) return null;
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
+    <nav
+      aria-label="Pagination"
+      className="border-line flex items-center justify-between gap-3 border-t px-4 py-3"
+    >
       <p className="num text-meta text-muted">
         Page {page} of {pages}, {total} total
       </p>
@@ -264,7 +271,12 @@ export function Pagination({
         <Button type="button" variant="quiet" disabled={page <= 1} onClick={() => onPage(page - 1)}>
           Previous
         </Button>
-        <Button type="button" variant="quiet" disabled={page >= pages} onClick={() => onPage(page + 1)}>
+        <Button
+          type="button"
+          variant="quiet"
+          disabled={page >= pages}
+          onClick={() => onPage(page + 1)}
+        >
           Next
         </Button>
       </div>

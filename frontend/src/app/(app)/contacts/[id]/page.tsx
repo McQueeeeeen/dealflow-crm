@@ -20,13 +20,19 @@ import type { Contact, Page, Task } from "@/lib/types";
 
 export default function ContactPage() {
   const { id } = useParams<{ id: string }>();
-  const contact = useQuery({ queryKey: keys.contact(id), queryFn: () => get<Contact>(`/contacts/${id}`) });
+  const contact = useQuery({
+    queryKey: keys.contact(id),
+    queryFn: () => get<Contact>(`/contacts/${id}`),
+  });
   if (contact.isPending) return <Loading label="Loading contact…" />;
   if (contact.isError) {
     return contact.error instanceof ApiError && contact.error.status === 404 ? (
       <div className="py-12 text-center">
         <p className="text-lead font-medium">This contact no longer exists</p>
-        <Link href="/contacts" className="mt-4 inline-block text-accent underline underline-offset-4">
+        <Link
+          href="/contacts"
+          className="text-accent mt-4 inline-block underline underline-offset-4"
+        >
           Back to contacts
         </Link>
       </div>
@@ -61,18 +67,26 @@ function ContactView({ contact }: { contact: Contact }) {
 
   return (
     <>
-      <Link href="/contacts" className="text-body text-muted underline underline-offset-4 hover:text-ink">
+      <Link
+        href="/contacts"
+        className="text-body text-muted hover:text-ink underline underline-offset-4"
+      >
         Contacts
       </Link>
       <header className="mt-3 flex flex-wrap items-start justify-between gap-x-8 gap-y-4 pb-6">
         <div className="min-w-0">
-          <h1 className="text-display font-semibold tracking-tight break-words">{fullName(contact)}</h1>
-          <p className="mt-1 text-muted">
+          <h1 className="text-display font-semibold tracking-tight break-words">
+            {fullName(contact)}
+          </h1>
+          <p className="text-muted mt-1">
             {contact.job_title ?? "No job title"}
             {contact.company_id ? (
               <>
                 {" at "}
-                <Link href={`/companies/${contact.company_id}`} className="underline underline-offset-4 hover:text-ink">
+                <Link
+                  href={`/companies/${contact.company_id}`}
+                  className="hover:text-ink underline underline-offset-4"
+                >
                   {contact.company_name}
                 </Link>
               </>
@@ -80,12 +94,18 @@ function ContactView({ contact }: { contact: Contact }) {
           </p>
           <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
             {contact.email ? (
-              <a href={`mailto:${contact.email}`} className="text-accent underline underline-offset-4">
+              <a
+                href={`mailto:${contact.email}`}
+                className="text-accent underline underline-offset-4"
+              >
                 {contact.email}
               </a>
             ) : null}
             {contact.phone ? (
-              <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="num text-accent underline underline-offset-4">
+              <a
+                href={`tel:${contact.phone.replace(/\s/g, "")}`}
+                className="num text-accent underline underline-offset-4"
+              >
                 {contact.phone}
               </a>
             ) : null}
@@ -101,7 +121,11 @@ function ContactView({ contact }: { contact: Contact }) {
               variant="danger"
               busy={remove.isPending}
               onClick={() => {
-                if (window.confirm(`Delete ${fullName(contact)}? Their follow-ups and notes are deleted too.`))
+                if (
+                  window.confirm(
+                    `Delete ${fullName(contact)}? Their follow-ups and notes are deleted too.`,
+                  )
+                )
                   remove.mutate();
               }}
             >
@@ -125,9 +149,9 @@ function ContactView({ contact }: { contact: Contact }) {
             ) : tasks.isError ? (
               <ErrorState error={tasks.error} onRetry={() => tasks.refetch()} />
             ) : tasks.data.data.length === 0 ? (
-              <p className="px-4 py-6 text-body text-muted">No follow-ups with this person.</p>
+              <p className="text-body text-muted px-4 py-6">No follow-ups with this person.</p>
             ) : (
-              <ul className="mt-2 divide-y divide-line border-t border-line">
+              <ul className="divide-line border-line mt-2 divide-y border-t">
                 {tasks.data.data.map((task) => (
                   <TaskRow key={task.id} task={task} showLinks={false} />
                 ))}
@@ -138,8 +162,8 @@ function ContactView({ contact }: { contact: Contact }) {
         </div>
         <div className="flex flex-col gap-6">
           <Panel>
-            <h2 className="px-4 pt-4 text-title font-semibold">Deals</h2>
-            <div className="mt-2 border-t border-line">
+            <h2 className="text-title px-4 pt-4 font-semibold">Deals</h2>
+            <div className="border-line mt-2 border-t">
               <LinkedDeals filter={{ contact_id: contact.id }} />
             </div>
           </Panel>
@@ -153,7 +177,11 @@ function ContactView({ contact }: { contact: Contact }) {
         onClose={() => setAddingDeal(false)}
         defaults={{ contactId: contact.id, companyId: contact.company_id ?? undefined }}
       />
-      <TaskFormDialog open={addingTask} onClose={() => setAddingTask(false)} link={{ contactId: contact.id }} />
+      <TaskFormDialog
+        open={addingTask}
+        onClose={() => setAddingTask(false)}
+        link={{ contactId: contact.id }}
+      />
     </>
   );
 }

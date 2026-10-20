@@ -79,7 +79,7 @@ export default function PipelinePage() {
       ) : (
         <>
           {total === 0 ? (
-            <p className="mb-4 text-body text-muted">No deals match these filters.</p>
+            <p className="text-body text-muted mb-4">No deals match these filters.</p>
           ) : null}
           <Board columns={board.data} queryKey={queryKey} />
         </>

@@ -7,7 +7,5 @@ export async function POST(req: NextRequest) {
   const res = await forwardJson("/api/v1/auth/register", body).catch(() => null);
   if (!res) return unavailable();
   const payload = await res.json();
-  return res.ok
-    ? withSession(payload, 201)
-    : NextResponse.json(payload, { status: res.status });
+  return res.ok ? withSession(payload, 201) : NextResponse.json(payload, { status: res.status });
 }
