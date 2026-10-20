@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button, ErrorState, FormError, Loading, Panel, TextArea } from "@/components/ui";
 import { del, get, post, query } from "@/lib/api";
 import { dateTime } from "@/lib/format";
+import { useUnsavedChanges } from "@/lib/hooks";
 import { canModify, keys, useMe } from "@/lib/queries";
 import type { Note, Page } from "@/lib/types";
 
@@ -15,6 +16,7 @@ export function NotesPanel({ parent }: { parent: Parent }) {
   const me = useMe().data;
   const client = useQueryClient();
   const [body, setBody] = useState("");
+  useUnsavedChanges(body.trim() !== "");
   const notesKey = keys.notes(parent);
 
   const notes = useQuery({
@@ -49,16 +51,17 @@ export function NotesPanel({ parent }: { parent: Parent }) {
           id="note-body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="What did you learn on the last call?"
+          name="body"
+          placeholder="Summarize the last call…"
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(e);
           }}
         />
         <FormError error={add.error} />
         <div className="flex items-center justify-between gap-3">
-          <span className="text-meta text-muted hidden sm:inline">Ctrl or Cmd + Enter to save</span>
+          <span className="text-meta text-muted hidden sm:inline">{"Ctrl\u00a0or\u00a0Cmd\u00a0+\u00a0Enter to save"}</span>
           <Button type="submit" busy={add.isPending} disabled={!body.trim()}>
-            Save note
+            Save Note
           </Button>
         </div>
       </form>

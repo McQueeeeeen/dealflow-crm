@@ -70,6 +70,18 @@
 
 html {
   background: var(--canvas);
+  scroll-padding-top: 4.5rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+input,
+label,
+select,
+textarea,
+summary {
+  touch-action: manipulation;
 }
 
 body {
@@ -82,6 +94,12 @@ body {
 }
 
 @layer base {
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
   h1,
   .font-display {
     font-family: var(--font-display);
@@ -110,15 +128,99 @@ body {
   outline-offset: 2px;
 }
 
+dialog {
+  overscroll-behavior: contain;
+}
+
 dialog::backdrop {
   background: rgb(14 16 22 / 0.5);
 }
 
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(app-header) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(app-header) {
+  display: none;
+}
+
+::view-transition-new(app-header) {
+  animation: none;
+}
+
+::view-transition-group(.morph) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+::view-transition-image-pair(.morph) {
+  animation-name: via-blur;
+}
+
+::view-transition-old(.fade) {
+  animation: 120ms ease-in both fade reverse;
+}
+
+::view-transition-new(.fade) {
+  animation: 200ms ease-out 80ms both fade;
+}
+
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  animation:
+    150ms ease-in both fade reverse,
+    360ms ease-in-out both slide reverse;
+}
+
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation:
+    210ms ease-out 150ms both fade,
+    360ms ease-in-out both slide;
+}
+
+::view-transition-old(.nav-forward),
+::view-transition-new(.nav-back) {
+  --slide-offset: -48px;
+}
+
+::view-transition-new(.nav-forward),
+::view-transition-old(.nav-back) {
+  --slide-offset: 48px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide {
+  from {
+    translate: var(--slide-offset);
+  }
+}
+
+@keyframes via-blur {
+  30% {
+    filter: blur(2px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*),
   *,
   *::before,
   *::after {
     transition-duration: 0s !important;
     animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

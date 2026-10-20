@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { TaskFormDialog } from "@/components/task-form";
 import { cx } from "@/components/ui";
@@ -10,12 +10,14 @@ import { del, post } from "@/lib/api";
 import { isOverdue, relativeDue } from "@/lib/format";
 import { canModify, useMe } from "@/lib/queries";
 import type { Task } from "@/lib/types";
+import { FORWARD } from "@/lib/transitions";
 
 export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: boolean }) {
   const me = useMe().data;
   const client = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [intent, setIntent] = useState<boolean | null>(null);
+  const checkId = useId();
   const done = !!task.completed_at;
   const overdue = isOverdue(task);
   const allowed = canModify(me, task.assignee_id) || task.created_by === me?.id;
@@ -39,6 +41,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
   return (
     <li className="flex items-start gap-3 px-4 py-3">
       <input
+        id={checkId}
         type="checkbox"
         checked={checked}
         disabled={!allowed || toggle.isPending}
@@ -46,11 +49,16 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
           setIntent(!checked);
           toggle.mutate(!checked);
         }}
-        aria-label={done ? `Reopen "${task.title}"` : `Mark "${task.title}" done`}
+        aria-label={done ? `Reopen “${task.title}”` : `Mark “${task.title}” done`}
         className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
       />
       <div className="min-w-0 flex-1">
-        <p className={cx("break-words", checked && "text-muted line-through")}>{task.title}</p>
+        <label
+          htmlFor={checkId}
+          className={cx("block cursor-pointer break-words", checked && "text-muted line-through")}
+        >
+          {task.title}
+        </label>
         <p className="text-meta text-muted mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
           {task.due_at ? (
             <span className={cx("num", overdue && "text-critical font-medium")}>
@@ -61,7 +69,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
             <span>No due date</span>
           )}
           {showLinks && task.deal_id ? (
-            <Link
+            <Link transitionTypes={FORWARD}
               href={`/deals/${task.deal_id}`}
               className="hover:text-ink underline underline-offset-2"
             >
@@ -69,7 +77,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
             </Link>
           ) : null}
           {showLinks && task.contact_id ? (
-            <Link
+            <Link transitionTypes={FORWARD}
               href={`/contacts/${task.contact_id}`}
               className="hover:text-ink underline underline-offset-2"
             >
@@ -96,7 +104,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
           <button
             type="button"
             onClick={() => {
-              if (window.confirm(`Delete "${task.title}"?`)) remove.mutate();
+              if (window.confirm(`Delete “${task.title}”?`)) remove.mutate();
             }}
             className="rounded-control text-meta text-muted hover:bg-critical-soft hover:text-critical min-h-11 px-2 sm:min-h-8"
           >

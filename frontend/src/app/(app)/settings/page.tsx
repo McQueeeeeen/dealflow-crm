@@ -60,7 +60,7 @@ function TeamSection() {
           </p>
         </div>
         <Button variant="primary" onClick={() => setAdding(true)}>
-          Add teammate
+          Add Teammate
         </Button>
       </div>
       {users.isPending ? (
@@ -105,20 +105,26 @@ function TeamSection() {
           ]}
         />
       )}
-      <Dialog open={adding} onClose={() => setAdding(false)} title="Add a teammate">
+      <Dialog open={adding} onClose={() => setAdding(false)} title="Add a Teammate">
         {adding ? <AddUserForm onClose={() => setAdding(false)} /> : null}
       </Dialog>
-      <Dialog open={editing !== null} onClose={() => setEditing(null)} title="Edit teammate">
+      <Dialog open={editing !== null} onClose={() => setEditing(null)} title="Edit Teammate">
         {editing ? <EditUserForm user={editing} onClose={() => setEditing(null)} /> : null}
       </Dialog>
     </Panel>
   );
 }
 
-function RoleSelect(props: { id: string; value: Role; onChange: (role: Role) => void }) {
+function RoleSelect(props: {
+  id: string;
+  name?: string;
+  value: Role;
+  onChange: (role: Role) => void;
+}) {
   return (
     <Select
       id={props.id}
+      name={props.name}
       value={props.value}
       onChange={(e) => props.onChange(e.target.value as Role)}
     >
@@ -151,9 +157,9 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       error={error}
       busy={save.isPending}
-      submitLabel="Add teammate"
+      submitLabel="Add Teammate"
     >
-      <Field label="Full name" error={fieldError(error, "full_name")}>
+      <Field label="Full name" name="full_name" error={fieldError(error, "full_name")}>
         {(p) => (
           <TextInput
             {...p}
@@ -163,7 +169,7 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
           />
         )}
       </Field>
-      <Field label="Work email" error={fieldError(error, "email")}>
+      <Field label="Work email" name="email" error={fieldError(error, "email")}>
         {(p) => (
           <TextInput
             {...p}
@@ -173,10 +179,11 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
           />
         )}
       </Field>
-      <Field label="Role">
+      <Field label="Role" name="role">
         {(p) => (
           <RoleSelect
             id={p.id}
+            name={p.name}
             value={values.role}
             onChange={(role) => setValues((v) => ({ ...v, role }))}
           />
@@ -184,6 +191,7 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
       </Field>
       <Field
         label="Initial password"
+        name="password"
         error={fieldError(error, "password")}
         hint="At least 10 characters. Share it with them directly."
       >
@@ -222,9 +230,9 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
       onClose={onClose}
       error={error}
       busy={save.isPending}
-      submitLabel="Save changes"
+      submitLabel="Save Changes"
     >
-      <Field label="Full name" error={fieldError(error, "full_name")}>
+      <Field label="Full name" name="full_name" error={fieldError(error, "full_name")}>
         {(p) => (
           <TextInput
             {...p}
@@ -233,10 +241,11 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
           />
         )}
       </Field>
-      <Field label="Role">
+      <Field label="Role" name="role">
         {(p) => (
           <RoleSelect
             id={p.id}
+            name={p.name}
             value={values.role}
             onChange={(role) => setValues((v) => ({ ...v, role }))}
           />
@@ -297,10 +306,10 @@ function PipelineSection() {
     <Panel>
       <div className="flex items-center justify-between gap-3 p-4">
         <div>
-          <h2 className="text-title font-semibold">Pipeline stages</h2>
+          <h2 className="text-title font-semibold">Pipeline Stages</h2>
           <p className="text-body text-muted">Probability drives the weighted forecast.</p>
         </div>
-        <Button onClick={() => setAdding(true)}>Add stage</Button>
+        <Button onClick={() => setAdding(true)}>Add Stage</Button>
       </div>
       {problem ? (
         <p
@@ -358,10 +367,10 @@ function PipelineSection() {
           ))}
         </ol>
       )}
-      <Dialog open={adding} onClose={() => setAdding(false)} title="Add a stage">
+      <Dialog open={adding} onClose={() => setAdding(false)} title="Add a Stage">
         {adding ? <StageForm onClose={() => setAdding(false)} /> : null}
       </Dialog>
-      <Dialog open={editing !== null} onClose={() => setEditing(null)} title="Edit stage">
+      <Dialog open={editing !== null} onClose={() => setEditing(null)} title="Edit Stage">
         {editing ? <StageForm stage={editing} onClose={() => setEditing(null)} /> : null}
       </Dialog>
     </Panel>
@@ -395,9 +404,9 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
       onClose={onClose}
       error={error}
       busy={save.isPending}
-      submitLabel={stage ? "Save stage" : "Add stage"}
+      submitLabel={stage ? "Save Stage" : "Add Stage"}
     >
-      <Field label="Stage name" error={fieldError(error, "name")}>
+      <Field label="Stage name" name="name" error={fieldError(error, "name")}>
         {(p) => (
           <TextInput
             {...p}
@@ -408,7 +417,7 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
         )}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Win probability (%)" error={fieldError(error, "probability")}>
+        <Field label="Win probability (%)" name="probability" error={fieldError(error, "probability")}>
           {(p) => (
             <TextInput
               {...p}
@@ -422,7 +431,7 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
           )}
         </Field>
         {!stage ? (
-          <Field label="Type">
+          <Field label="Type" name="kind">
             {(p) => (
               <Select
                 {...p}

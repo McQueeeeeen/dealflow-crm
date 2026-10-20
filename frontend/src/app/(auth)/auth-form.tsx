@@ -68,14 +68,14 @@ export function AuthForm({ mode, demo }: Props) {
     <div className="grid gap-10 md:grid-cols-[1fr_minmax(0,26rem)] md:items-center">
       <div className="max-w-xl">
         <h1 className="text-display sm:text-hero font-semibold">
-          {isLogin ? "Every deal, from first call to signed." : "Set up a workspace for your team"}
+          {isLogin ? "Every Deal, from First Call to Signed." : "Set Up a Workspace for Your Team"}
         </h1>
         <p className="text-lead text-muted mt-4 max-w-md">
           {isLogin
             ? "Pick up where you left off: today's follow-ups, deals in motion and what is likely to close this month."
             : "You become the workspace admin. Invite your team from Settings once you are in."}
         </p>
-        <ol aria-label="Pipeline stages" className="mt-10 grid grid-cols-5 gap-1.5">
+        <ol aria-label="Pipeline Stages" className="mt-10 grid grid-cols-5 gap-1.5">
           {STAGES.map((stage, i) => {
             const last = i === STAGES.length - 1;
             return (
@@ -108,7 +108,7 @@ export function AuthForm({ mode, demo }: Props) {
       >
         {!isLogin ? (
           <>
-            <Field label="Company name" error={fieldError(error, "organization_name")}>
+            <Field label="Company name" name="organization_name" error={fieldError(error, "organization_name")}>
               {(p) => (
                 <TextInput
                   {...p}
@@ -119,7 +119,7 @@ export function AuthForm({ mode, demo }: Props) {
                 />
               )}
             </Field>
-            <Field label="Your name" error={fieldError(error, "full_name")}>
+            <Field label="Your name" name="full_name" error={fieldError(error, "full_name")}>
               {(p) => (
                 <TextInput
                   {...p}
@@ -132,7 +132,7 @@ export function AuthForm({ mode, demo }: Props) {
             </Field>
           </>
         ) : null}
-        <Field label="Work email" error={fieldError(error, "email")}>
+        <Field label="Work email" name="email" error={fieldError(error, "email")}>
           {(p) => (
             <TextInput
               {...p}
@@ -146,6 +146,7 @@ export function AuthForm({ mode, demo }: Props) {
         </Field>
         <Field
           label="Password"
+          name="password"
           error={fieldError(error, "password")}
           hint={isLogin ? undefined : "At least 10 characters."}
         >
@@ -164,7 +165,7 @@ export function AuthForm({ mode, demo }: Props) {
         <FormError error={error instanceof ApiError && error.fields.length > 0 ? null : error} />
 
         <Button type="submit" variant="primary" busy={busy}>
-          {isLogin ? "Sign in" : "Create workspace"}
+          {isLogin ? "Sign In" : "Create Workspace"}
         </Button>
 
         {isLogin && demo ? (
@@ -173,7 +174,7 @@ export function AuthForm({ mode, demo }: Props) {
             variant="quiet"
             onClick={() => setValues((v) => ({ ...v, email: demo.email, password: demo.password }))}
           >
-            Fill in the demo account
+            Fill In the Demo Account
           </Button>
         ) : null}
 
@@ -183,7 +184,7 @@ export function AuthForm({ mode, demo }: Props) {
             href={isLogin ? "/register" : "/login"}
             className="text-accent font-medium underline underline-offset-4"
           >
-            {isLogin ? "Create a workspace" : "Sign in"}
+            {isLogin ? "Create a workspace" : "Sign In"}
           </Link>
         </p>
       </form>

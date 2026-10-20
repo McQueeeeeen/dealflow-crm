@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 
+import { DealLink, DealName } from "@/components/deal-link";
 import { StageTrack } from "@/components/stage-track";
 import { ErrorState, Loading } from "@/components/ui";
 import { get, query } from "@/lib/api";
@@ -35,12 +35,11 @@ export function LinkedDeals({
     <ul className="divide-line divide-y">
       {sorted.map((deal) => (
         <li key={deal.id}>
-          <Link
-            href={`/deals/${deal.id}`}
+          <DealLink deal={deal}
             className="hover:bg-hover flex items-center gap-3 px-4 py-3"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{deal.title}</p>
+              <DealName deal={deal} className="block truncate font-medium" />
               <p className="text-meta text-muted mt-1 flex items-center gap-2">
                 <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} />
                 {deal.stage_name}
@@ -48,7 +47,7 @@ export function LinkedDeals({
               </p>
             </div>
             <span className="num shrink-0 font-medium">{fmt(deal.value_cents)}</span>
-          </Link>
+          </DealLink>
         </li>
       ))}
     </ul>

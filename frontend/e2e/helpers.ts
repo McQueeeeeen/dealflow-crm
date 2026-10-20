@@ -3,8 +3,8 @@ import { expect, type Page, type TestInfo } from "@playwright/test";
 
 export async function signInAsDemo(page: Page) {
   await page.goto("/login");
-  await page.getByRole("button", { name: "Fill in the demo account" }).click();
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Fill In the Demo Account" }).click();
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL("**/today");
   await expect(page.getByRole("heading", { level: 1, name: "Today" })).toBeVisible();
 }

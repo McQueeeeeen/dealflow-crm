@@ -7,7 +7,7 @@ import { DealFormDialog } from "@/components/deal-form";
 import { OwnerFilter } from "@/components/owner-select";
 import { Button, EmptyState, ErrorState, Loading, PageHeader, TextInput } from "@/components/ui";
 import { get, query } from "@/lib/api";
-import { useDebounced, useMoney } from "@/lib/hooks";
+import { useMoney, useUrlParams, useUrlSearch } from "@/lib/hooks";
 import { keys } from "@/lib/queries";
 import type { BoardColumn } from "@/lib/types";
 
@@ -15,10 +15,11 @@ import { Board } from "./board";
 
 export default function PipelinePage() {
   const fmt = useMoney();
-  const [search, setSearch] = useState("");
-  const [owner, setOwner] = useState("");
+  const [params, update] = useUrlParams();
+  const q = params.get("q") ?? "";
+  const owner = params.get("owner") ?? "";
+  const [search, setSearch] = useUrlSearch(q, update);
   const [creating, setCreating] = useState(false);
-  const q = useDebounced(search.trim());
   const queryKey = keys.board({ q, owner });
 
   const board = useQuery({
@@ -45,7 +46,7 @@ export default function PipelinePage() {
         }
         actions={
           <Button variant="primary" onClick={() => setCreating(true)}>
-            New deal
+            New Deal
           </Button>
         }
       />
@@ -54,12 +55,13 @@ export default function PipelinePage() {
           <span className="sr-only">Search deals</span>
           <TextInput
             type="search"
-            placeholder="Search deals by name"
+            name="q"
+            placeholder="Search deals by name…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <OwnerFilter value={owner} onChange={setOwner} />
+        <OwnerFilter value={owner} onChange={(v) => update({ owner: v })} />
       </div>
 
       {board.isPending ? (
@@ -72,7 +74,7 @@ export default function PipelinePage() {
           body="Create a deal for each opportunity you are working on. Drag it across stages as it moves forward."
           action={
             <Button variant="primary" onClick={() => setCreating(true)}>
-              Create the first deal
+              Create the First Deal
             </Button>
           }
         />

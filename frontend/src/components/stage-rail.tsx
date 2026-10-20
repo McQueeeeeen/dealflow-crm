@@ -110,10 +110,10 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
         {editable && !closed && won && lost ? (
           <div className="flex gap-2 sm:ml-auto">
             <Button variant="primary" onClick={() => move.mutate(won.id)} disabled={move.isPending}>
-              Mark as won
+              Mark as Won
             </Button>
             <Button variant="danger" onClick={() => move.mutate(lost.id)} disabled={move.isPending}>
-              Mark as lost
+              Mark as Lost
             </Button>
           </div>
         ) : null}

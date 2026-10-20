@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
+import { DealLink, DealName } from "@/components/deal-link";
 import { StageTrack } from "@/components/stage-track";
 import { TaskFormDialog } from "@/components/task-form";
 import { TaskGroup } from "@/components/task-list";
@@ -13,6 +14,7 @@ import { parseDay, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
 import { keys, useMe, useStages } from "@/lib/queries";
 import type { Deal, Page, Summary, Task } from "@/lib/types";
+import { SECTION } from "@/lib/transitions";
 
 function groupTasks(tasks: Task[], now = new Date()) {
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -36,7 +38,7 @@ function groupTasks(tasks: Task[], now = new Date()) {
 
 export default function TodayPage() {
   const [adding, setAdding] = useState(false);
-  const todayLabel = new Intl.DateTimeFormat("en-US", {
+  const todayLabel = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -46,10 +48,10 @@ export default function TodayPage() {
     <>
       <PageHeader
         title="Today"
-        description={todayLabel}
+        description={<time suppressHydrationWarning>{todayLabel}</time>}
         actions={
           <Button variant="primary" onClick={() => setAdding(true)}>
-            Add follow-up
+            Add Follow-Up
           </Button>
         }
       />
@@ -104,7 +106,7 @@ function FollowUps({ onAdd }: { onAdd: () => void }) {
 
   return (
     <Panel>
-      <h2 className="text-title px-4 pt-4 font-semibold">Your follow-ups</h2>
+      <h2 className="text-title px-4 pt-4 font-semibold">Your Follow-Ups</h2>
       {tasks.isPending ? (
         <Loading label="Loading your follow-ups…" />
       ) : tasks.isError ? (
@@ -113,7 +115,7 @@ function FollowUps({ onAdd }: { onAdd: () => void }) {
         <EmptyState
           title="No open follow-ups"
           body="Add a follow-up for the next call, email or proposal so it shows up here on the day it is due."
-          action={<Button onClick={onAdd}>Add follow-up</Button>}
+          action={<Button onClick={onAdd}>Add Follow-Up</Button>}
         />
       ) : (
         <TaskSections tasks={tasks.data.data} />
@@ -127,9 +129,9 @@ function TaskSections({ tasks }: { tasks: Task[] }) {
   return (
     <div className="pb-2">
       <TaskGroup title="Overdue" tasks={groups.overdue} tone="critical" />
-      <TaskGroup title="Due today" tasks={groups.today} />
-      <TaskGroup title="Next 7 days" tasks={groups.week} />
-      <TaskGroup title="Later or undated" tasks={groups.later} />
+      <TaskGroup title="Due Today" tasks={groups.today} />
+      <TaskGroup title="Next 7 Days" tasks={groups.week} />
+      <TaskGroup title="Later or Undated" tasks={groups.later} />
     </div>
   );
 }
@@ -155,8 +157,8 @@ function ClosingSoon() {
   return (
     <Panel>
       <div className="flex items-baseline justify-between gap-3 px-4 pt-4">
-        <h2 className="text-title font-semibold">Closing this month</h2>
-        <Link href="/pipeline" className="text-body text-accent underline underline-offset-4">
+        <h2 className="text-title font-semibold">Closing This Month</h2>
+        <Link transitionTypes={SECTION} href="/pipeline" className="text-body text-accent underline underline-offset-4">
           Open pipeline
         </Link>
       </div>
@@ -178,12 +180,11 @@ function ClosingSoon() {
             const slipped = parseDay(deal.expected_close_date!) < startOfToday;
             return (
               <li key={deal.id}>
-                <Link
-                  href={`/deals/${deal.id}`}
+                <DealLink deal={deal}
                   className="hover:bg-hover flex items-center gap-3 px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{deal.title}</p>
+                    <DealName deal={deal} className="block truncate font-medium" />
                     <p className="text-meta text-muted mt-1 flex items-center gap-2">
                       <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} />
                       <span className="truncate">{deal.company_name ?? deal.stage_name}</span>
@@ -196,7 +197,7 @@ function ClosingSoon() {
                       {shortDate(deal.expected_close_date!)}
                     </p>
                   </div>
-                </Link>
+                </DealLink>
               </li>
             );
           })}

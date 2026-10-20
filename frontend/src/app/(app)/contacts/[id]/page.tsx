@@ -17,6 +17,7 @@ import { del, get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
 import { canModify, isManager, keys, useMe } from "@/lib/queries";
 import type { Contact, Page, Task } from "@/lib/types";
+import { BACK, FORWARD } from "@/lib/transitions";
 
 export default function ContactPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,7 +63,7 @@ function ContactView({ contact }: { contact: Contact }) {
 
   return (
     <>
-      <Link
+      <Link transitionTypes={BACK}
         href="/contacts"
         className="text-body text-muted hover:text-ink underline underline-offset-4"
       >
@@ -78,7 +79,7 @@ function ContactView({ contact }: { contact: Contact }) {
             {contact.company_id ? (
               <>
                 {" at "}
-                <Link
+                <Link transitionTypes={FORWARD}
                   href={`/companies/${contact.company_id}`}
                   className="hover:text-ink underline underline-offset-4"
                 >
@@ -108,9 +109,9 @@ function ContactView({ contact }: { contact: Contact }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" onClick={() => setAddingDeal(true)}>
-            New deal
+            New Deal
           </Button>
-          {editable ? <Button onClick={() => setEditing(true)}>Edit contact</Button> : null}
+          {editable ? <Button onClick={() => setEditing(true)}>Edit Contact</Button> : null}
           {isManager(me) ? (
             <Button
               variant="danger"
@@ -134,9 +135,9 @@ function ContactView({ contact }: { contact: Contact }) {
         <div className="flex flex-col gap-6">
           <Panel>
             <div className="flex items-center justify-between gap-3 px-4 pt-4">
-              <h2 className="text-title font-semibold">Follow-ups</h2>
+              <h2 className="text-title font-semibold">Follow-Ups</h2>
               <Button variant="quiet" onClick={() => setAddingTask(true)}>
-                Add follow-up
+                Add Follow-Up
               </Button>
             </div>
             {tasks.isPending ? (

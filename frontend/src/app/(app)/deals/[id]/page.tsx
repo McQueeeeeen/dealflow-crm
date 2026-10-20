@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { ActivityPanel } from "@/components/activity";
 import { DealFormDialog } from "@/components/deal-form";
+import { DealName } from "@/components/deal-link";
 import { NotesPanel } from "@/components/notes";
 import { StageRail } from "@/components/stage-rail";
 import { TaskFormDialog } from "@/components/task-form";
@@ -17,6 +18,7 @@ import { dateTime, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
 import { canModify, isManager, keys, useMe } from "@/lib/queries";
 import type { Deal, Page, StageChange, Task } from "@/lib/types";
+import { BACK, FORWARD } from "@/lib/transitions";
 
 export default function DealPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +46,7 @@ function DealView({ deal }: { deal: Deal }) {
 
   return (
     <>
-      <Link
+      <Link transitionTypes={BACK}
         href="/pipeline"
         className="text-body text-muted hover:text-ink underline underline-offset-4"
       >
@@ -52,10 +54,12 @@ function DealView({ deal }: { deal: Deal }) {
       </Link>
       <header className="mt-3 flex flex-wrap items-start justify-between gap-x-8 gap-y-4 pb-6">
         <div className="min-w-0">
-          <h1 className="text-display font-semibold tracking-tight break-words">{deal.title}</h1>
+          <h1 className="text-display font-semibold tracking-tight break-words">
+            <DealName deal={deal} className="block" />
+          </h1>
           <p className="text-muted mt-1">
             {deal.company_id ? (
-              <Link
+              <Link transitionTypes={FORWARD}
                 href={`/companies/${deal.company_id}`}
                 className="hover:text-ink underline underline-offset-4"
               >
@@ -71,7 +75,7 @@ function DealView({ deal }: { deal: Deal }) {
         </div>
         {editable ? (
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setEditing(true)}>Edit deal</Button>
+            <Button onClick={() => setEditing(true)}>Edit Deal</Button>
             {isManager(me) ? <DeleteDeal deal={deal} /> : null}
           </div>
         ) : (
@@ -95,7 +99,7 @@ function DealView({ deal }: { deal: Deal }) {
               <dt className="text-muted">Contact</dt>
               <dd className="min-w-0 truncate">
                 {deal.contact_id ? (
-                  <Link
+                  <Link transitionTypes={FORWARD}
                     href={`/contacts/${deal.contact_id}`}
                     className="underline underline-offset-4"
                   >
@@ -153,7 +157,7 @@ function DeleteDeal({ deal }: { deal: Deal }) {
       variant="danger"
       busy={remove.isPending}
       onClick={() => {
-        if (window.confirm(`Delete "${deal.title}"? Its notes and follow-ups are deleted too.`))
+        if (window.confirm(`Delete “${deal.title}”? Its notes and follow-ups are deleted too.`))
           remove.mutate();
       }}
     >
@@ -170,9 +174,9 @@ function DealTasks({ dealId, onAdd }: { dealId: string; onAdd: () => void }) {
   return (
     <Panel>
       <div className="flex items-center justify-between gap-3 px-4 pt-4">
-        <h2 className="text-title font-semibold">Follow-ups</h2>
+        <h2 className="text-title font-semibold">Follow-Ups</h2>
         <Button variant="quiet" onClick={onAdd}>
-          Add follow-up
+          Add Follow-Up
         </Button>
       </div>
       {tasks.isPending ? (
@@ -201,7 +205,7 @@ function StageHistory({ dealId }: { dealId: string }) {
   });
   return (
     <Panel quiet>
-      <h2 className="text-title px-4 pt-4 font-semibold">Stage path</h2>
+      <h2 className="text-title px-4 pt-4 font-semibold">Stage Path</h2>
       {history.isPending ? (
         <Loading label="Loading stage path…" />
       ) : history.isError ? (

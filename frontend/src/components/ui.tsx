@@ -5,6 +5,7 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -15,6 +16,8 @@ import {
 import Link from "next/link";
 
 import { ApiError } from "@/lib/api";
+import { useUnsavedChanges } from "@/lib/hooks";
+import { BACK } from "@/lib/transitions";
 
 export function cx(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -56,15 +59,18 @@ const control =
 
 export function Field({
   label,
+  name,
   error,
   hint,
   children,
 }: {
   label: string;
+  name?: string;
   error?: string;
   hint?: string;
   children: (props: {
     id: string;
+    name?: string;
     "aria-invalid"?: boolean;
     "aria-describedby"?: string;
   }) => ReactNode;
@@ -76,7 +82,12 @@ export function Field({
       <label htmlFor={id} className="text-meta text-muted font-medium">
         {label}
       </label>
-      {children({ id, "aria-invalid": error ? true : undefined, "aria-describedby": describedBy })}
+      {children({
+        id,
+        name,
+        "aria-invalid": error ? true : undefined,
+        "aria-describedby": describedBy,
+      })}
       {error ? (
         <p id={`${id}-error`} className="text-meta text-critical">
           {error}
@@ -91,8 +102,16 @@ export function Field({
 }
 
 export const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  function TextInput({ className, ...props }, ref) {
-    return <input ref={ref} className={cx(control, className)} {...props} />;
+  function TextInput({ className, autoComplete = "off", spellCheck, ...props }, ref) {
+    return (
+      <input
+        ref={ref}
+        className={cx(control, className)}
+        autoComplete={autoComplete}
+        spellCheck={props.type === "email" ? false : spellCheck}
+        {...props}
+      />
+    );
   },
 );
 
@@ -143,7 +162,7 @@ export function Dialog({
             </h2>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => requestClose(ref.current, onClose)}
               className="rounded-control text-muted hover:bg-hover -mt-1 -mr-2 inline-flex size-11 items-center justify-center sm:size-9"
               aria-label="Close"
             >
@@ -217,7 +236,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
       <p className="text-body text-critical">{message}</p>
       {onRetry ? (
         <Button type="button" onClick={onRetry}>
-          Try again
+          Try Again
         </Button>
       ) : null}
     </div>
@@ -299,6 +318,10 @@ export function Pagination({
   );
 }
 
+function requestClose(dialog: HTMLDialogElement | null | undefined, onClose: () => void) {
+  if (!dialog || dialog.dispatchEvent(new Event("cancel", { cancelable: true }))) onClose();
+}
+
 export function ModalForm({
   onSubmit,
   onClose,
@@ -314,10 +337,30 @@ export function ModalForm({
   submitLabel: string;
   children: ReactNode;
 }) {
+  const form = useRef<HTMLFormElement>(null);
+  const [dirty, setDirty] = useState(false);
+  useUnsavedChanges(dirty);
+
+  useEffect(() => {
+    const dialog = form.current?.closest("dialog");
+    if (!dialog || !dirty) return;
+    const guard = (e: Event) => {
+      if (!window.confirm("Discard unsaved changes?")) e.preventDefault();
+    };
+    dialog.addEventListener("cancel", guard);
+    return () => dialog.removeEventListener("cancel", guard);
+  }, [dirty]);
+
+  useEffect(() => {
+    if (error) form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [error]);
+
   return (
     <form
+      ref={form}
       noValidate
       className="flex flex-col gap-4"
+      onInput={() => setDirty(true)}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();
@@ -326,7 +369,11 @@ export function ModalForm({
       {children}
       <FormError error={error} />
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="quiet" onClick={onClose}>
+        <Button
+          type="button"
+          variant="quiet"
+          onClick={() => requestClose(form.current?.closest("dialog"), onClose)}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="primary" busy={busy}>
@@ -341,7 +388,7 @@ export function Missing({ title, href, back }: { title: string; href: string; ba
   return (
     <div className="py-12 text-center">
       <p className="text-lead font-medium">{title}</p>
-      <Link href={href} className="text-accent mt-4 inline-block underline underline-offset-4">
+      <Link transitionTypes={BACK} href={href} className="text-accent mt-4 inline-block underline underline-offset-4">
         {back}
       </Link>
     </div>

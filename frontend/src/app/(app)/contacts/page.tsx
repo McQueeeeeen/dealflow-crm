@@ -20,17 +20,19 @@ import {
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
-import { useDebounced } from "@/lib/hooks";
+import { useUrlParams, useUrlSearch } from "@/lib/hooks";
 import { keys } from "@/lib/queries";
 import type { Contact, Page } from "@/lib/types";
+import { FORWARD } from "@/lib/transitions";
 
 export default function ContactsPage() {
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [owner, setOwner] = useState("");
-  const [page, setPage] = useState(1);
+  const [params, update] = useUrlParams();
+  const q = params.get("q") ?? "";
+  const owner = params.get("owner") ?? "";
+  const page = Number(params.get("page") ?? 1);
+  const [search, setSearch] = useUrlSearch(q, update);
   const [creating, setCreating] = useState(false);
-  const q = useDebounced(search.trim());
 
   const contacts = useQuery({
     queryKey: keys.contacts({ q, owner, page }),
@@ -44,7 +46,7 @@ export default function ContactsPage() {
         title="Contacts"
         actions={
           <Button variant="primary" onClick={() => setCreating(true)}>
-            Add contact
+            Add Contact
           </Button>
         }
       />
@@ -53,20 +55,15 @@ export default function ContactsPage() {
           <span className="sr-only">Search contacts</span>
           <TextInput
             type="search"
-            placeholder="Search by name or email"
+            name="q"
+            placeholder="Search by name or email…"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </label>
         <OwnerFilter
           value={owner}
-          onChange={(v) => {
-            setOwner(v);
-            setPage(1);
-          }}
+          onChange={(v) => update({ owner: v, page: null })}
         />
       </div>
       <Panel>
@@ -81,7 +78,7 @@ export default function ContactsPage() {
             <EmptyState
               title="No contacts yet"
               body="Add the people you talk to. Link them to a company to see everyone at one account together."
-              action={<Button onClick={() => setCreating(true)}>Add contact</Button>}
+              action={<Button onClick={() => setCreating(true)}>Add Contact</Button>}
             />
           )
         ) : (
@@ -94,7 +91,7 @@ export default function ContactsPage() {
                   header: "Name",
                   cell: (c) => (
                     <div className="min-w-0">
-                      <Link
+                      <Link transitionTypes={FORWARD}
                         href={`/contacts/${c.id}`}
                         className="font-medium hover:underline hover:underline-offset-2"
                       >
@@ -108,7 +105,7 @@ export default function ContactsPage() {
                   header: "Company",
                   cell: (c) =>
                     c.company_id ? (
-                      <Link
+                      <Link transitionTypes={FORWARD}
                         href={`/companies/${c.company_id}`}
                         className="hover:underline hover:underline-offset-2"
                       >
@@ -144,7 +141,7 @@ export default function ContactsPage() {
               page={page}
               perPage={contacts.data.per_page}
               total={contacts.data.total}
-              onPage={setPage}
+              onPage={(p) => update({ page: p === 1 ? null : p })}
             />
           </>
         )}
