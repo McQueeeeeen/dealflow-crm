@@ -5,8 +5,12 @@ pub mod companies;
 pub mod contacts;
 pub mod deals;
 pub mod notes;
+pub mod organization;
+pub mod search;
 pub mod stages;
+pub mod targets;
 pub mod tasks;
+pub mod transfer;
 pub mod users;
 
 use axum::extract::State;
@@ -29,6 +33,11 @@ pub fn router() -> Router<AppState> {
         .merge(notes::router())
         .merge(audit_log::router())
         .merge(analytics::router())
+        .merge(organization::router())
+        .merge(search::router())
+        .merge(targets::router())
+        .merge(transfer::router())
+        .merge(crate::live::router())
 }
 
 pub async fn health(State(state): State<AppState>) -> (StatusCode, Json<Value>) {

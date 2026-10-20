@@ -5,6 +5,7 @@ pub mod authz;
 pub mod config;
 pub mod error;
 pub mod extract;
+pub mod live;
 pub mod models;
 pub mod pagination;
 pub mod state;

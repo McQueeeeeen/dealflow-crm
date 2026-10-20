@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
 use axum::body::Body;
 use axum::http::{header, Method, Request, StatusCode};
 use axum::Router;
 use chrono::Duration;
 use dealflow_api::config::Config;
+use dealflow_api::live::Hub;
 use dealflow_api::state::AppState;
 use http_body_util::BodyExt;
 use serde_json::{json, Value};
@@ -15,6 +18,7 @@ pub const PASSWORD: &str = "correct-horse-battery";
 pub struct TestApp {
     router: Router,
     pub pool: PgPool,
+    pub hub: Arc<Hub>,
 }
 
 #[derive(Debug, Clone)]
@@ -78,8 +82,10 @@ impl TestApp {
             refresh_token_ttl: Duration::days(30),
             log_json: false,
         };
+        let state = AppState::new(pool.clone(), config);
         Self {
-            router: dealflow_api::app(AppState::new(pool.clone(), config)),
+            hub: state.hub.clone(),
+            router: dealflow_api::app(state),
             pool,
         }
     }
@@ -123,6 +129,19 @@ impl TestApp {
                 .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()))
         };
         Response { status, body }
+    }
+
+    pub async fn open(&self, path: &str, s: &Session) -> axum::response::Response {
+        let request = Request::builder()
+            .uri(path)
+            .header(header::AUTHORIZATION, format!("Bearer {}", s.token))
+            .body(Body::empty())
+            .expect("valid request");
+        self.router
+            .clone()
+            .oneshot(request)
+            .await
+            .expect("infallible")
     }
 
     pub async fn get(&self, path: &str, s: &Session) -> Response {

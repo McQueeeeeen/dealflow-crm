@@ -12,6 +12,7 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
+use crate::live;
 use crate::models::{AuditAction, EntityType, StageKind};
 use crate::pagination::{Page, Pagination};
 use crate::state::AppState;
@@ -54,6 +55,7 @@ pub struct Deal {
     pub version: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub last_activity_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, FromRow)]
@@ -145,7 +147,13 @@ const SELECT_DEAL: &str = "
            s.probability, d.board_position, d.company_id, co.name AS company_name, d.contact_id,
            trim(ct.first_name || ' ' || ct.last_name) AS contact_name,
            d.owner_id, u.full_name AS owner_name, d.expected_close_date, d.closed_at, d.version,
-           d.created_at, d.updated_at
+           d.created_at, d.updated_at,
+           greatest(d.updated_at,
+                    (SELECT max(n.created_at) FROM notes n
+                     WHERE n.organization_id = d.organization_id AND n.deal_id = d.id),
+                    (SELECT max(t.completed_at) FROM tasks t
+                     WHERE t.organization_id = d.organization_id AND t.deal_id = d.id))
+               AS last_activity_at
     FROM deals d
     JOIN pipeline_stages s ON s.id = d.stage_id
     JOIN users u ON u.id = d.owner_id
@@ -514,6 +522,15 @@ pub async fn move_deal(
             changes,
         )
         .await?;
+    } else {
+        let change = live::Change {
+            org: actor.org_id,
+            entity: EntityType::Deal.as_str().into(),
+            id,
+            action: "updated".into(),
+            actor: Some(actor.user_id),
+        };
+        live::notify(&mut tx, &change).await?;
     }
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;

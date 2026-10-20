@@ -81,6 +81,15 @@ fn is_plausible_email(value: &str) -> bool {
     }
 }
 
+pub fn normalize_domain(value: &str) -> String {
+    let lower = value.trim().to_lowercase();
+    let host = lower
+        .trim_start_matches("https://")
+        .trim_start_matches("http://")
+        .trim_start_matches("www.");
+    host.split('/').next().unwrap_or(host).to_owned()
+}
+
 pub fn like_pattern(search: &str) -> String {
     let mut escaped = String::with_capacity(search.len() + 2);
     escaped.push('%');
@@ -97,6 +106,12 @@ pub fn like_pattern(search: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn domains_lose_scheme_www_and_path() {
+        assert_eq!(normalize_domain(" HTTPS://www.Acme.io/about "), "acme.io");
+        assert_eq!(normalize_domain("harbor.example"), "harbor.example");
+    }
 
     #[test]
     fn accepts_ordinary_emails() {

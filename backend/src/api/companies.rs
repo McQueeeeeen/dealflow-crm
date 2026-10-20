@@ -14,7 +14,7 @@ use crate::extract::{ApiJson, ApiPath, ApiQuery};
 use crate::models::{AuditAction, EntityType};
 use crate::pagination::{Page, Pagination};
 use crate::state::AppState;
-use crate::validation::{clean, like_pattern, Validator};
+use crate::validation::{clean, like_pattern, normalize_domain, Validator};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -129,16 +129,16 @@ pub async fn get_company(
     Ok(Json(fetch_company(&state.pool, user.org_id, id).await?))
 }
 
-struct CleanInput {
-    name: String,
-    domain: Option<String>,
-    industry: Option<String>,
+pub(crate) struct CleanInput {
+    pub(crate) name: String,
+    pub(crate) domain: Option<String>,
+    pub(crate) industry: Option<String>,
 }
 
-fn validate(req: CompanyInput) -> AppResult<(CleanInput, Option<Uuid>)> {
+pub(crate) fn validate(req: CompanyInput) -> AppResult<(CleanInput, Option<Uuid>)> {
     let input = CleanInput {
         name: req.name.trim().to_owned(),
-        domain: clean(req.domain).map(|d| d.to_lowercase()),
+        domain: clean(req.domain).map(|d| normalize_domain(&d)),
         industry: clean(req.industry),
     };
     Validator::new()
