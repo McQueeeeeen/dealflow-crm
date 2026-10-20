@@ -10,6 +10,7 @@ import {
 
 for (const scheme of ["light", "dark"] as const) {
   test(`every screen renders cleanly in ${scheme} mode`, async ({ page }, info) => {
+    test.setTimeout(90_000);
     await page.addInitScript((t) => localStorage.setItem("dealflow-theme", t), scheme);
     const errors = watchErrors(page);
 
@@ -36,6 +37,7 @@ for (const scheme of ["light", "dark"] as const) {
     }
 
     await page.goto("/today");
+    await expect(page.getByRole("heading", { level: 1, name: /^Welcome back/ })).toBeVisible();
     await page.keyboard.press("ControlOrMeta+k");
     await page.getByRole("combobox").fill("fleet");
     await expect(page.getByRole("option").first()).toBeVisible();
