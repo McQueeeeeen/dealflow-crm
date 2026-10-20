@@ -13,7 +13,7 @@ TypeScript.
 
 - **Today**: your overdue and upcoming follow-ups, and the deals you expect to close this month.
 - **Pipeline**: a kanban board of deals by stage. Drag with a mouse, press and hold on touch
-  screens, or use the keyboard (space to pick up, arrows to move, space to drop).
+  screens, or focus a deal's handle and press the left or right arrow key.
 - **Deals, companies, contacts**: linked records with notes, follow-ups and a readable history
   of every change.
 - **Reports**: open and weighted pipeline, a stage-by-stage conversion funnel, a six-month
@@ -122,7 +122,7 @@ The end-to-end suite boots the whole stack in CI (PostgreSQL, the API with demo 
 production Next.js build) and drives it with Playwright on desktop and phone viewports. It
 visits every screen in both themes and fails on any console error, any sideways scrolling on
 a phone, or any serious WCAG 2.1 AA violation reported by axe. It also moves a deal across the
-board with the keyboard, completes a follow-up, adds a note, checks form validation, the theme
+board with the arrow keys, completes a follow-up, adds a note, checks form validation, the theme
 toggle and signing out.
 
 CI runs `rustfmt`, `clippy -D warnings`, the full test suite and the seed script for the
@@ -132,4 +132,4 @@ backend, and Prettier, ESLint, a production build and `tsc` for the frontend.
 
 The visual direction, palette with contrast reasoning, type scale and motion rules are in
 [DESIGN.md](DESIGN.md). Both themes meet WCAG AA contrast, every control is reachable by
-keyboard, and the board can be operated entirely from the keyboard.
+keyboard, including moving deals across the board.
