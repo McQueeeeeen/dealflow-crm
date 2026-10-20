@@ -197,7 +197,8 @@ export function CommandPalette() {
                 placeholder="Search deals, companies, people…"
                 autoComplete="off"
                 spellCheck={false}
-                className="text-lead placeholder:text-muted h-14 min-w-0 flex-1 bg-transparent focus-visible:outline-none"
+                style={{ outline: "none" }}
+                className="text-lead placeholder:text-muted h-14 min-w-0 flex-1 bg-transparent"
               />
               <kbd className="border-line text-meta text-muted rounded-md border px-1.5">Esc</kbd>
             </div>
