@@ -26,7 +26,9 @@ test("a deal moves to the next stage with the keyboard", async ({ page }, info) 
   await expect(qualified.getByRole("link", { name: title, exact: true })).toBeVisible();
   await expect(lead.getByRole("link", { name: title, exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: `Move ${title}` })).toBeFocused();
-  await expect(page.getByRole("status").filter({ hasText: `${title} moved to Qualified.` })).toBeAttached();
+  await expect(
+    page.getByRole("status").filter({ hasText: `${title} moved to Qualified.` }),
+  ).toBeAttached();
   expect(errors).toEqual([]);
 });
 
