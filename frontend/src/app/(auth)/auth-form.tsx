@@ -15,7 +15,7 @@ interface Props {
 }
 
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/today";
+  return raw && /^\/(?![/\\])/.test(raw) ? raw : "/today";
 }
 
 export function AuthForm({ mode, demo }: Props) {

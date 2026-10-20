@@ -19,6 +19,8 @@ pub enum AppError {
     Unauthorized,
     #[error("invalid email or password")]
     InvalidCredentials,
+    #[error("too many failed sign-in attempts, try again in 15 minutes")]
+    TooManyAttempts,
     #[error("you do not have permission to perform this action")]
     Forbidden,
     #[error("{0} not found")]
@@ -47,6 +49,7 @@ impl AppError {
         match self {
             Self::Unauthorized => (StatusCode::UNAUTHORIZED, "unauthorized"),
             Self::InvalidCredentials => (StatusCode::UNAUTHORIZED, "invalid_credentials"),
+            Self::TooManyAttempts => (StatusCode::TOO_MANY_REQUESTS, "too_many_attempts"),
             Self::Forbidden => (StatusCode::FORBIDDEN, "forbidden"),
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "not_found"),
             Self::Conflict(_) => (StatusCode::CONFLICT, "conflict"),

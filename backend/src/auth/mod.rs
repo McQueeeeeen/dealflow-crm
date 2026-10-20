@@ -1,6 +1,7 @@
 pub mod jwt;
 pub mod password;
 pub mod refresh;
+pub mod throttle;
 
 use axum::extract::FromRequestParts;
 use axum::http::header::AUTHORIZATION;

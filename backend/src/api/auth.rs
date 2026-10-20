@@ -151,6 +151,9 @@ pub async fn login(
     ApiJson(req): ApiJson<LoginRequest>,
 ) -> AppResult<Json<Session>> {
     let email = normalize_email(&req.email);
+    if state.login_throttle.is_locked(&email) {
+        return Err(AppError::TooManyAttempts);
+    }
     let user: Option<(Uuid, Uuid, String, bool)> = sqlx::query_as(
         "SELECT id, organization_id, password_hash, is_active FROM users WHERE email = $1",
     )
@@ -160,11 +163,14 @@ pub async fn login(
 
     let Some((user_id, org_id, hash, is_active)) = user else {
         password::burn_verification_time(&req.password);
+        state.login_throttle.record_failure(&email);
         return Err(AppError::InvalidCredentials);
     };
     if !password::verify_password(&req.password, &hash) || !is_active {
+        state.login_throttle.record_failure(&email);
         return Err(AppError::InvalidCredentials);
     }
+    state.login_throttle.clear(&email);
 
     let mut conn = state.pool.acquire().await?;
     let session = start_session(&mut conn, &state, user_id, org_id, None).await?;
