@@ -27,7 +27,7 @@ jobs:
         if: hashFiles('frontend/package.json') != ''
         working-directory: frontend
         run: |
-          [ -f package-lock.json ] || npm install --package-lock-only --ignore-scripts
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           npm ci --ignore-scripts
           npx prettier --write .
       - name: Commit

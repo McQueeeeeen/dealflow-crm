@@ -7,3 +7,6 @@ node_modules/
 /frontend/next-env.d.ts
 *.tsbuildinfo
 .DS_Store
+/frontend/test-results
+/frontend/playwright-report
+/frontend/e2e/screenshots
