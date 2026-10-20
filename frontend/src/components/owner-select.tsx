@@ -16,7 +16,7 @@ export function OwnerFilter({
   const users = useUsers().data ?? [];
   return (
     <label className="text-body flex items-center gap-2">
-      <span className="text-muted">{label}</span>
+      <span className="text-muted whitespace-nowrap">{label}</span>
       <Select value={value} onChange={(e) => onChange(e.target.value)} className="w-auto">
         <option value="">Everyone</option>
         {me ? <option value={me.id}>Me</option> : null}
