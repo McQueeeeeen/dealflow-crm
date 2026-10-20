@@ -257,7 +257,10 @@ function Column({ column }: { column: BoardColumn }) {
         </p>
       </header>
       <SortableContext items={column.deals.map((d) => d.id)} strategy={verticalListSortingStrategy}>
-        <ul ref={setNodeRef} className="flex min-h-24 flex-col gap-2 p-2 sm:max-h-[calc(100dvh-17rem)] sm:overflow-y-auto">
+        <ul
+          ref={setNodeRef}
+          className="flex min-h-24 flex-col gap-2 p-2 sm:max-h-[calc(100dvh-17rem)] sm:overflow-y-auto"
+        >
           {column.deals.map((deal) => (
             <SortableDeal key={deal.id} deal={deal} />
           ))}
