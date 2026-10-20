@@ -28,10 +28,16 @@ export async function shot(page: Page, info: TestInfo, name: string) {
 
 /** Fails on serious or critical WCAG A/AA violations. */
 export async function expectAccessible(page: Page) {
-  const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
-  const blocking = result.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  const result = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  const blocking = result.violations.filter(
+    (v) => v.impact === "serious" || v.impact === "critical",
+  );
   expect(
-    blocking.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(" ")).join(", ")})`),
+    blocking.map(
+      (v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(" ")).join(", ")})`,
+    ),
   ).toEqual([]);
 }
 
