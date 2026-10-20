@@ -16,7 +16,7 @@ jobs:
       - name: Rust
         working-directory: backend
         run: |
-          [ -f Cargo.lock ] || cargo generate-lockfile
+          cargo update --workspace
           cargo fmt
       - uses: actions/setup-node@v4
         if: hashFiles('frontend/package.json') != ''
