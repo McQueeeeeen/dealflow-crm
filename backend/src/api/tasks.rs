@@ -307,7 +307,15 @@ pub async fn update_task(
     .await?;
     let changes = audit::diff(&before, &after);
     if !audit::is_empty_diff(&changes) {
-        audit::record(&mut tx, &actor, EntityType::Task, id, AuditAction::Updated, changes).await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::Task,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
@@ -335,7 +343,15 @@ async fn set_completion(
         .fetch_one(&mut *tx)
         .await?;
         let changes = audit::diff(&before, &after);
-        audit::record(&mut tx, actor, EntityType::Task, id, AuditAction::Updated, changes).await?;
+        audit::record(
+            &mut tx,
+            actor,
+            EntityType::Task,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;

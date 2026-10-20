@@ -38,7 +38,11 @@ impl JwtKeys {
             iat: now.timestamp(),
             exp: (now + ttl).timestamp(),
         };
-        Ok(encode(&Header::new(Algorithm::HS256), &claims, &self.encoding)?)
+        Ok(encode(
+            &Header::new(Algorithm::HS256),
+            &claims,
+            &self.encoding,
+        )?)
     }
 
     pub fn verify(&self, token: &str) -> Result<Claims, AppError> {

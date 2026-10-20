@@ -10,7 +10,10 @@ async fn new_deal_lands_in_first_open_stage_and_records_history(pool: PgPool) {
     let admin = app.register("Acme", "owner@acme.test").await;
 
     let deal = app
-        .create_deal(&admin, json!({ "title": "  Renewal  ", "value_cents": 120_000 }))
+        .create_deal(
+            &admin,
+            json!({ "title": "  Renewal  ", "value_cents": 120_000 }),
+        )
         .await;
     assert_eq!(deal.body["title"], "Renewal");
     assert_eq!(deal.body["stage_name"], "Lead");
@@ -19,7 +22,10 @@ async fn new_deal_lands_in_first_open_stage_and_records_history(pool: PgPool) {
     assert!(deal.body["closed_at"].is_null());
 
     let history = app
-        .get(&format!("/api/v1/deals/{}/stage-history", deal.id()), &admin)
+        .get(
+            &format!("/api/v1/deals/{}/stage-history", deal.id()),
+            &admin,
+        )
         .await;
     let history = history.body.as_array().unwrap();
     assert_eq!(history.len(), 1);
@@ -34,7 +40,9 @@ async fn moving_into_a_closing_stage_stamps_closed_at(pool: PgPool) {
     let won = app.stage_id(&admin, "Won").await;
     let lead = app.stage_id(&admin, "Lead").await;
 
-    let deal = app.create_deal(&admin, json!({ "title": "Expansion" })).await;
+    let deal = app
+        .create_deal(&admin, json!({ "title": "Expansion" }))
+        .await;
     let moved = app.move_deal(&admin, &deal.body, won).await;
     moved.assert_status(StatusCode::OK);
     assert_eq!(moved.body["stage_kind"], "won");
@@ -46,7 +54,10 @@ async fn moving_into_a_closing_stage_stamps_closed_at(pool: PgPool) {
     assert!(reopened.body["closed_at"].is_null());
 
     let history = app
-        .get(&format!("/api/v1/deals/{}/stage-history", deal.id()), &admin)
+        .get(
+            &format!("/api/v1/deals/{}/stage-history", deal.id()),
+            &admin,
+        )
         .await;
     let steps: Vec<_> = history
         .body
@@ -67,12 +78,20 @@ async fn stale_version_is_rejected_with_conflict(pool: PgPool) {
         .await;
     let url = format!("/api/v1/deals/{}", deal.id());
 
-    app.put(&url, &admin, json!({ "title": "First edit", "value_cents": 600, "version": 1 }))
-        .await
-        .assert_status(StatusCode::OK);
+    app.put(
+        &url,
+        &admin,
+        json!({ "title": "First edit", "value_cents": 600, "version": 1 }),
+    )
+    .await
+    .assert_status(StatusCode::OK);
 
     let stale = app
-        .put(&url, &admin, json!({ "title": "Second edit", "value_cents": 700, "version": 1 }))
+        .put(
+            &url,
+            &admin,
+            json!({ "title": "Second edit", "value_cents": 700, "version": 1 }),
+        )
         .await;
     stale.assert_status(StatusCode::CONFLICT);
     assert_eq!(stale.error_code(), "conflict");
@@ -88,8 +107,10 @@ async fn board_groups_deals_by_stage_in_pipeline_order(pool: PgPool) {
     let admin = app.register("Acme", "owner@acme.test").await;
     let proposal = app.stage_id(&admin, "Proposal").await;
 
-    app.create_deal(&admin, json!({ "title": "A", "value_cents": 100 })).await;
-    app.create_deal(&admin, json!({ "title": "B", "value_cents": 250 })).await;
+    app.create_deal(&admin, json!({ "title": "A", "value_cents": 100 }))
+        .await;
+    app.create_deal(&admin, json!({ "title": "B", "value_cents": 250 }))
+        .await;
     app.create_deal(
         &admin,
         json!({ "title": "C", "value_cents": 1000, "stage_id": proposal }),
@@ -113,7 +134,11 @@ async fn deal_input_is_validated(pool: PgPool) {
     let app = TestApp::new(pool);
     let admin = app.register("Acme", "owner@acme.test").await;
     let res = app
-        .post("/api/v1/deals", &admin, json!({ "title": "", "value_cents": -5 }))
+        .post(
+            "/api/v1/deals",
+            &admin,
+            json!({ "title": "", "value_cents": -5 }),
+        )
         .await;
     res.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(res.error_fields(), ["title", "value_cents"]);
@@ -160,7 +185,8 @@ async fn every_change_is_written_to_the_audit_log(pool: PgPool) {
 async fn audit_log_rejects_tampering(pool: PgPool) {
     let app = TestApp::new(pool);
     let admin = app.register("Acme", "owner@acme.test").await;
-    app.create_deal(&admin, json!({ "title": "Immutable" })).await;
+    app.create_deal(&admin, json!({ "title": "Immutable" }))
+        .await;
     let tampered = sqlx::query("UPDATE audit_log SET action = 'deleted'")
         .execute(&app.pool)
         .await;

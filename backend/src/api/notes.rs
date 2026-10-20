@@ -177,14 +177,13 @@ pub async fn delete_note(
     actor: AuthUser,
     ApiPath(id): ApiPath<Uuid>,
 ) -> AppResult<StatusCode> {
-    let author: Uuid = sqlx::query_scalar(
-        "SELECT author_id FROM notes WHERE id = $1 AND organization_id = $2",
-    )
-    .bind(id)
-    .bind(actor.org_id)
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::NotFound("note"))?;
+    let author: Uuid =
+        sqlx::query_scalar("SELECT author_id FROM notes WHERE id = $1 AND organization_id = $2")
+            .bind(id)
+            .bind(actor.org_id)
+            .fetch_optional(&state.pool)
+            .await?
+            .ok_or(AppError::NotFound("note"))?;
     actor.require_can_modify(author)?;
     sqlx::query("DELETE FROM notes WHERE id = $1 AND organization_id = $2")
         .bind(id)

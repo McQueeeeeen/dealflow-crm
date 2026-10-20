@@ -70,9 +70,15 @@ async fn only_managers_and_admins_delete_records(pool: PgPool) {
 
     let deal = app.create_deal(&rep, json!({ "title": "Doomed" })).await;
     let url = format!("/api/v1/deals/{}", deal.id());
-    app.delete(&url, &rep).await.assert_status(StatusCode::FORBIDDEN);
-    app.delete(&url, &manager).await.assert_status(StatusCode::NO_CONTENT);
-    app.get(&url, &admin).await.assert_status(StatusCode::NOT_FOUND);
+    app.delete(&url, &rep)
+        .await
+        .assert_status(StatusCode::FORBIDDEN);
+    app.delete(&url, &manager)
+        .await
+        .assert_status(StatusCode::NO_CONTENT);
+    app.get(&url, &admin)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
 }
 
 #[sqlx::test(migrator = "dealflow_api::MIGRATOR")]

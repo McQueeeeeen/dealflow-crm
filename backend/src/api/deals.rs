@@ -360,13 +360,15 @@ pub async fn create_deal(
     let mut tx = state.pool.begin().await?;
     let stage_id = match req.stage_id {
         Some(id) => id,
-        None => sqlx::query_scalar(
-            "SELECT id FROM pipeline_stages
+        None => {
+            sqlx::query_scalar(
+                "SELECT id FROM pipeline_stages
              WHERE organization_id = $1 AND kind = 'open' ORDER BY position LIMIT 1",
-        )
-        .bind(actor.org_id)
-        .fetch_one(&mut *tx)
-        .await?,
+            )
+            .bind(actor.org_id)
+            .fetch_one(&mut *tx)
+            .await?
+        }
     };
     let kind = stage_kind(&mut tx, actor.org_id, stage_id).await?;
     let closed_at = (kind != StageKind::Open).then(Utc::now);
@@ -458,7 +460,9 @@ pub async fn update_deal(
     validate_common(title, req.value_cents)?;
 
     let mut tx = state.pool.begin().await?;
-    let before = lock_for_write(&mut tx, &actor, id, req.version).await?.fields;
+    let before = lock_for_write(&mut tx, &actor, id, req.version)
+        .await?
+        .fields;
     let owner_id = match req.owner_id {
         Some(owner) if owner != before.owner_id => actor.resolve_owner(Some(owner))?,
         _ => before.owner_id,
@@ -482,7 +486,15 @@ pub async fn update_deal(
     .await?;
     let changes = audit::diff(&before, &after);
     if !audit::is_empty_diff(&changes) {
-        audit::record(&mut tx, &actor, EntityType::Deal, id, AuditAction::Updated, changes).await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::Deal,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
@@ -506,7 +518,10 @@ pub async fn move_deal(
     ApiJson(req): ApiJson<MoveDeal>,
 ) -> AppResult<Json<Deal>> {
     if req.board_position.is_some_and(|p| !p.is_finite()) {
-        return Err(AppError::validation("board_position", "must be a finite number"));
+        return Err(AppError::validation(
+            "board_position",
+            "must be a finite number",
+        ));
     }
 
     let mut tx = state.pool.begin().await?;
@@ -539,9 +554,24 @@ pub async fn move_deal(
     .await?;
 
     if stage_changed {
-        record_stage_change(&mut tx, &actor, id, Some(locked.fields.stage_id), req.stage_id).await?;
+        record_stage_change(
+            &mut tx,
+            &actor,
+            id,
+            Some(locked.fields.stage_id),
+            req.stage_id,
+        )
+        .await?;
         let changes = audit::diff(&locked.fields, &after);
-        audit::record(&mut tx, &actor, EntityType::Deal, id, AuditAction::Updated, changes).await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::Deal,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;

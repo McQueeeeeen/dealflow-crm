@@ -18,11 +18,18 @@ async fn company_search_and_rollups(pool: PgPool) {
         .await;
     harbor.assert_status(StatusCode::CREATED);
     assert_eq!(harbor.body["domain"], "harbor.example");
-    assert!(harbor.body["industry"].is_null(), "blank optional text is stored as null");
+    assert!(
+        harbor.body["industry"].is_null(),
+        "blank optional text is stored as null"
+    );
 
-    app.post("/api/v1/companies", &admin, json!({ "name": "Granite Foods" }))
-        .await
-        .assert_status(StatusCode::CREATED);
+    app.post(
+        "/api/v1/companies",
+        &admin,
+        json!({ "name": "Granite Foods" }),
+    )
+    .await
+    .assert_status(StatusCode::CREATED);
     app.post(
         "/api/v1/contacts",
         &admin,
@@ -53,17 +60,26 @@ async fn deleting_a_company_keeps_its_deals_and_contacts(pool: PgPool) {
     let app = TestApp::new(pool);
     let admin = app.register("Acme", "owner@acme.test").await;
     let company = app
-        .post("/api/v1/companies", &admin, json!({ "name": "Short-lived" }))
+        .post(
+            "/api/v1/companies",
+            &admin,
+            json!({ "name": "Short-lived" }),
+        )
         .await
         .id();
     let deal = app
-        .create_deal(&admin, json!({ "title": "Survivor", "company_id": company }))
+        .create_deal(
+            &admin,
+            json!({ "title": "Survivor", "company_id": company }),
+        )
         .await;
 
     app.delete(&format!("/api/v1/companies/{company}"), &admin)
         .await
         .assert_status(StatusCode::NO_CONTENT);
-    let after = app.get(&format!("/api/v1/deals/{}", deal.id()), &admin).await;
+    let after = app
+        .get(&format!("/api/v1/deals/{}", deal.id()), &admin)
+        .await;
     after.assert_status(StatusCode::OK);
     assert!(after.body["company_id"].is_null());
 }
@@ -108,7 +124,10 @@ async fn task_lifecycle_and_filters(pool: PgPool) {
         .assert_status(StatusCode::CREATED);
 
     let mine = app
-        .get(&format!("/api/v1/tasks?assignee_id={}&status=overdue", rep.user_id), &rep)
+        .get(
+            &format!("/api/v1/tasks?assignee_id={}&status=overdue", rep.user_id),
+            &rep,
+        )
         .await;
     assert_eq!(mine.body["total"], 1);
 
@@ -129,16 +148,27 @@ async fn task_lifecycle_and_filters(pool: PgPool) {
 async fn notes_need_exactly_one_parent(pool: PgPool) {
     let app = TestApp::new(pool);
     let admin = app.register("Acme", "owner@acme.test").await;
-    let deal = app.create_deal(&admin, json!({ "title": "Noted" })).await.id();
+    let deal = app
+        .create_deal(&admin, json!({ "title": "Noted" }))
+        .await
+        .id();
 
-    let res = app.post("/api/v1/notes", &admin, json!({ "body": "Orphan" })).await;
+    let res = app
+        .post("/api/v1/notes", &admin, json!({ "body": "Orphan" }))
+        .await;
     res.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(res.error_fields(), ["parent"]);
 
-    app.post("/api/v1/notes", &admin, json!({ "body": "Budget approved", "deal_id": deal }))
-        .await
-        .assert_status(StatusCode::CREATED);
-    let notes = app.get(&format!("/api/v1/notes?deal_id={deal}"), &admin).await;
+    app.post(
+        "/api/v1/notes",
+        &admin,
+        json!({ "body": "Budget approved", "deal_id": deal }),
+    )
+    .await
+    .assert_status(StatusCode::CREATED);
+    let notes = app
+        .get(&format!("/api/v1/notes?deal_id={deal}"), &admin)
+        .await;
     assert_eq!(notes.body["total"], 1);
     assert_eq!(notes.body["data"][0]["author_name"], "Acme Admin");
 }
@@ -162,7 +192,11 @@ async fn pipeline_stages_can_be_reordered_but_not_deleted_while_used(pool: PgPoo
     assert_eq!(reordered.body[0]["name"], "Qualified");
 
     let partial = app
-        .put("/api/v1/stages/order", &admin, json!({ "stage_ids": &ids[..2] }))
+        .put(
+            "/api/v1/stages/order",
+            &admin,
+            json!({ "stage_ids": &ids[..2] }),
+        )
         .await;
     partial.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
 

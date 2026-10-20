@@ -37,7 +37,11 @@ impl Validator {
     }
 
     pub fn email(&mut self, field: &str, value: &str) -> &mut Self {
-        self.check(is_plausible_email(value), field, "must be a valid email address")
+        self.check(
+            is_plausible_email(value),
+            field,
+            "must be a valid email address",
+        )
     }
 
     fn max_len(&mut self, field: &str, value: &str, max_chars: usize) -> &mut Self {
@@ -56,9 +60,7 @@ impl Validator {
 
 /// Trims the value and maps blank input to `None`, so optional text fields never store "".
 pub fn clean(value: Option<String>) -> Option<String> {
-    value
-        .map(|v| v.trim().to_owned())
-        .filter(|v| !v.is_empty())
+    value.map(|v| v.trim().to_owned()).filter(|v| !v.is_empty())
 }
 
 pub fn normalize_email(value: &str) -> String {
@@ -109,7 +111,16 @@ mod tests {
 
     #[test]
     fn rejects_malformed_emails() {
-        for bad in ["", "plain", "@example.com", "a@b", "a@@b.com", "a b@c.com", "a@.com", "a@b.com."] {
+        for bad in [
+            "",
+            "plain",
+            "@example.com",
+            "a@b",
+            "a@@b.com",
+            "a b@c.com",
+            "a@.com",
+            "a@b.com.",
+        ] {
             assert!(!is_plausible_email(bad), "{bad:?} should be rejected");
         }
     }
@@ -145,6 +156,9 @@ mod tests {
 
     #[test]
     fn length_limit_counts_characters_not_bytes() {
-        assert!(Validator::new().required("name", "Жанна", 5).finish().is_ok());
+        assert!(Validator::new()
+            .required("name", "Жанна", 5)
+            .finish()
+            .is_ok());
     }
 }
