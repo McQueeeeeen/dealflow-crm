@@ -22,7 +22,6 @@ pub struct Session {
     pub token: String,
     pub refresh: String,
     pub user_id: Uuid,
-    pub org_id: Uuid,
 }
 
 pub struct Response {
@@ -231,10 +230,5 @@ fn session_from(body: &Value) -> Session {
             .expect("refresh token")
             .to_owned(),
         user_id: body["user"]["id"].as_str().unwrap().parse().unwrap(),
-        org_id: body["user"]["organization_id"]
-            .as_str()
-            .unwrap()
-            .parse()
-            .unwrap(),
     }
 }
