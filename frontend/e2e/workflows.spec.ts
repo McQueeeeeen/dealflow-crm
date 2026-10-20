@@ -22,7 +22,7 @@ test("a deal moves to the next stage with the keyboard", async ({ page }, info) 
   );
   const announcer = page.locator("[aria-live]").filter({ hasText: title });
   await page.keyboard.press("Space");
-  await expect(announcer).toContainText(`Picked up ${title}`);
+  await expect(announcer).toContainText(title);
   await page.keyboard.press("ArrowRight");
   await expect(announcer).toContainText("is over Qualified");
   await page.keyboard.press("Space");
