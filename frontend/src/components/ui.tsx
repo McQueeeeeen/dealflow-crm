@@ -339,12 +339,19 @@ export function RecordView<T>({
   missing,
   children,
 }: {
-  query: { isPending: boolean; isError: boolean; error: unknown; data: T | undefined; refetch: () => unknown };
+  query: {
+    isPending: boolean;
+    isError: boolean;
+    error: unknown;
+    data: T | undefined;
+    refetch: () => unknown;
+  };
   missing: { title: string; href: string; back: string };
   children: (data: T) => ReactNode;
 }) {
   if (query.isPending) return <Loading label="Loading…" />;
-  if (query.error instanceof ApiError && query.error.status === 404) return <Missing {...missing} />;
+  if (query.error instanceof ApiError && query.error.status === 404)
+    return <Missing {...missing} />;
   if (query.isError || query.data === undefined)
     return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
   return <>{children(query.data)}</>;

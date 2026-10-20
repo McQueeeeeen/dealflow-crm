@@ -33,8 +33,7 @@ export function ThemeToggle() {
     document.documentElement.dataset.theme = next;
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-    }
+    } catch {}
     window.dispatchEvent(new Event(CHANGE_EVENT));
   }
 

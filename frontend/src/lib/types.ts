@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "manager" | "sales_rep";
 export type StageKind = "open" | "won" | "lost";
 

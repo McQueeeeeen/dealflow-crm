@@ -20,9 +20,19 @@ import type { Contact, Page, Task } from "@/lib/types";
 
 export default function ContactPage() {
   const { id } = useParams<{ id: string }>();
-  const contact = useQuery({ queryKey: keys.contact(id), queryFn: () => get<Contact>(`/contacts/${id}`) });
+  const contact = useQuery({
+    queryKey: keys.contact(id),
+    queryFn: () => get<Contact>(`/contacts/${id}`),
+  });
   return (
-    <RecordView query={contact} missing={{ title: "This contact no longer exists", href: "/contacts", back: "Back to contacts" }}>
+    <RecordView
+      query={contact}
+      missing={{
+        title: "This contact no longer exists",
+        href: "/contacts",
+        back: "Back to contacts",
+      }}
+    >
       {(contact) => <ContactView contact={contact} />}
     </RecordView>
   );
