@@ -7,11 +7,8 @@ use crate::auth::AuthUser;
 use crate::error::AppResult;
 use crate::models::{AuditAction, EntityType};
 
-/// Bookkeeping fields that change on every write and would only add noise to a diff.
 const IGNORED_FIELDS: [&str; 3] = ["updated_at", "version", "created_at"];
 
-/// Writes an audit entry on the caller's connection, so it commits or rolls back together
-/// with the change it describes.
 pub async fn record(
     conn: &mut PgConnection,
     actor: &AuthUser,
@@ -45,7 +42,6 @@ pub fn snapshot<T: Serialize>(value: &T) -> Value {
     value
 }
 
-/// Field-level diff between two snapshots: `{"field": {"from": old, "to": new}}`.
 pub fn diff<T: Serialize>(before: &T, after: &T) -> Value {
     let (Value::Object(before), Value::Object(after)) = (snapshot(before), snapshot(after)) else {
         return Value::Object(Map::new());

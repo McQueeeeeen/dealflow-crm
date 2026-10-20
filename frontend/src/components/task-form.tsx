@@ -1,13 +1,12 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 
 import {
-  Button,
   Dialog,
   Field,
-  FormError,
+  ModalForm,
   Select,
   TextArea,
   TextInput,
@@ -36,7 +35,6 @@ export function TaskFormDialog(props: Props) {
   );
 }
 
-/** `datetime-local` works in local time without a zone, so convert at the edges. */
 function toLocalInput(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -72,8 +70,7 @@ function TaskForm({ task, link, onClose }: Props) {
     },
   });
 
-  function submit(e: FormEvent) {
-    e.preventDefault();
+  function submit() {
     save.mutate({
       title: values.title,
       details: values.details || null,
@@ -86,7 +83,13 @@ function TaskForm({ task, link, onClose }: Props) {
 
   const error = save.error;
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <ModalForm
+      onSubmit={submit}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel={task ? "Save follow-up" : "Add follow-up"}
+    >
       <Field label="What needs to happen" error={fieldError(error, "title")}>
         {(p) => (
           <TextInput
@@ -136,15 +139,6 @@ function TaskForm({ task, link, onClose }: Props) {
           />
         )}
       </Field>
-      <FormError error={error} />
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="quiet" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" busy={save.isPending}>
-          {task ? "Save follow-up" : "Add follow-up"}
-        </Button>
-      </div>
-    </form>
+    </ModalForm>
   );
 }

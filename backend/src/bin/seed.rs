@@ -1,6 +1,3 @@
-//! Fills a demo workspace with a deterministic, realistic-looking sales history.
-//! Re-running it replaces the previous demo workspace.
-
 use anyhow::Context;
 use chrono::{DateTime, Days, Duration, NaiveDate, Utc};
 use dealflow_api::auth::password::hash_password;
@@ -263,7 +260,6 @@ async fn seed_companies(
     Ok(companies)
 }
 
-/// Returns `(contact_id, company_id, owner_id)`.
 async fn seed_contacts(
     tx: &mut Transaction<'_, Postgres>,
     ids: &Ids,
@@ -302,8 +298,6 @@ async fn seed_contacts(
     Ok(contacts)
 }
 
-/// Walks each deal through the pipeline the way a real one would move, recording every
-/// step, so the funnel and win-rate reports have genuine history to work from.
 async fn seed_deals(
     tx: &mut Transaction<'_, Postgres>,
     ids: &Ids,
@@ -352,7 +346,6 @@ async fn seed_deals(
         let stage = *path.last().expect("path starts with a stage");
         let expected_close: Option<NaiveDate> = match outcome {
             None => {
-                // Most open deals carry a date; a few have already slipped past it.
                 let date = Utc::now().date_naive() + Days::new(rng.gen_range(0..150));
                 let date = if rng.gen_bool(0.1) {
                     date - Days::new(60)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 
 import { Table } from "@/components/table";
 import {
@@ -9,8 +9,8 @@ import {
   Dialog,
   ErrorState,
   Field,
-  FormError,
   Loading,
+  ModalForm,
   PageHeader,
   Panel,
   Select,
@@ -146,13 +146,12 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
   });
   const error = save.error;
   return (
-    <form
-      noValidate
-      className="flex flex-col gap-4"
-      onSubmit={(e: FormEvent) => {
-        e.preventDefault();
-        save.mutate();
-      }}
+    <ModalForm
+      onSubmit={() => save.mutate()}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel="Add teammate"
     >
       <Field label="Full name" error={fieldError(error, "full_name")}>
         {(p) => (
@@ -198,16 +197,7 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
           />
         )}
       </Field>
-      <FormError error={error} />
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="quiet" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" busy={save.isPending}>
-          Add teammate
-        </Button>
-      </div>
-    </form>
+    </ModalForm>
   );
 }
 
@@ -227,13 +217,12 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
   });
   const error = save.error;
   return (
-    <form
-      noValidate
-      className="flex flex-col gap-4"
-      onSubmit={(e: FormEvent) => {
-        e.preventDefault();
-        save.mutate();
-      }}
+    <ModalForm
+      onSubmit={() => save.mutate()}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel="Save changes"
     >
       <Field label="Full name" error={fieldError(error, "full_name")}>
         {(p) => (
@@ -267,16 +256,7 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
           </span>
         </span>
       </label>
-      <FormError error={error} />
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="quiet" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" busy={save.isPending}>
-          Save changes
-        </Button>
-      </div>
-    </form>
+    </ModalForm>
   );
 }
 
@@ -410,13 +390,12 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
   });
   const error = save.error;
   return (
-    <form
-      noValidate
-      className="flex flex-col gap-4"
-      onSubmit={(e: FormEvent) => {
-        e.preventDefault();
-        save.mutate();
-      }}
+    <ModalForm
+      onSubmit={() => save.mutate()}
+      onClose={onClose}
+      error={error}
+      busy={save.isPending}
+      submitLabel={stage ? "Save stage" : "Add stage"}
     >
       <Field label="Stage name" error={fieldError(error, "name")}>
         {(p) => (
@@ -458,15 +437,6 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
           </Field>
         ) : null}
       </div>
-      <FormError error={error} />
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="quiet" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" busy={save.isPending}>
-          {stage ? "Save stage" : "Add stage"}
-        </Button>
-      </div>
-    </form>
+    </ModalForm>
   );
 }

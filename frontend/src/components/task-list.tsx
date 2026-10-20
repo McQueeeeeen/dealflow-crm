@@ -15,12 +15,15 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
   const me = useMe().data;
   const client = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [intent, setIntent] = useState<boolean | null>(null);
   const done = !!task.completed_at;
   const overdue = isOverdue(task);
   const allowed = canModify(me, task.assignee_id) || task.created_by === me?.id;
 
   const toggle = useMutation({
-    mutationFn: () => post<Task>(`/tasks/${task.id}/${done ? "reopen" : "complete"}`),
+    mutationFn: (complete: boolean) =>
+      post<Task>(`/tasks/${task.id}/${complete ? "complete" : "reopen"}`),
+    onError: () => setIntent(null),
     onSettled: () => {
       client.invalidateQueries({ queryKey: ["tasks"] });
       client.invalidateQueries({ queryKey: ["audit"] });
@@ -31,8 +34,7 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
     onSuccess: () => client.invalidateQueries({ queryKey: ["tasks"] }),
   });
 
-  // Show the intended state right away; the list refetches when the request settles.
-  const checked = toggle.isPending ? !done : done;
+  const checked = intent ?? done;
 
   return (
     <li className="flex items-start gap-3 px-4 py-3">
@@ -40,7 +42,10 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
         type="checkbox"
         checked={checked}
         disabled={!allowed || toggle.isPending}
-        onChange={() => toggle.mutate()}
+        onChange={() => {
+          setIntent(!checked);
+          toggle.mutate(!checked);
+        }}
         aria-label={done ? `Reopen "${task.title}"` : `Mark "${task.title}" done`}
         className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
       />

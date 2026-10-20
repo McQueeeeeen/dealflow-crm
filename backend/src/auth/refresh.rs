@@ -3,8 +3,6 @@ use base64::Engine;
 use rand::RngCore;
 use sha2::{Digest, Sha256};
 
-/// Refresh tokens are opaque random strings. Only their SHA-256 digest is stored, so a
-/// database leak does not hand out live sessions.
 pub fn generate() -> String {
     let mut bytes = [0u8; 32];
     rand::rngs::OsRng.fill_bytes(&mut bytes);

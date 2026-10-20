@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgConnection};
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::audit;
@@ -28,7 +27,7 @@ pub fn router() -> Router<AppState> {
         .route("/tasks/{id}/reopen", post(reopen_task))
 }
 
-#[derive(Debug, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct Task {
     pub id: Uuid,
     pub title: String,
@@ -58,34 +57,30 @@ struct TaskFields {
     contact_id: Option<Uuid>,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct TaskInput {
     pub title: String,
     pub details: Option<String>,
     pub due_at: Option<DateTime<Utc>>,
-    /// Defaults to the caller. Anyone can hand a task to a teammate.
     pub assignee_id: Option<Uuid>,
     pub deal_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Copy, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskStatus {
     Open,
     Completed,
-    /// Open and past its due time.
     Overdue,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct TaskQuery {
     pub assignee_id: Option<Uuid>,
     pub deal_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
     pub status: Option<TaskStatus>,
-    /// Only tasks due before this instant.
     pub due_before: Option<DateTime<Utc>>,
     pub page: Option<u32>,
     pub per_page: Option<u32>,
@@ -123,12 +118,6 @@ fn status_filter(status: Option<TaskStatus>) -> Option<&'static str> {
     })
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/tasks", tag = "tasks",
-    params(TaskQuery),
-    responses((status = 200, description = "Open tasks first, soonest due first", body = Page<Task>)),
-    security(("bearer" = []))
-)]
 pub async fn list_tasks(
     State(state): State<AppState>,
     user: AuthUser,
@@ -175,12 +164,6 @@ async fn fetch_task(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResul
     .ok_or(AppError::NotFound("task"))
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/tasks/{id}", tag = "tasks",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, body = Task), (status = 404, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn get_task(
     State(state): State<AppState>,
     user: AuthUser,
@@ -200,7 +183,6 @@ fn validate(req: &TaskInput) -> AppResult<(String, Option<String>)> {
     Ok((title, details))
 }
 
-/// Reps may change a task when it is assigned to them or they created it.
 fn require_task_access(actor: &AuthUser, task: &TaskFields) -> AppResult<()> {
     if actor.can_modify(task.assignee_id) || task.created_by == actor.user_id {
         Ok(())
@@ -222,12 +204,6 @@ async fn lock_task(conn: &mut PgConnection, actor: &AuthUser, id: Uuid) -> AppRe
     Ok(task)
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/tasks", tag = "tasks",
-    request_body = TaskInput,
-    responses((status = 201, body = Task), (status = 422, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn create_task(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -268,17 +244,6 @@ pub async fn create_task(
     Ok((StatusCode::CREATED, Json(task)))
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/tasks/{id}", tag = "tasks",
-    params(("id" = Uuid, Path)),
-    request_body = TaskInput,
-    responses(
-        (status = 200, body = Task),
-        (status = 403, body = crate::error::ErrorBody),
-        (status = 404, body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn update_task(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -358,12 +323,6 @@ async fn set_completion(
     Ok(task)
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/tasks/{id}/complete", tag = "tasks",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, description = "Idempotent", body = Task)),
-    security(("bearer" = []))
-)]
 pub async fn complete_task(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -372,12 +331,6 @@ pub async fn complete_task(
     Ok(Json(set_completion(&state, &actor, id, true).await?))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/tasks/{id}/reopen", tag = "tasks",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, description = "Idempotent", body = Task)),
-    security(("bearer" = []))
-)]
 pub async fn reopen_task(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -386,12 +339,6 @@ pub async fn reopen_task(
     Ok(Json(set_completion(&state, &actor, id, false).await?))
 }
 
-#[utoipa::path(
-    delete, path = "/api/v1/tasks/{id}", tag = "tasks",
-    params(("id" = Uuid, Path)),
-    responses((status = 204), (status = 403, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn delete_task(
     State(state): State<AppState>,
     actor: AuthUser,

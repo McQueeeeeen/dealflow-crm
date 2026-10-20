@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::auth::AuthUser;
@@ -21,7 +20,7 @@ pub fn router() -> Router<AppState> {
         .route("/notes/{id}", delete(delete_note))
 }
 
-#[derive(Debug, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct Note {
     pub id: Uuid,
     pub body: String,
@@ -33,9 +32,7 @@ pub struct Note {
     pub created_at: DateTime<Utc>,
 }
 
-/// Exactly one parent must be set.
-#[derive(Deserialize, ToSchema, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct NoteParent {
     pub deal_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
@@ -59,15 +56,14 @@ impl NoteParent {
     }
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct CreateNote {
     pub body: String,
     #[serde(flatten)]
     pub parent: NoteParent,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct NoteQuery {
     pub deal_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
@@ -87,12 +83,6 @@ const FILTER: &str = "
       AND n.contact_id IS NOT DISTINCT FROM $3
       AND n.company_id IS NOT DISTINCT FROM $4";
 
-#[utoipa::path(
-    get, path = "/api/v1/notes", tag = "notes",
-    params(NoteQuery),
-    responses((status = 200, description = "Newest first", body = Page<Note>)),
-    security(("bearer" = []))
-)]
 pub async fn list_notes(
     State(state): State<AppState>,
     user: AuthUser,
@@ -127,12 +117,6 @@ pub async fn list_notes(
     Ok(Json(pagination.wrap(notes, total)))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/notes", tag = "notes",
-    request_body = CreateNote,
-    responses((status = 201, body = Note), (status = 422, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn create_note(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -163,15 +147,6 @@ pub async fn create_note(
     Ok((StatusCode::CREATED, Json(note)))
 }
 
-#[utoipa::path(
-    delete, path = "/api/v1/notes/{id}", tag = "notes",
-    params(("id" = Uuid, Path)),
-    responses(
-        (status = 204),
-        (status = 403, description = "Only the author or a manager can delete a note", body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn delete_note(
     State(state): State<AppState>,
     actor: AuthUser,

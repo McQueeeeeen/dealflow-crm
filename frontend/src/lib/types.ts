@@ -1,4 +1,3 @@
-// Mirrors the API schema served at /openapi.json.
 
 export type Role = "admin" | "manager" | "sales_rep";
 export type StageKind = "open" | "won" | "lost";

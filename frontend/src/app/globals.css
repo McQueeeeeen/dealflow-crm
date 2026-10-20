@@ -2,7 +2,6 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Palette and reasons live in DESIGN.md. Text pairs are checked to WCAG AA in both themes. */
 :root {
   color-scheme: light;
   --canvas: #f3f4f1;
@@ -80,7 +79,6 @@
 
   --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
 
-  /* 1.2 modular scale on a 15px body. */
   --text-meta: 0.78rem;
   --text-meta--line-height: 1.1rem;
   --text-body: 0.9375rem;
@@ -110,7 +108,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Amounts and dates line up in columns. */
 .num {
   font-variant-numeric: tabular-nums;
 }

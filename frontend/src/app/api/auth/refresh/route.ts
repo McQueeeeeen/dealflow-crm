@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
   );
   if (!res) return unavailable();
   if (!res.ok) {
-    // Keep the cookie when another tab rotated it a moment ago; the caller retries once.
     return NextResponse.json({ error: { code: "unauthorized" } }, { status: 401 });
   }
   return withSession(await res.json());

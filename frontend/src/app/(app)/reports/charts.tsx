@@ -7,7 +7,6 @@ import { monthLabel, percent } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
 import type { ForecastMonth, FunnelStage } from "@/lib/types";
 
-/** Horizontal bars, one hue: how many deals from the cohort reached each stage. */
 export function FunnelChart({ stages, cohort }: { stages: FunnelStage[]; cohort: number }) {
   const max = Math.max(cohort, 1);
   return (
@@ -44,10 +43,6 @@ export function FunnelChart({ stages, cohort }: { stages: FunnelStage[]; cohort:
   );
 }
 
-/**
- * Columns per month. The light column is the full open value; the accent column inside it
- * is the same deals weighted by stage probability, so the gap between them is the risk.
- */
 export function ForecastChart({ months }: { months: ForecastMonth[] }) {
   const fmt = useMoney();
   const [focus, setFocus] = useState<number | null>(null);

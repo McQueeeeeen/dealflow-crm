@@ -1,10 +1,6 @@
 import { cx } from "@/components/ui";
 import type { Stage, StageKind } from "@/lib/types";
 
-/**
- * The product's recurring mark: one segment per open stage, filled up to where the deal is.
- * Won deals fill every segment; lost deals show an empty track in the critical color.
- */
 export function StageTrack({
   stages,
   stageId,

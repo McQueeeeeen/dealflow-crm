@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 
-// Makes the CRM installable on phones and desktops as a standalone window.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "DealFlow CRM",

@@ -1,6 +1,5 @@
 name: Autoformat
 
-# Manual helper: applies rustfmt and Prettier, refreshes missing lockfiles, and commits the result.
 on: workflow_dispatch
 
 permissions:

@@ -6,8 +6,6 @@ use argon2::Argon2;
 pub const MIN_PASSWORD_LEN: usize = 10;
 pub const MAX_PASSWORD_LEN: usize = 128;
 
-/// Verified against when the email is unknown, so a login attempt takes the same time
-/// whether or not the account exists.
 static DUMMY_HASH: LazyLock<String> =
     LazyLock::new(|| hash_password("dummy-password-for-timing").expect("hashing a constant"));
 

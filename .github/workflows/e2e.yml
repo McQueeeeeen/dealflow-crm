@@ -1,8 +1,5 @@
 name: E2E
 
-# Boots the whole stack (PostgreSQL, the Rust API with demo data, the production Next.js
-# build) and drives it with Playwright on desktop and phone viewports. Screenshots of every
-# screen in both themes are kept as an artifact.
 on:
   push:
     branches: [main]

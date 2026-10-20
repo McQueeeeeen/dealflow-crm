@@ -2,8 +2,6 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
-// Tokens never reach browser JavaScript: the Next.js server keeps them in httpOnly cookies
-// and attaches the access token when it forwards requests to the API.
 export const ACCESS_COOKIE = "df_access";
 export const REFRESH_COOKIE = "df_refresh";
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
@@ -47,7 +45,6 @@ export function clearSession(res: NextResponse): NextResponse {
   return res;
 }
 
-/** Forwards a JSON body to the API and relays its status and payload. */
 export async function forwardJson(path: string, body: unknown): Promise<Response> {
   return fetch(apiUrl(path), {
     method: "POST",

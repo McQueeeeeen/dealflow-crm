@@ -1,10 +1,3 @@
-//! Access rules, kept in one place so handlers read as policy checks rather than role
-//! comparisons.
-//!
-//! - Admins configure the workspace: users and pipeline stages.
-//! - Managers and admins can edit or delete any record and see team analytics.
-//! - Sales reps can read everything in their organization but only change records they own.
-
 use uuid::Uuid;
 
 use crate::auth::AuthUser;
@@ -36,7 +29,6 @@ impl AuthUser {
         allow(self.can_modify(owner_id))
     }
 
-    /// Owner for a new or reassigned record. Reps may only assign records to themselves.
     pub fn resolve_owner(&self, requested: Option<Uuid>) -> AppResult<Uuid> {
         match requested {
             None => Ok(self.user_id),

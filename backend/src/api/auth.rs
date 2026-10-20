@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgConnection};
-use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::auth::password::{self, MAX_PASSWORD_LEN, MIN_PASSWORD_LEN};
@@ -16,8 +15,6 @@ use crate::models::{Role, StageKind};
 use crate::state::AppState;
 use crate::validation::{normalize_email, Validator};
 
-/// A refresh token presented again shortly after rotation is treated as a benign race
-/// between two tabs. Reuse after this window is treated as theft.
 const ROTATION_GRACE_SECONDS: i64 = 10;
 
 const DEFAULT_STAGES: [(&str, i16, StageKind); 6] = [
@@ -38,28 +35,27 @@ pub fn router() -> Router<AppState> {
         .route("/auth/me", get(me))
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct RegisterRequest {
     pub organization_name: String,
     pub full_name: String,
     pub email: String,
     pub password: String,
-    /// ISO 4217 code used for every deal value in the workspace. Defaults to USD.
     pub currency: Option<String>,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct RefreshRequest {
     pub refresh_token: String,
 }
 
-#[derive(Serialize, ToSchema, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct Me {
     pub id: Uuid,
     pub email: String,
@@ -70,24 +66,15 @@ pub struct Me {
     pub currency: String,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize)]
 pub struct Session {
     pub access_token: String,
     pub refresh_token: String,
     pub token_type: &'static str,
-    /// Access token lifetime in seconds.
     pub expires_in: i64,
     pub user: Me,
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/auth/register", tag = "auth",
-    request_body = RegisterRequest,
-    responses(
-        (status = 201, description = "Workspace created, admin signed in", body = Session),
-        (status = 422, description = "Invalid input", body = crate::error::ErrorBody),
-    )
-)]
 pub async fn register(
     State(state): State<AppState>,
     ApiJson(req): ApiJson<RegisterRequest>,
@@ -159,14 +146,6 @@ pub async fn register(
     Ok((StatusCode::CREATED, Json(session)))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/auth/login", tag = "auth",
-    request_body = LoginRequest,
-    responses(
-        (status = 200, body = Session),
-        (status = 401, description = "Unknown email, wrong password or deactivated user", body = crate::error::ErrorBody),
-    )
-)]
 pub async fn login(
     State(state): State<AppState>,
     ApiJson(req): ApiJson<LoginRequest>,
@@ -204,14 +183,6 @@ struct StoredRefreshToken {
     is_active: bool,
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/auth/refresh", tag = "auth",
-    request_body = RefreshRequest,
-    responses(
-        (status = 200, description = "Rotated session; the presented refresh token is now spent", body = Session),
-        (status = 401, body = crate::error::ErrorBody),
-    )
-)]
 pub async fn refresh_session(
     State(state): State<AppState>,
     ApiJson(req): ApiJson<RefreshRequest>,
@@ -261,11 +232,6 @@ pub async fn refresh_session(
     Ok(Json(session))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/auth/logout", tag = "auth",
-    request_body = RefreshRequest,
-    responses((status = 204, description = "Every token in this session family is revoked"))
-)]
 pub async fn logout(
     State(state): State<AppState>,
     ApiJson(req): ApiJson<RefreshRequest>,
@@ -282,11 +248,6 @@ pub async fn logout(
     Ok(StatusCode::NO_CONTENT)
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/auth/me", tag = "auth",
-    responses((status = 200, body = Me), (status = 401, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn me(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Me>> {
     let mut conn = state.pool.acquire().await?;
     Ok(Json(load_me(&mut conn, user.user_id).await?))

@@ -1,7 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Runs against an already started stack (API with seeded demo data, plus `next start`);
-// see .github/workflows/e2e.yml.
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,

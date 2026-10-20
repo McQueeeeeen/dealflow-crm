@@ -36,7 +36,6 @@ import type { BoardColumn, Deal } from "@/lib/types";
 
 const GAP = 1024;
 
-/** Sort key between two neighbours, so a move rewrites one row instead of the whole column. */
 function positionBetween(prev?: Deal, next?: Deal): number {
   if (prev && next) return (prev.board_position + next.board_position) / 2;
   if (prev) return prev.board_position + GAP;
@@ -120,7 +119,6 @@ export function Board({
   const [problem, setProblem] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-    // A short press-and-hold on touch screens, so swiping still scrolls the board.
     useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
@@ -284,8 +282,6 @@ function SortableDeal({ deal }: { deal: Deal }) {
     transition,
     isDragging,
   } = useSortable({ id: deal.id, disabled: !movable });
-  // Mouse and touch can grab the whole card; the keyboard uses the dedicated handle so the
-  // card does not become a button wrapped around a link.
   const { onKeyDown, ...pointerListeners } = listeners ?? {};
 
   return (

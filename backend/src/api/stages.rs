@@ -6,7 +6,6 @@ use axum::routing::{get, put};
 use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::audit;
@@ -24,32 +23,30 @@ pub fn router() -> Router<AppState> {
         .route("/stages/{id}", put(update_stage).delete(delete_stage))
 }
 
-#[derive(Debug, Clone, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow)]
 pub struct Stage {
     pub id: Uuid,
     pub name: String,
     pub position: i32,
-    /// Likelihood, in percent, that a deal in this stage closes as won.
     pub probability: i16,
     pub kind: StageKind,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct CreateStage {
     pub name: String,
     pub probability: i16,
     pub kind: StageKind,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct UpdateStage {
     pub name: String,
     pub probability: i16,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct StageOrder {
-    /// Every stage id of the organization, in the desired order.
     pub stage_ids: Vec<Uuid>,
 }
 
@@ -75,11 +72,6 @@ fn validate(name: &str, probability: i16) -> AppResult<()> {
         .finish()
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/stages", tag = "pipeline",
-    responses((status = 200, body = Vec<Stage>)),
-    security(("bearer" = []))
-)]
 pub async fn list_stages(
     State(state): State<AppState>,
     user: AuthUser,
@@ -87,12 +79,6 @@ pub async fn list_stages(
     Ok(Json(fetch_stages(&state.pool, user.org_id).await?))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/stages", tag = "pipeline",
-    request_body = CreateStage,
-    responses((status = 201, body = Stage), (status = 403, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn create_stage(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -130,13 +116,6 @@ pub async fn create_stage(
     Ok((StatusCode::CREATED, Json(stage)))
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/stages/{id}", tag = "pipeline",
-    params(("id" = Uuid, Path)),
-    request_body = UpdateStage,
-    responses((status = 200, body = Stage), (status = 404, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn update_stage(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -184,12 +163,6 @@ pub async fn update_stage(
     Ok(Json(after))
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/stages/order", tag = "pipeline",
-    request_body = StageOrder,
-    responses((status = 200, body = Vec<Stage>), (status = 422, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn reorder_stages(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -223,15 +196,6 @@ pub async fn reorder_stages(
     Ok(Json(fetch_stages(&state.pool, actor.org_id).await?))
 }
 
-#[utoipa::path(
-    delete, path = "/api/v1/stages/{id}", tag = "pipeline",
-    params(("id" = Uuid, Path)),
-    responses(
-        (status = 204),
-        (status = 409, description = "Stage still holds deals or deal history", body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn delete_stage(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -251,7 +215,6 @@ pub async fn delete_stage(
     }
 
     let mut tx = state.pool.begin().await?;
-    // Foreign keys from deals and stage history reject the delete while the stage is in use.
     sqlx::query("DELETE FROM pipeline_stages WHERE id = $1 AND organization_id = $2")
         .bind(id)
         .bind(actor.org_id)

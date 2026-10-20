@@ -5,7 +5,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgConnection};
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::api::stages::{fetch_stages, Stage};
@@ -18,8 +17,6 @@ use crate::pagination::{Page, Pagination};
 use crate::state::AppState;
 use crate::validation::{clean, like_pattern, Validator};
 
-/// Upper bound for a single deal: ten trillion in the minor unit, far beyond any real deal
-/// and well inside i64 when summed across a pipeline.
 const MAX_VALUE_CENTS: i64 = 1_000_000_000_000_000;
 const BOARD_GAP: f64 = 1024.0;
 const BOARD_LIMIT: i64 = 1000;
@@ -36,11 +33,10 @@ pub fn router() -> Router<AppState> {
         .route("/deals/{id}/stage-history", get(stage_history))
 }
 
-#[derive(Debug, Clone, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow)]
 pub struct Deal {
     pub id: Uuid,
     pub title: String,
-    /// Amount in the minor unit of the organization currency.
     pub value_cents: i64,
     pub stage_id: Uuid,
     pub stage_name: String,
@@ -55,7 +51,6 @@ pub struct Deal {
     pub owner_name: String,
     pub expected_close_date: Option<NaiveDate>,
     pub closed_at: Option<DateTime<Utc>>,
-    /// Optimistic concurrency token. Send it back on update or move.
     pub version: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -81,12 +76,11 @@ struct LockedDeal {
     closed_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct CreateDeal {
     pub title: String,
     #[serde(default)]
     pub value_cents: i64,
-    /// Defaults to the first open stage of the pipeline.
     pub stage_id: Option<Uuid>,
     pub company_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
@@ -94,7 +88,7 @@ pub struct CreateDeal {
     pub expected_close_date: Option<NaiveDate>,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct UpdateDeal {
     pub title: String,
     pub value_cents: i64,
@@ -105,18 +99,15 @@ pub struct UpdateDeal {
     pub version: i32,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct MoveDeal {
     pub stage_id: Uuid,
-    /// Sort key inside the target column. Omit to place the deal at the top.
     pub board_position: Option<f64>,
     pub version: i32,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct DealQuery {
-    /// Case-insensitive substring match on the title.
     pub q: Option<String>,
     pub stage_id: Option<Uuid>,
     pub owner_id: Option<Uuid>,
@@ -127,14 +118,13 @@ pub struct DealQuery {
     pub per_page: Option<u32>,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct BoardQuery {
     pub q: Option<String>,
     pub owner_id: Option<Uuid>,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize)]
 pub struct BoardColumn {
     pub stage: Stage,
     pub deals: Vec<Deal>,
@@ -142,7 +132,7 @@ pub struct BoardColumn {
     pub total_value_cents: i64,
 }
 
-#[derive(Serialize, ToSchema, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct StageChange {
     pub from_stage_name: Option<String>,
     pub to_stage_name: String,
@@ -174,12 +164,6 @@ const FILTER: &str = "
 const FIELD_COLUMNS: &str =
     "title, value_cents, stage_id, company_id, contact_id, owner_id, expected_close_date";
 
-#[utoipa::path(
-    get, path = "/api/v1/deals", tag = "deals",
-    params(DealQuery),
-    responses((status = 200, body = Page<Deal>)),
-    security(("bearer" = []))
-)]
 pub async fn list_deals(
     State(state): State<AppState>,
     user: AuthUser,
@@ -217,12 +201,6 @@ pub async fn list_deals(
     Ok(Json(pagination.wrap(deals, total)))
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/deals/board", tag = "deals",
-    params(BoardQuery),
-    responses((status = 200, description = "One column per stage, in pipeline order", body = Vec<BoardColumn>)),
-    security(("bearer" = []))
-)]
 pub async fn board(
     State(state): State<AppState>,
     user: AuthUser,
@@ -275,12 +253,6 @@ async fn fetch_deal(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResul
     .ok_or(AppError::NotFound("deal"))
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/deals/{id}", tag = "deals",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, body = Deal), (status = 404, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn get_deal(
     State(state): State<AppState>,
     user: AuthUser,
@@ -342,12 +314,6 @@ async fn record_stage_change(
     Ok(())
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/deals", tag = "deals",
-    request_body = CreateDeal,
-    responses((status = 201, body = Deal), (status = 422, body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn create_deal(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -409,8 +375,6 @@ pub async fn create_deal(
     Ok((StatusCode::CREATED, Json(deal)))
 }
 
-/// Locks the deal row and checks the caller's version, so two people editing the same
-/// deal cannot silently overwrite each other.
 async fn lock_for_write(
     conn: &mut PgConnection,
     actor: &AuthUser,
@@ -438,18 +402,6 @@ async fn lock_for_write(
     Ok(locked)
 }
 
-#[utoipa::path(
-    put, path = "/api/v1/deals/{id}", tag = "deals",
-    params(("id" = Uuid, Path)),
-    request_body = UpdateDeal,
-    responses(
-        (status = 200, body = Deal),
-        (status = 403, body = crate::error::ErrorBody),
-        (status = 404, body = crate::error::ErrorBody),
-        (status = 409, description = "Version mismatch", body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn update_deal(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -501,16 +453,6 @@ pub async fn update_deal(
     Ok(Json(deal))
 }
 
-#[utoipa::path(
-    post, path = "/api/v1/deals/{id}/move", tag = "deals",
-    params(("id" = Uuid, Path)),
-    request_body = MoveDeal,
-    responses(
-        (status = 200, description = "Deal moved; closing stages stamp closed_at", body = Deal),
-        (status = 409, description = "Version mismatch", body = crate::error::ErrorBody),
-    ),
-    security(("bearer" = []))
-)]
 pub async fn move_deal(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -578,12 +520,6 @@ pub async fn move_deal(
     Ok(Json(deal))
 }
 
-#[utoipa::path(
-    delete, path = "/api/v1/deals/{id}", tag = "deals",
-    params(("id" = Uuid, Path)),
-    responses((status = 204), (status = 403, description = "Managers and admins only", body = crate::error::ErrorBody)),
-    security(("bearer" = []))
-)]
 pub async fn delete_deal(
     State(state): State<AppState>,
     actor: AuthUser,
@@ -612,12 +548,6 @@ pub async fn delete_deal(
     Ok(StatusCode::NO_CONTENT)
 }
 
-#[utoipa::path(
-    get, path = "/api/v1/deals/{id}/stage-history", tag = "deals",
-    params(("id" = Uuid, Path)),
-    responses((status = 200, description = "Oldest change first", body = Vec<StageChange>)),
-    security(("bearer" = []))
-)]
 pub async fn stage_history(
     State(state): State<AppState>,
     user: AuthUser,

@@ -7,6 +7,7 @@ The backend is written in Rust (Axum, SQLx, PostgreSQL). The web app is Next.js 
 TypeScript.
 
 [![CI](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/ci.yml)
+[![E2E](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/e2e.yml/badge.svg)](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/e2e.yml)
 
 ## What it does
 
@@ -97,17 +98,12 @@ Without Docker you need Rust (stable), Node.js 22 and PostgreSQL 16:
 cd backend
 export DATABASE_URL=postgres://localhost/dealflow JWT_SECRET=$(openssl rand -hex 32)
 cargo run --bin seed      # migrates and loads demo data
-cargo run                 # API on :8080, docs at http://localhost:8080/docs
+cargo run                 # API on :8080
 
 cd ../frontend
 cp .env.example .env.local
 npm install && npm run dev   # web app on :3000
 ```
-
-## API
-
-Interactive reference at `/docs` (Scalar) and the OpenAPI document at `/openapi.json`, both
-generated from the handler annotations, so they cannot drift from the code.
 
 ## Tests
 
@@ -121,6 +117,13 @@ and drives the real router: registration and login, refresh-token rotation and r
 detection, deactivation, tenant isolation, cross-tenant references, role permissions,
 optimistic concurrency, stage moves, the audit trail and its immutability, search and
 pagination, tasks, notes, pipeline reordering, and the numbers behind every report.
+
+The end-to-end suite boots the whole stack in CI (PostgreSQL, the API with demo data, the
+production Next.js build) and drives it with Playwright on desktop and phone viewports. It
+visits every screen in both themes and fails on any console error, any sideways scrolling on
+a phone, or any serious WCAG 2.1 AA violation reported by axe. It also moves a deal across the
+board with the keyboard, completes a follow-up, adds a note, checks form validation, the theme
+toggle and signing out.
 
 CI runs `rustfmt`, `clippy -D warnings`, the full test suite and the seed script for the
 backend, and Prettier, ESLint, a production build and `tsc` for the frontend.

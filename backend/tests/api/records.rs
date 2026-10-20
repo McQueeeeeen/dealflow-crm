@@ -49,8 +49,6 @@ async fn company_search_and_rollups(pool: PgPool) {
     assert_eq!(row["contacts_count"], 1);
     assert_eq!(row["open_deals_count"], 1);
     assert_eq!(row["open_deals_value_cents"], 4200);
-
-    // Wildcards in the search term are matched literally.
     let none = app.get("/api/v1/companies?q=%25", &admin).await;
     assert_eq!(none.body["total"], 0);
 }
@@ -136,7 +134,6 @@ async fn task_lifecycle_and_filters(pool: PgPool) {
     done.assert_status(StatusCode::OK);
     let completed_at = done.body["completed_at"].clone();
     assert!(completed_at.is_string());
-    // Completing twice is a no-op, not a new timestamp.
     let again = app.post(&url, &rep, json!({})).await;
     assert_eq!(again.body["completed_at"], completed_at);
 

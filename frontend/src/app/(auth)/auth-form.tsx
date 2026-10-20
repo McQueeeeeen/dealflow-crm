@@ -14,7 +14,6 @@ interface Props {
   demo?: { email: string; password: string };
 }
 
-/** Only same-site paths are honored, so a crafted ?next= cannot bounce users elsewhere. */
 function safeNext(raw: string | null): string {
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/today";
 }

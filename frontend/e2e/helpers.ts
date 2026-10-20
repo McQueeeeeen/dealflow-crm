@@ -9,7 +9,6 @@ export async function signInAsDemo(page: Page) {
   await expect(page.getByRole("heading", { level: 1, name: "Today" })).toBeVisible();
 }
 
-/** Collects console errors and uncaught exceptions so a test can assert there were none. */
 export function watchErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (msg) => {
@@ -26,7 +25,6 @@ export async function shot(page: Page, info: TestInfo, name: string) {
   });
 }
 
-/** Fails on serious or critical WCAG A/AA violations. */
 export async function expectAccessible(page: Page) {
   const result = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])

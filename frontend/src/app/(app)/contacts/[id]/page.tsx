@@ -12,35 +12,20 @@ import { NotesPanel } from "@/components/notes";
 import { ContactFormDialog } from "@/components/record-forms";
 import { TaskFormDialog } from "@/components/task-form";
 import { TaskRow } from "@/components/task-list";
-import { Button, ErrorState, Loading, Panel } from "@/components/ui";
-import { ApiError, del, get, query } from "@/lib/api";
+import { Button, ErrorState, Loading, Panel, RecordView } from "@/components/ui";
+import { del, get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
 import { canModify, isManager, keys, useMe } from "@/lib/queries";
 import type { Contact, Page, Task } from "@/lib/types";
 
 export default function ContactPage() {
   const { id } = useParams<{ id: string }>();
-  const contact = useQuery({
-    queryKey: keys.contact(id),
-    queryFn: () => get<Contact>(`/contacts/${id}`),
-  });
-  if (contact.isPending) return <Loading label="Loading contact…" />;
-  if (contact.isError) {
-    return contact.error instanceof ApiError && contact.error.status === 404 ? (
-      <div className="py-12 text-center">
-        <p className="text-lead font-medium">This contact no longer exists</p>
-        <Link
-          href="/contacts"
-          className="text-accent mt-4 inline-block underline underline-offset-4"
-        >
-          Back to contacts
-        </Link>
-      </div>
-    ) : (
-      <ErrorState error={contact.error} onRetry={() => contact.refetch()} />
-    );
-  }
-  return <ContactView contact={contact.data} />;
+  const contact = useQuery({ queryKey: keys.contact(id), queryFn: () => get<Contact>(`/contacts/${id}`) });
+  return (
+    <RecordView query={contact} missing={{ title: "This contact no longer exists", href: "/contacts", back: "Back to contacts" }}>
+      {(contact) => <ContactView contact={contact} />}
+    </RecordView>
+  );
 }
 
 function ContactView({ contact }: { contact: Contact }) {

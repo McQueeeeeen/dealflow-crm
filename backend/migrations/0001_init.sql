@@ -4,10 +4,6 @@ CREATE TYPE user_role AS ENUM ('admin', 'manager', 'sales_rep');
 CREATE TYPE stage_kind AS ENUM ('open', 'won', 'lost');
 CREATE TYPE audit_action AS ENUM ('created', 'updated', 'deleted');
 
--- Every tenant-owned table carries organization_id and exposes UNIQUE (organization_id, id).
--- Cross-table references use composite foreign keys on that pair, so the database itself
--- refuses a row that points at another tenant's data.
-
 CREATE TABLE organizations (
     id          UUID PRIMARY KEY,
     name        TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 120),
@@ -35,7 +31,6 @@ CREATE TABLE refresh_tokens (
     family_id   UUID NOT NULL,
     token_hash  TEXT NOT NULL UNIQUE,
     expires_at  TIMESTAMPTZ NOT NULL,
-    -- used_at marks normal rotation; revoked_at marks logout or detected token theft.
     used_at     TIMESTAMPTZ,
     revoked_at  TIMESTAMPTZ,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -53,7 +48,6 @@ CREATE TABLE pipeline_stages (
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT pipeline_stages_org_id_key UNIQUE (organization_id, id),
     CONSTRAINT pipeline_stages_name_key UNIQUE (organization_id, name),
-    -- Deferred so a reorder can swap positions inside one transaction.
     CONSTRAINT pipeline_stages_position_key UNIQUE (organization_id, position) DEFERRABLE INITIALLY DEFERRED
 );
 
@@ -128,8 +122,6 @@ CREATE INDEX deals_board_idx ON deals (organization_id, stage_id, board_position
 CREATE INDEX deals_org_owner_idx ON deals (organization_id, owner_id);
 CREATE INDEX deals_org_company_idx ON deals (organization_id, company_id);
 CREATE INDEX deals_title_trgm_idx ON deals USING gin (title gin_trgm_ops);
-
--- Feeds the funnel report: which stages each deal actually passed through.
 CREATE TABLE deal_stage_changes (
     id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     organization_id  UUID NOT NULL,

@@ -123,7 +123,6 @@ async fn board_groups_deals_by_stage_in_pipeline_order(pool: PgPool) {
     assert_eq!(columns[0]["stage"]["name"], "Lead");
     assert_eq!(columns[0]["count"], 2);
     assert_eq!(columns[0]["total_value_cents"], 350);
-    // Newest deals go to the top of a column.
     assert_eq!(columns[0]["deals"][0]["title"], "B");
     assert_eq!(columns[2]["count"], 1);
     assert_eq!(columns[2]["total_value_cents"], 1000);

@@ -10,7 +10,6 @@ import type { Company, Contact, Page } from "@/lib/types";
 
 type FieldProps = { id: string; "aria-invalid"?: boolean; "aria-describedby"?: string };
 
-// Small workspaces fit in one page; larger ones would need a typeahead.
 export function CompanySelect({
   value,
   onChange,

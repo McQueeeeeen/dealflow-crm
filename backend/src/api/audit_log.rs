@@ -4,7 +4,6 @@ use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::auth::AuthUser;
@@ -18,7 +17,7 @@ pub fn router() -> Router<AppState> {
     Router::new().route("/audit", get(list_audit))
 }
 
-#[derive(Debug, Serialize, ToSchema, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct AuditEntry {
     pub id: i64,
     pub actor_id: Option<Uuid>,
@@ -26,15 +25,12 @@ pub struct AuditEntry {
     pub entity_type: String,
     pub entity_id: Uuid,
     pub action: AuditAction,
-    /// For updates: `{"field": {"from": old, "to": new}}`. For creates and deletes: a snapshot.
     pub changes: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Deserialize, IntoParams)]
-#[into_params(parameter_in = Query)]
+#[derive(Deserialize)]
 pub struct AuditQuery {
-    /// One of company, contact, deal, task, user, stage.
     pub entity_type: Option<String>,
     pub entity_id: Option<Uuid>,
     pub actor_id: Option<Uuid>,
@@ -48,12 +44,6 @@ const FILTER: &str = "
       AND ($3::uuid IS NULL OR a.entity_id = $3)
       AND ($4::uuid IS NULL OR a.actor_id = $4)";
 
-#[utoipa::path(
-    get, path = "/api/v1/audit", tag = "audit",
-    params(AuditQuery),
-    responses((status = 200, description = "Newest first", body = Page<AuditEntry>)),
-    security(("bearer" = []))
-)]
 pub async fn list_audit(
     State(state): State<AppState>,
     user: AuthUser,

@@ -11,7 +11,6 @@ import { useMoney } from "@/lib/hooks";
 import { keys, useStages } from "@/lib/queries";
 import type { Deal, Page } from "@/lib/types";
 
-/** Deals linked to a company or contact, open ones first. */
 export function LinkedDeals({
   filter,
 }: {
