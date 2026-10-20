@@ -33,7 +33,12 @@ const NAV: NavItem[] = [
   { href: "/companies", label: "Companies", icon: IconBuilding },
   { href: "/contacts", label: "Contacts", icon: IconUsers },
   { href: "/reports", label: "Reports", icon: IconChartBar },
-  { href: "/settings", label: "Settings", icon: IconSettings, visible: (me) => me.role === "admin" },
+  {
+    href: "/settings",
+    label: "Settings",
+    icon: IconSettings,
+    visible: (me) => me.role === "admin",
+  },
 ];
 
 function isActive(pathname: string, href: string): boolean {

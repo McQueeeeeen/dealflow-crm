@@ -56,14 +56,14 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
     <div>
       <div className="text-meta text-muted mb-6 flex flex-wrap gap-x-5 gap-y-1">
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="hatch border-line inline-block size-3 rounded-sm border" />
+          <span
+            aria-hidden="true"
+            className="hatch border-line inline-block size-3 rounded-sm border"
+          />
           Full value of open deals
         </span>
         <span className="flex items-center gap-2">
-          <span
-            aria-hidden="true"
-            className="bg-accent inline-block size-3 rounded-sm"
-          />
+          <span aria-hidden="true" className="bg-accent inline-block size-3 rounded-sm" />
           Weighted by stage probability
         </span>
       </div>

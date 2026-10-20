@@ -124,7 +124,11 @@ function MyNumbers() {
       />
       <Stat
         label="Won this month"
-        value={<span className={s.won_this_month_count > 0 ? "text-won" : undefined}>{fmt(s.won_this_month_cents)}</span>}
+        value={
+          <span className={s.won_this_month_count > 0 ? "text-won" : undefined}>
+            {fmt(s.won_this_month_cents)}
+          </span>
+        }
         note={`${s.won_this_month_count} ${s.won_this_month_count === 1 ? "deal" : "deals"}`}
       />
     </div>
