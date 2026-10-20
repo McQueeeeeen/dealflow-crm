@@ -9,6 +9,8 @@ TypeScript.
 [![CI](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/ci.yml)
 [![E2E](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/e2e.yml/badge.svg)](https://github.com/McQueeeeeen/dealflow-crm/actions/workflows/e2e.yml)
 
+![Pipeline board](docs/screenshots/pipeline.png)
+
 ## What it does
 
 - **Today**: your overdue and upcoming follow-ups, and the deals you expect to close this month.
@@ -19,6 +21,14 @@ TypeScript.
 - **Reports**: open and weighted pipeline, a stage-by-stage conversion funnel, a six-month
   forecast by expected close date, and results per salesperson for managers.
 - **Settings**: invite teammates with a role, rename, reorder and re-weight pipeline stages.
+
+| Today | Reports, dark theme |
+|---|---|
+| ![Today](docs/screenshots/today.png) | ![Reports](docs/screenshots/reports-dark.png) |
+| **Deal** | **Phone** |
+| ![Deal](docs/screenshots/deal.png) | ![Phone](docs/screenshots/mobile-today.png) |
+
+Screenshots are produced by the end-to-end suite against the seeded demo workspace.
 
 ## Architecture
 
