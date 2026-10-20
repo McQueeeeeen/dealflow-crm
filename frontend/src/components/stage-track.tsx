@@ -1,4 +1,5 @@
 import { cx } from "@/components/ui";
+import { stageHeat } from "@/lib/heat";
 import type { Stage, StageKind } from "@/lib/types";
 
 export function StageTrack({
@@ -33,10 +34,13 @@ export function StageTrack({
         <span
           key={stage.id}
           className={cx(
-            "rounded-[1px]",
-            size === "lg" ? "h-1.5 w-10 sm:w-14" : "h-1 w-3",
-            kind === "lost" ? "bg-critical/35" : i < filled ? "bg-accent" : "bg-track",
+            "rounded-full",
+            size === "lg" ? "h-2 w-10 sm:w-14" : "h-1.5 w-3.5",
+            (kind === "lost" || i >= filled) && "bg-track",
           )}
+          style={
+            kind !== "lost" && i < filled ? { backgroundColor: stageHeat(stages, stage) } : undefined
+          }
         />
       ))}
     </span>

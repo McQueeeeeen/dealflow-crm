@@ -85,7 +85,7 @@ function MyNumbers() {
       {s.won_this_month_count > 0 ? (
         <>
           You closed{" "}
-          <strong className="num text-accent font-semibold">{fmt(s.won_this_month_cents)}</strong>{" "}
+          <strong className="num text-won font-semibold">{fmt(s.won_this_month_cents)}</strong>{" "}
           this month.
         </>
       ) : (

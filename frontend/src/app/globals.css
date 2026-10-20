@@ -4,23 +4,31 @@
 
 :root {
   color-scheme: light dark;
-  --canvas: light-dark(#f4f5f7, #14161b);
-  --surface: light-dark(#fcfcfd, #1b1e25);
-  --raised: light-dark(#fcfcfd, #232731);
-  --hover: light-dark(#eceef2, #252932);
-  --ink: light-dark(#15171c, #e9ebf0);
-  --ink-muted: light-dark(#5b606b, #a2a8b4);
-  --line: light-dark(#e1e3e8, #2c313b);
-  --line-strong: light-dark(#8a909b, #6a7180);
-  --accent: light-dark(#2440f0, #7d8cff);
-  --accent-ink: light-dark(#fcfcfd, #0e1020);
-  --accent-soft: light-dark(#e6eafe, #20264a);
-  --critical: light-dark(#c2341c, #ff7a63);
-  --critical-soft: light-dark(#fbe7e3, #3a1e1a);
-  --track-empty: light-dark(#dadde3, #333845);
+  --canvas: light-dark(#eef1f5, #12151c);
+  --surface: light-dark(#fdfdfe, #191d26);
+  --raised: light-dark(#fdfdfe, #20252f);
+  --hover: light-dark(#e6eaf0, #232834);
+  --ink: light-dark(#1b2130, #e8ebf1);
+  --ink-muted: light-dark(#5a6275, #a1a9b8);
+  --line: light-dark(#dde2ea, #2a303c);
+  --line-strong: light-dark(#8b93a5, #69728a);
+  --accent: light-dark(#1b2130, #e8ebf1);
+  --accent-ink: light-dark(#fdfdfe, #12151c);
+  --accent-soft: light-dark(#e3e8f2, #262c38);
+  --won: light-dark(#b8461b, #ff9b66);
+  --focus: light-dark(#2f6fe4, #7aa7ff);
+  --critical: light-dark(#c0392b, #ff7b6b);
+  --critical-soft: light-dark(#fbe6e3, #3b1f1c);
+  --track-empty: light-dark(#dfe4ec, #2f3542);
+  --lift-rest:
+    0 1px 2px light-dark(rgb(27 33 48 / 0.06), rgb(0 0 0 / 0.4)),
+    0 2px 8px light-dark(rgb(27 33 48 / 0.06), rgb(0 0 0 / 0.25));
+  --lift-hover:
+    0 2px 4px light-dark(rgb(27 33 48 / 0.08), rgb(0 0 0 / 0.45)),
+    0 8px 20px light-dark(rgb(27 33 48 / 0.1), rgb(0 0 0 / 0.35));
   --elevation:
-    0 8px 24px light-dark(rgb(21 23 28 / 0.12), rgb(0 0 0 / 0.45)),
-    0 1px 3px light-dark(rgb(21 23 28 / 0.1), rgb(0 0 0 / 0.4));
+    0 12px 32px light-dark(rgb(27 33 48 / 0.18), rgb(0 0 0 / 0.5)),
+    0 2px 6px light-dark(rgb(27 33 48 / 0.1), rgb(0 0 0 / 0.4));
 }
 
 :root[data-theme="light"] {
@@ -46,9 +54,11 @@
   --color-critical: var(--critical);
   --color-critical-soft: var(--critical-soft);
   --color-track: var(--track-empty);
+  --color-won: var(--won);
+  --color-focus: var(--focus);
 
-  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo), var(--font-plex), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 
   --text-meta: 0.78rem;
   --text-meta--line-height: 1.1rem;
@@ -63,8 +73,11 @@
   --text-hero: 3rem;
   --text-hero--line-height: 3.3rem;
 
-  --radius-control: 6px;
-  --radius-dialog: 10px;
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-dialog: 18px;
+  --shadow-card: var(--lift-rest);
+  --shadow-card-hover: var(--lift-hover);
   --shadow-float: var(--elevation);
 }
 
@@ -103,8 +116,8 @@ body {
   h1,
   .font-display {
     font-family: var(--font-display);
-    font-stretch: 112%;
-    letter-spacing: -0.02em;
+    font-weight: 800;
+    letter-spacing: -0.03em;
   }
 }
 
@@ -124,7 +137,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 

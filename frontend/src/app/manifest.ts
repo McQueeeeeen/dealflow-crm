@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Sales pipeline, contacts and follow-ups for small B2B sales teams.",
     start_url: "/today",
     display: "standalone",
-    background_color: "#f4f5f7",
-    theme_color: "#2440f0",
+    background_color: "#eef1f5",
+    theme_color: "#1b2130",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
   };
 }

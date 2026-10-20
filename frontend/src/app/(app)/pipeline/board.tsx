@@ -21,12 +21,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { DealLink, DealName } from "@/components/deal-link";
 import { cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
 import { parseDay, shortDate } from "@/lib/format";
+import { stageHeat } from "@/lib/heat";
 import { useMoney } from "@/lib/hooks";
 import { canModify, useMe } from "@/lib/queries";
 import type { BoardColumn, Deal } from "@/lib/types";
@@ -161,6 +162,8 @@ export function Board({
 
   const dealById = (id: UniqueIdentifier) =>
     columns.flatMap((c) => c.deals).find((d) => d.id === id);
+  const stages = columns.map((c) => c.stage);
+
   function step(deal: Deal, by: number) {
     const target = columns[columns.findIndex((c) => c.stage.id === deal.stage_id) + by];
     if (target) {
@@ -207,7 +210,12 @@ export function Board({
           )}
         >
           {columns.map((column) => (
-            <Column key={column.stage.id} column={column} onStep={step} />
+            <Column
+              key={column.stage.id}
+              column={column}
+              color={stageHeat(stages, column.stage)}
+              onStep={step}
+            />
           ))}
         </div>
         <DragOverlay dropAnimation={null}>
@@ -224,27 +232,35 @@ export function Board({
   );
 }
 
-function Column({ column, onStep }: { column: BoardColumn; onStep: Step }) {
+function Column({
+  column,
+  color,
+  onStep,
+}: {
+  column: BoardColumn;
+  color: string;
+  onStep: Step;
+}) {
   const fmt = useMoney();
   const { setNodeRef, isOver } = useDroppable({ id: column.stage.id, data: { type: "column" } });
   const { stage } = column;
   return (
     <section
       aria-labelledby={`stage-${stage.id}`}
+      style={{ "--heat": color } as CSSProperties}
       className={cx(
-        "rounded-control bg-canvas flex w-[78vw] max-w-72 shrink-0 snap-start flex-col border sm:w-72",
-        isOver ? "border-accent" : "border-line",
+        "rounded-card flex w-[78vw] max-w-72 shrink-0 snap-start flex-col border bg-[color-mix(in_oklch,var(--heat)_8%,var(--canvas))] sm:w-72",
+        isOver ? "border-[var(--heat)]" : "border-transparent",
       )}
     >
-      <header className="border-line border-b px-3 py-2.5">
-        <h2 id={`stage-${stage.id}`} className="flex items-baseline justify-between gap-2">
-          <span
-            className={cx(
-              "font-semibold",
-              stage.kind === "won" && "text-accent",
-              stage.kind === "lost" && "text-muted",
-            )}
-          >
+      <header className="px-3 pt-3 pb-2">
+        <span aria-hidden="true" className="block h-1.5 rounded-full bg-[var(--heat)]" />
+        <h2
+          id={`stage-${stage.id}`}
+          className="mt-3 flex items-center justify-between gap-2"
+        >
+          <span className="flex items-center gap-2 font-semibold">
+            <span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--heat)]" />
             {stage.name}
           </span>
           <span className="num text-meta text-muted">
@@ -252,7 +268,7 @@ function Column({ column, onStep }: { column: BoardColumn; onStep: Step }) {
           </span>
         </h2>
         <p className="num mt-1 flex items-baseline justify-between gap-2">
-          <span className="text-lead font-display font-semibold">
+          <span className="text-title font-display">
             {fmt(column.total_value_cents, { compact: true })}
           </span>
           <span className="text-meta text-muted">
@@ -356,8 +372,8 @@ function DealCard({
   return (
     <article
       className={cx(
-        "rounded-control border-line bg-surface border p-3",
-        floating ? "shadow-float rotate-1 cursor-grabbing" : "hover:border-line-strong cursor-grab",
+        "rounded-card bg-surface shadow-card p-3.5",
+        floating ? "shadow-float rotate-1 cursor-grabbing" : "hover:shadow-card-hover cursor-grab",
       )}
     >
       <div className="flex items-start justify-between gap-2">

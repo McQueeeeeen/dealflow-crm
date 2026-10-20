@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
 import { shortDate } from "@/lib/format";
+import { stageHeat } from "@/lib/heat";
 import { keys, useStages } from "@/lib/queries";
 import type { Deal } from "@/lib/types";
 
@@ -56,13 +57,14 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
             <>
               <span
                 className={cx(
-                  "block h-2 rounded-[2px]",
-                  deal.stage_kind === "lost"
-                    ? "bg-critical/35"
-                    : i < reached
-                      ? "bg-accent"
-                      : "bg-track",
+                  "block h-2.5 rounded-full",
+                  (deal.stage_kind === "lost" || i >= reached) && "bg-track",
                 )}
+                style={
+                  deal.stage_kind !== "lost" && i < reached
+                    ? { backgroundColor: stageHeat(stages, stage) }
+                    : undefined
+                }
               />
               <span
                 className={cx(
@@ -100,7 +102,7 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
         <p
           className={cx(
             "text-body",
-            deal.stage_kind === "won" && "text-accent font-medium",
+            deal.stage_kind === "won" && "text-won font-medium",
             deal.stage_kind === "lost" && "text-critical font-medium",
             !closed && "text-muted",
           )}

@@ -211,7 +211,7 @@ export function Panel({
     <section
       className={cx(
         "border-line",
-        quiet ? "border-t" : "rounded-control bg-surface border",
+        quiet ? "border-t" : "rounded-card bg-surface border",
         className,
       )}
     >

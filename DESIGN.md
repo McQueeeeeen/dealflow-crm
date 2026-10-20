@@ -3,42 +3,52 @@
 Written by the agent from the owner's brief ("calm and precise, a tool people work in all day").
 Agent-authored direction tends toward default taste, so every choice below carries its reason.
 
-Dial: ENERGY 1 / RHYTHM 2 / MOTION 1
+Dial: ENERGY 2 / RHYTHM 2 / MOTION 1
 
-Reading this as: a signed-in sales workspace for small B2B sales teams, in a quiet
-ledger-like visual language, dial ENERGY 1 / RHYTHM 2 / MOTION 1.
+Reading this as: a signed-in sales workspace for small B2B sales teams, in a soft, colour-coded
+product language where colour means one thing only: how hot a deal is.
 
 ## Subject
 
-Sales reps and their managers. The two decisions the product supports every day:
-which deal to push next, and which follow-up is about to slip. Money and dates are the
-primary content, so numbers are set with the same care as text.
+Sales people talk about cold leads and hot deals. The design takes that literally. The pipeline
+is a temperature scale, and colour is reserved for it, so a glance at any screen says how close
+the money is.
 
-## Palette
+## Thermal scale
 
-Monochrome with one saturated signal. Grey-green with a forest accent was the expected
-fintech look, so the identity now comes from a single cobalt used only where something moves
-toward a close.
+Each open stage gets a colour from its position in the pipeline, interpolated in OKLCH so steps
+look even. Stages an admin adds later get a colour automatically.
+
+| Point | Colour | Meaning |
+|---|---|---|
+| cold | `oklch(0.62 0.16 255)` blue | First stage, a new lead |
+| cool | `oklch(0.70 0.12 200)` teal | Early qualification |
+| warm | `oklch(0.80 0.15 85)` amber | Proposal territory |
+| hot | `oklch(0.70 0.18 50)` orange | Last open stage |
+| won | `oklch(0.63 0.21 32)` flame | Closed won |
+| lost | neutral grey | The deal went cold |
+
+The scale appears wherever stage matters: the bar and wash on each board column, stage tracks
+in lists, the stage rail on a deal, funnel bars, won amounts and the rail on the sign-in page.
+It never decorates anything else.
+
+## Neutrals and actions
 
 | Token | Light | Dark | Reason |
 |---|---|---|---|
-| canvas | `#F4F5F7` | `#14161B` | Cool off-white and graphite, no warm paper tint. |
-| surface | `#FCFCFD` | `#1B1E25` | Where data lives. Not pure white, so the cobalt reads crisper. |
-| ink | `#15171C` | `#E9EBF0` | Body text. |
-| ink-muted | `#5B606B` | `#A2A8B4` | Secondary text; at least 6:1 on surface in both themes. |
-| line | `#E1E3E8` | `#2C313B` | Hairlines between rows. |
-| cobalt (accent) | `#2440F0` | `#7D8CFF` | The one accent: primary actions, the current page, won deals, the stage track. 6.8:1 with white text. |
-| brick (critical) | `#C2341C` | `#FF7A63` | Lost deals, overdue follow-ups, destructive actions only. |
-
-One accent beyond neutrals. Charts use the cobalt ramp only.
+| canvas | `#EEF1F5` | `#12151C` | Cool grey so the warm end of the scale stands out. |
+| surface | `#FDFDFE` | `#191D26` | Cards and panels. |
+| ink | `#1B2130` | `#E8EBF1` | Text, and primary actions: buttons and the current page are ink pills, so colour stays free for temperature. |
+| ink-muted | `#5A6275` | `#A1A9B8` | Secondary text; at least 5:1 on canvas. |
+| won | `#B8461B` | `#FF9B66` | Won amounts as text; 5.3:1 on surface. |
+| focus | `#2F6FE4` | `#7AA7FF` | Keyboard focus ring only. |
+| critical | `#C0392B` | `#FF7B6B` | Overdue follow-ups and destructive actions. |
 
 ## Type
 
-- Archivo, set 12% wider than normal, is the product's voice: page titles, the wordmark and
-  money that matters (deal value, stage totals, report figures, the Today summary). The wide
-  cut reads like a ticker or a printed statement, engineered rather than decorative.
-- IBM Plex Sans does the work: tables, forms, buttons, labels. Compact numerals that line up
-  in columns; tabular figures on every amount and date.
+Manrope for everything: soft, open shapes that match the rounded components, with tabular
+figures for columns of money. Titles and large amounts use weight 800 with tight tracking;
+body text 400 and 500.
 
 Scale (1.2 ratio, 15px base): 12.5 / 15 / 18 / 21.6 / 34, and 48 for the sign-in headline.
 Title Case for headings and buttons (Chicago style), sentence case for body copy, labels and
@@ -59,17 +69,15 @@ messages. No uppercase labels.
 
 ## Identity motif
 
-The **stage track**: a row of short segments, one per open stage, filled up to where the
-deal currently is. It appears in every deal list outside the board (Today, company and
-contact pages) and, as the stage rail, across the deal page: full width, named
-segments that move the deal when clicked. The board leaves it out because the
-column already says the stage. It is information (how far along this deal is), repeated
-so the product has one recognizable gesture.
+The thermal bar: a short rounded bar in a stage's temperature colour. It caps every board
+column, fills the stage tracks and the deal's stage rail, and heats up from Lead to Won once on
+the sign-in page.
 
 ## Shape and depth
 
-Radius 6px on controls and cards, 10px on dialogs. Shadow only on things that float above
-the page: a card being dragged and open dialogs. Everything else is flat with hairlines.
+Radius 10px on controls, 14px on cards and panels, 18px on dialogs; navigation and status marks
+are pills. Deal cards on the board carry a soft shadow because they are physical objects you
+drag; a dragged card and dialogs lift higher. Everything else is flat with hairlines.
 
 ## Motion
 

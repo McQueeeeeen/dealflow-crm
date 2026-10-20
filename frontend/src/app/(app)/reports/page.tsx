@@ -8,6 +8,7 @@ import { Table } from "@/components/table";
 import { EmptyState, ErrorState, Loading, PageHeader, Panel, Select } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { percent, shortDate } from "@/lib/format";
+import { WON_HEAT } from "@/lib/heat";
 import { useMoney, useUrlParams } from "@/lib/hooks";
 import { isManager, keys, useMe } from "@/lib/queries";
 import type { Forecast, Funnel, LeaderboardRow, Summary } from "@/lib/types";
@@ -229,8 +230,8 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
                       <span className="num w-24 shrink-0 text-right">{fmt(r.won_cents)}</span>
                       <span className="hidden h-3 flex-1 sm:block" aria-hidden="true">
                         <span
-                          className="bg-accent block h-full rounded-r-[4px]"
-                          style={{ width: `${(r.won_cents / top) * 100}%` }}
+                          className="block h-full rounded-full"
+                          style={{ width: `${(r.won_cents / top) * 100}%`, backgroundColor: WON_HEAT }}
                         />
                       </span>
                     </div>

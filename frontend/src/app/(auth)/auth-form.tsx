@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button, Field, FormError, TextInput, fieldError, cx } from "@/components/ui";
 import { ApiError } from "@/lib/api";
+import { WON_HEAT, heat } from "@/lib/heat";
 
 type Mode = "login" | "register";
 
@@ -68,7 +69,7 @@ export function AuthForm({ mode, demo }: Props) {
     <div className="grid gap-10 md:grid-cols-[1fr_minmax(0,26rem)] md:items-center">
       <div className="max-w-xl">
         <h1 className="text-display sm:text-hero font-semibold">
-          {isLogin ? "Every Deal, from First Call to Signed." : "Set Up a Workspace for Your Team"}
+          {isLogin ? "Every Deal, from Cold Lead to Signed." : "Set Up a Workspace for Your Team"}
         </h1>
         <p className="text-lead text-muted mt-4 max-w-md">
           {isLogin
@@ -81,16 +82,16 @@ export function AuthForm({ mode, demo }: Props) {
             return (
               <li key={stage} className="min-w-0">
                 <span
-                  className={cx(
-                    "rail-fill block h-2 rounded-[2px]",
-                    last ? "bg-accent" : "bg-accent/45",
-                  )}
-                  style={{ animationDelay: `${i * 140}ms` }}
+                  className="rail-fill block h-2.5 rounded-full"
+                  style={{
+                    animationDelay: `${i * 140}ms`,
+                    backgroundColor: last ? WON_HEAT : heat(i / (STAGES.length - 2)),
+                  }}
                 />
                 <span
                   className={cx(
                     "text-meta mt-2 block truncate",
-                    last ? "text-accent font-medium" : "text-muted",
+                    last ? "text-won font-medium" : "text-muted",
                   )}
                 >
                   {stage}
@@ -104,7 +105,7 @@ export function AuthForm({ mode, demo }: Props) {
       <form
         onSubmit={submit}
         noValidate
-        className="rounded-control border-line bg-surface flex flex-col gap-4 border p-5 sm:p-6"
+        className="rounded-card border-line bg-surface shadow-card flex flex-col gap-4 border p-5 sm:p-6"
       >
         {!isLogin ? (
           <>
