@@ -328,7 +328,9 @@ async fn seed_deals(
     let won = stage_ids(ids, StageKind::Won)[0];
     let lost = stage_ids(ids, StageKind::Lost)[0];
     let now = Utc::now();
-    let month_start = now - Duration::days(i64::from(now.day0())) - Duration::seconds(i64::from(now.num_seconds_from_midnight()));
+    let month_start = now
+        - Duration::days(i64::from(now.day0()))
+        - Duration::seconds(i64::from(now.num_seconds_from_midnight()));
     let hours_into_month = (now - month_start).num_hours().max(2);
     let mut deals = Vec::new();
 
