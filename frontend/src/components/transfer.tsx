@@ -177,7 +177,7 @@ function ImportFlow({ kind, onClose }: { kind: Kind; onClose: () => void }) {
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button type="button" variant="quiet" onClick={onClose}>
-          {done ? "Close" : "Cancel"}
+          {done ? "Done" : "Cancel"}
         </Button>
         {file && !done ? (
           report ? (

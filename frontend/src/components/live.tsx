@@ -4,7 +4,7 @@ import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Avatar } from "@/components/ui";
+import { Avatar, cx } from "@/components/ui";
 import { put } from "@/lib/api";
 import type { Viewer } from "@/lib/types";
 
@@ -108,7 +108,7 @@ export function LiveProvider({ me, children }: { me: string; children: ReactNode
   return <LiveContext value={state}>{children}</LiveContext>;
 }
 
-export function LiveStatus({ me }: { me: string }) {
+export function LiveStatus({ me, compact }: { me: string; compact?: boolean }) {
   const { connected, viewers } = useContext(LiveContext);
   const pathname = usePathname();
   const here = viewers.filter(
@@ -128,7 +128,7 @@ export function LiveStatus({ me }: { me: string }) {
               </span>
             ))}
           </span>
-          <span>
+          <span className={cx(compact && "sr-only")}>
             {here.length === 1 ? `${here[0]!.name} is here too` : `${here.length} teammates here`}
           </span>
         </span>
@@ -140,7 +140,7 @@ export function LiveStatus({ me }: { me: string }) {
             connected ? "bg-won size-2 rounded-full" : "bg-line-strong size-2 rounded-full"
           }
         />
-        {connected ? "Live" : "Offline"}
+        <span className={cx(compact && "sr-only")}>{connected ? "Live" : "Offline"}</span>
       </span>
     </div>
   );
