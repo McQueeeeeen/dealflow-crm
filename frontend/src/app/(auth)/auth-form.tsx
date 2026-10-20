@@ -81,7 +81,10 @@ export function AuthForm({ mode, demo }: Props) {
             return (
               <li key={stage} className="min-w-0">
                 <span
-                  className={cx("rail-fill block h-2 rounded-[2px]", last ? "bg-accent" : "bg-accent/45")}
+                  className={cx(
+                    "rail-fill block h-2 rounded-[2px]",
+                    last ? "bg-accent" : "bg-accent/45",
+                  )}
                   style={{ animationDelay: `${i * 140}ms` }}
                 />
                 <span
