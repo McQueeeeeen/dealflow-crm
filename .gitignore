@@ -1,0 +1,9 @@
+/backend/target
+.env
+.env.local
+node_modules/
+/frontend/.next
+/frontend/out
+/frontend/next-env.d.ts
+*.tsbuildinfo
+.DS_Store

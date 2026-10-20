@@ -1,0 +1,43 @@
+name: Autoformat
+
+# Manual helper: applies rustfmt and Prettier, refreshes missing lockfiles, and commits the result.
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Rust
+        working-directory: backend
+        run: |
+          [ -f Cargo.lock ] || cargo generate-lockfile
+          cargo fmt
+      - uses: actions/setup-node@v4
+        if: hashFiles('frontend/package.json') != ''
+        with:
+          node-version: 22
+      - name: Frontend
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        run: |
+          [ -f package-lock.json ] || npm install --package-lock-only --ignore-scripts
+          npm ci --ignore-scripts
+          npx prettier --write .
+      - name: Commit
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Already formatted"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: apply formatters"
+          git push
