@@ -110,7 +110,7 @@ function CompanyView({ company }: { company: Company }) {
           <NotesPanel parent={{ company_id: company.id }} />
         </div>
         <div className="flex flex-col gap-6">
-          <Panel>
+          <Panel quiet>
             <div className="flex items-center justify-between gap-3 px-4 pt-4">
               <h2 className="text-title font-semibold">People</h2>
               <Button variant="quiet" onClick={() => setAddingContact(true)}>

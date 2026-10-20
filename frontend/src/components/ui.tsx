@@ -179,9 +179,23 @@ export function PageHeader({
   );
 }
 
-export function Panel({ className, children }: { className?: string; children: ReactNode }) {
+export function Panel({
+  className,
+  quiet,
+  children,
+}: {
+  className?: string;
+  quiet?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <section className={cx("rounded-control border-line bg-surface border", className)}>
+    <section
+      className={cx(
+        "border-line",
+        quiet ? "border-t" : "rounded-control bg-surface border",
+        className,
+      )}
+    >
       {children}
     </section>
   );
