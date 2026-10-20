@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="border-line bg-surface sticky top-0 z-30 border-b">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 sm:px-6">
           <Link href="/today" className="flex min-h-14 items-baseline gap-2 py-2">
-            <span className="text-lead font-semibold tracking-tight">DealFlow</span>
+            <span className="text-lead font-serif font-semibold">DealFlow</span>
             <span className="text-meta text-muted hidden max-w-48 truncate md:inline">
               {me.data.organization_name}
             </span>

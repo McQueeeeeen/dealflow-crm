@@ -65,7 +65,7 @@ function DealView({ deal }: { deal: Deal }) {
               "No company linked"
             )}
           </p>
-          <p className="num text-display mt-4 font-semibold">{fmt(deal.value_cents)}</p>
+          <p className="num text-display mt-4 font-serif font-semibold">{fmt(deal.value_cents)}</p>
         </div>
         {editable ? (
           <div className="flex flex-wrap gap-2">
