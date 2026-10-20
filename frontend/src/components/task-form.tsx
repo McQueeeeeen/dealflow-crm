@@ -20,7 +20,7 @@ export function TaskFormDialog(props: Props) {
     <Dialog
       open={props.open}
       onClose={props.onClose}
-      title={props.task ? "Edit follow-up" : "New follow-up"}
+      title={props.task ? "Edit Follow-Up" : "New Follow-Up"}
     >
       {props.open ? <TaskForm {...props} /> : null}
     </Dialog>
@@ -80,21 +80,21 @@ function TaskForm({ task, link, onClose }: Props) {
       onClose={onClose}
       error={error}
       busy={save.isPending}
-      submitLabel={task ? "Save follow-up" : "Add follow-up"}
+      submitLabel={task ? "Save Follow-Up" : "Add Follow-Up"}
     >
-      <Field label="What needs to happen" error={fieldError(error, "title")}>
+      <Field label="What needs to happen" name="title" error={fieldError(error, "title")}>
         {(p) => (
           <TextInput
             {...p}
             value={values.title}
             onChange={(e) => setValues((v) => ({ ...v, title: e.target.value }))}
-            placeholder="Send the revised proposal"
+            placeholder="Send the revised proposal…"
             autoFocus
           />
         )}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Due" error={fieldError(error, "due_at")}>
+        <Field label="Due" name="due_at" error={fieldError(error, "due_at")}>
           {(p) => (
             <TextInput
               {...p}
@@ -104,7 +104,7 @@ function TaskForm({ task, link, onClose }: Props) {
             />
           )}
         </Field>
-        <Field label="Assigned to" error={fieldError(error, "assignee_id")}>
+        <Field label="Assigned to" name="assignee_id" error={fieldError(error, "assignee_id")}>
           {(p) => (
             <Select
               {...p}
@@ -122,7 +122,7 @@ function TaskForm({ task, link, onClose }: Props) {
           )}
         </Field>
       </div>
-      <Field label="Details" error={fieldError(error, "details")}>
+      <Field label="Details" name="details" error={fieldError(error, "details")}>
         {(p) => (
           <TextArea
             {...p}

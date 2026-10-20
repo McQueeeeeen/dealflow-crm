@@ -41,7 +41,8 @@ One accent beyond neutrals. Charts use the cobalt ramp only.
   in columns; tabular figures on every amount and date.
 
 Scale (1.2 ratio, 15px base): 12.5 / 15 / 18 / 21.6 / 34, and 48 for the sign-in headline.
-Sentence case everywhere. No uppercase labels.
+Title Case for headings and buttons (Chicago style), sentence case for body copy, labels and
+messages. No uppercase labels.
 
 ## Layout
 
@@ -74,4 +75,13 @@ the page: a card being dragged and open dialogs. Everything else is flat with ha
 
 Hover and focus states, the drag preview, and dialog open. One orchestrated moment: the stage
 rail on the sign-in page fills once, stage by stage, to show what the product does.
+
+Navigation uses view transitions, each with one job:
+
+- A deal's name morphs from the board, Today or a list into the deal page title: the same
+  object, seen closer.
+- Opening a record slides content left; links back to a list slide it right.
+- Switching sections from the main navigation crossfades.
+- The header never moves, so there is always a fixed point.
+
 `prefers-reduced-motion` turns transitions off.

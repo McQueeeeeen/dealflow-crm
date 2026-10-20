@@ -19,18 +19,20 @@ import {
   TextInput,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
-import { useDebounced, useMoney } from "@/lib/hooks";
+import { useMoney, useUrlParams, useUrlSearch } from "@/lib/hooks";
 import { keys } from "@/lib/queries";
 import type { Company, Page } from "@/lib/types";
+import { FORWARD } from "@/lib/transitions";
 
 export default function CompaniesPage() {
   const router = useRouter();
   const fmt = useMoney();
-  const [search, setSearch] = useState("");
-  const [owner, setOwner] = useState("");
-  const [page, setPage] = useState(1);
+  const [params, update] = useUrlParams();
+  const q = params.get("q") ?? "";
+  const owner = params.get("owner") ?? "";
+  const page = Number(params.get("page") ?? 1);
+  const [search, setSearch] = useUrlSearch(q, update);
   const [creating, setCreating] = useState(false);
-  const q = useDebounced(search.trim());
 
   const companies = useQuery({
     queryKey: keys.companies({ q, owner, page }),
@@ -44,7 +46,7 @@ export default function CompaniesPage() {
         title="Companies"
         actions={
           <Button variant="primary" onClick={() => setCreating(true)}>
-            Add company
+            Add Company
           </Button>
         }
       />
@@ -53,20 +55,15 @@ export default function CompaniesPage() {
           <span className="sr-only">Search companies</span>
           <TextInput
             type="search"
-            placeholder="Search by name or domain"
+            name="q"
+            placeholder="Search by name or domain…"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </label>
         <OwnerFilter
           value={owner}
-          onChange={(v) => {
-            setOwner(v);
-            setPage(1);
-          }}
+          onChange={(v) => update({ owner: v, page: null })}
         />
       </div>
       <Panel>
@@ -81,7 +78,7 @@ export default function CompaniesPage() {
             <EmptyState
               title="No companies yet"
               body="Add the organizations you sell to. Contacts and deals can then be linked to them."
-              action={<Button onClick={() => setCreating(true)}>Add company</Button>}
+              action={<Button onClick={() => setCreating(true)}>Add Company</Button>}
             />
           )
         ) : (
@@ -94,7 +91,7 @@ export default function CompaniesPage() {
                   header: "Name",
                   cell: (c) => (
                     <div className="min-w-0">
-                      <Link
+                      <Link transitionTypes={FORWARD}
                         href={`/companies/${c.id}`}
                         className="font-medium hover:underline hover:underline-offset-2"
                       >
@@ -133,7 +130,7 @@ export default function CompaniesPage() {
               page={page}
               perPage={companies.data.per_page}
               total={companies.data.total}
-              onPage={setPage}
+              onPage={(p) => update({ page: p === 1 ? null : p })}
             />
           </>
         )}

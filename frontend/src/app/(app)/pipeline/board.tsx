@@ -21,9 +21,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
+import { DealLink, DealName } from "@/components/deal-link";
 import { cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
 import { parseDay, shortDate } from "@/lib/format";
@@ -138,10 +138,10 @@ export function Board({
       if (context?.previous) client.setQueryData(queryKey, context.previous);
       setProblem(
         err instanceof ApiError && err.status === 409
-          ? `"${m.deal.title}" was changed by someone else. The board has been refreshed, try the move again.`
+          ? `“${m.deal.title}” was changed by someone else. The board has been refreshed, try the move again.`
           : err instanceof ApiError && err.status === 403
-            ? `Only the owner or a manager can move "${m.deal.title}".`
-            : `Could not move "${m.deal.title}". Check your connection and try again.`,
+            ? `Only the owner or a manager can move “${m.deal.title}”.`
+            : `Could not move “${m.deal.title}”. Check your connection and try again.`,
       );
     },
     onSuccess: (saved) => {
@@ -200,7 +200,12 @@ export function Board({
         onDragEnd={onDragEnd}
         onDragCancel={() => setActive(null)}
       >
-        <div className="-mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
+        <div
+          className={cx(
+            "-mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6",
+            active && "select-none",
+          )}
+        >
           {columns.map((column) => (
             <Column key={column.stage.id} column={column} onStep={step} />
           ))}
@@ -286,7 +291,11 @@ function SortableDeal({ deal, onStep }: { deal: Deal; onStep: Step }) {
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cx(isDragging && "opacity-40")}
+      className={cx(
+        "[contain-intrinsic-size:auto_7rem] [content-visibility:auto]",
+        isDragging && "opacity-40",
+      )}
+      inert={isDragging}
       {...listeners}
     >
       <DealCard
@@ -352,13 +361,16 @@ function DealCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <Link
-          href={`/deals/${deal.id}`}
-          className="min-w-0 font-medium break-words hover:underline hover:underline-offset-2"
-          tabIndex={floating ? -1 : undefined}
-        >
-          {deal.title}
-        </Link>
+        {floating ? (
+          <span className="min-w-0 font-medium break-words">{deal.title}</span>
+        ) : (
+          <DealLink
+            deal={deal}
+            className="min-w-0 font-medium break-words hover:underline hover:underline-offset-2"
+          >
+            <DealName deal={deal} className="block" />
+          </DealLink>
+        )}
         {handle}
       </div>
       {deal.company_name ? (

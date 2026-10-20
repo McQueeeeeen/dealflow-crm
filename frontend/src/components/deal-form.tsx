@@ -21,7 +21,7 @@ interface Props {
 
 export function DealFormDialog(props: Props) {
   return (
-    <Dialog open={props.open} onClose={props.onClose} title={props.deal ? "Edit deal" : "New deal"}>
+    <Dialog open={props.open} onClose={props.onClose} title={props.deal ? "Edit Deal" : "New Deal"}>
       {props.open ? <DealForm {...props} /> : null}
     </Dialog>
   );
@@ -90,9 +90,9 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
       onClose={onClose}
       error={error}
       busy={save.isPending}
-      submitLabel={deal ? "Save deal" : "Create deal"}
+      submitLabel={deal ? "Save Deal" : "Create Deal"}
     >
-      <Field label="Deal name" error={fieldError(error, "title")}>
+      <Field label="Deal name" name="title" error={fieldError(error, "title")}>
         {(p) => (
           <TextInput
             {...p}
@@ -105,6 +105,7 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label={`Value (${me?.currency ?? "USD"})`}
+          name="value"
           error={valueError ?? fieldError(error, "value_cents")}
         >
           {(p) => (
@@ -114,11 +115,11 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
               className="num"
               value={values.value}
               onChange={(e) => set("value")(e.target.value)}
-              placeholder="0"
+              placeholder="12,500"
             />
           )}
         </Field>
-        <Field label="Expected close" error={fieldError(error, "expected_close_date")}>
+        <Field label="Expected close" name="expected_close_date" error={fieldError(error, "expected_close_date")}>
           {(p) => (
             <TextInput
               {...p}
@@ -130,7 +131,7 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
         </Field>
       </div>
       {!deal ? (
-        <Field label="Stage" error={fieldError(error, "stage_id")}>
+        <Field label="Stage" name="stage_id" error={fieldError(error, "stage_id")}>
           {(p) => (
             <Select
               {...p}
@@ -148,10 +149,10 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
         </Field>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Company" error={fieldError(error, "company_id")}>
+        <Field label="Company" name="company_id" error={fieldError(error, "company_id")}>
           {(p) => <CompanySelect {...p} value={values.company_id} onChange={set("company_id")} />}
         </Field>
-        <Field label="Contact" error={fieldError(error, "contact_id")}>
+        <Field label="Contact" name="contact_id" error={fieldError(error, "contact_id")}>
           {(p) => (
             <ContactSelect
               {...p}
@@ -162,7 +163,7 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
           )}
         </Field>
       </div>
-      <Field label="Owner" error={fieldError(error, "owner_id")}>
+      <Field label="Owner" name="owner_id" error={fieldError(error, "owner_id")}>
         {(p) => (
           <Select {...p} value={values.owner_id} onChange={(e) => set("owner_id")(e.target.value)}>
             <OwnerOptions />

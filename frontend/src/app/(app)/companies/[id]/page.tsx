@@ -16,6 +16,7 @@ import { fullName } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
 import { canModify, isManager, keys, useMe } from "@/lib/queries";
 import type { Company, Contact, Page } from "@/lib/types";
+import { BACK, FORWARD } from "@/lib/transitions";
 
 export default function CompanyPage() {
   const { id } = useParams<{ id: string }>();
@@ -57,7 +58,7 @@ function CompanyView({ company }: { company: Company }) {
 
   return (
     <>
-      <Link
+      <Link transitionTypes={BACK}
         href="/companies"
         className="text-body text-muted hover:text-ink underline underline-offset-4"
       >
@@ -79,9 +80,9 @@ function CompanyView({ company }: { company: Company }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" onClick={() => setAddingDeal(true)}>
-            New deal
+            New Deal
           </Button>
-          {editable ? <Button onClick={() => setEditing(true)}>Edit company</Button> : null}
+          {editable ? <Button onClick={() => setEditing(true)}>Edit Company</Button> : null}
           {isManager(me) ? (
             <Button
               variant="danger"
@@ -114,7 +115,7 @@ function CompanyView({ company }: { company: Company }) {
             <div className="flex items-center justify-between gap-3 px-4 pt-4">
               <h2 className="text-title font-semibold">People</h2>
               <Button variant="quiet" onClick={() => setAddingContact(true)}>
-                Add contact
+                Add Contact
               </Button>
             </div>
             <CompanyContacts companyId={company.id} />
@@ -155,7 +156,7 @@ function CompanyContacts({ companyId }: { companyId: string }) {
     <ul className="divide-line border-line mt-2 divide-y border-t">
       {contacts.data.data.map((c) => (
         <li key={c.id} className="px-4 py-3">
-          <Link
+          <Link transitionTypes={FORWARD}
             href={`/contacts/${c.id}`}
             className="font-medium hover:underline hover:underline-offset-2"
           >

@@ -1,14 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import { OwnerFilter } from "@/components/owner-select";
 import { Table } from "@/components/table";
 import { EmptyState, ErrorState, Loading, PageHeader, Panel, Select } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { percent, shortDate } from "@/lib/format";
-import { useMoney } from "@/lib/hooks";
+import { useMoney, useUrlParams } from "@/lib/hooks";
 import { isManager, keys, useMe } from "@/lib/queries";
 import type { Forecast, Funnel, LeaderboardRow, Summary } from "@/lib/types";
 
@@ -28,8 +28,9 @@ function sinceDate(days: number): string {
 
 export default function ReportsPage() {
   const me = useMe().data;
-  const [owner, setOwner] = useState("");
-  const [days, setDays] = useState(180);
+  const [params, update] = useUrlParams();
+  const owner = params.get("owner") ?? "";
+  const days = Number(params.get("days") ?? 180);
   const from = sinceDate(days);
 
   return (
@@ -39,10 +40,10 @@ export default function ReportsPage() {
         description="Built from the live pipeline and every stage change your team has recorded."
       />
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-3">
-        <OwnerFilter value={owner} onChange={setOwner} label="Deals of" />
+        <OwnerFilter value={owner} onChange={(v) => update({ owner: v })} label="Deals of" />
         <label className="flex items-center gap-2">
           <span className="text-muted">Period</span>
-          <Select value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-auto">
+          <Select value={days} onChange={(e) => update({ days: e.target.value === "180" ? null : e.target.value })} className="w-auto">
             {PERIODS.map((p) => (
               <option key={p.days} value={p.days}>
                 {p.label}
@@ -135,7 +136,7 @@ function FunnelSection({ owner, from }: { owner: string; from: string }) {
   });
   return (
     <Section
-      title="Where do deals drop off?"
+      title="Where Do Deals Drop Off?"
       subtitle={
         funnel.data
           ? `${funnel.data.cohort_size} deals created since ${shortDate(funnel.data.from)}, counted at the furthest stage they reached.`
@@ -166,7 +167,7 @@ function ForecastSection({ owner }: { owner: string }) {
   });
   return (
     <Section
-      title="What could close in the next six months?"
+      title="What Could Close in the Next Six Months?"
       subtitle="Open deals grouped by their expected close date."
     >
       {forecast.isPending ? (
@@ -202,7 +203,7 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
   const top = Math.max(...(board.data ?? []).map((r) => r.won_cents), 1);
   return (
     <div className="mt-6">
-      <Section title="Who is closing?" subtitle="Won value in the selected period, by deal owner.">
+      <Section title="Who Is Closing?" subtitle="Won value in the selected period, by deal owner.">
         {board.isPending ? (
           <Loading label="Loading team results…" />
         ) : board.isError ? (

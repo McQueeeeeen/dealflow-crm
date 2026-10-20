@@ -9,6 +9,7 @@ import { Button, ErrorState, Loading, cx } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/format";
 import { useMe } from "@/lib/queries";
 import type { Me } from "@/lib/types";
+import { SECTION } from "@/lib/transitions";
 
 interface NavItem {
   href: string;
@@ -47,10 +48,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <header className="border-line bg-surface sticky top-0 z-30 border-b">
+      <header
+        className="border-line bg-surface sticky top-0 z-30 border-b"
+        style={{ viewTransitionName: "app-header" }}
+      >
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 sm:px-6">
-          <Link href="/today" className="flex min-h-14 items-baseline gap-2 py-2">
-            <span className="text-lead font-display font-semibold">DealFlow</span>
+          <Link transitionTypes={SECTION} href="/today" className="flex min-h-14 items-baseline gap-2 py-2">
+            <span className="text-lead font-display font-semibold" translate="no">
+            DealFlow
+          </span>
             <span className="text-meta text-muted hidden max-w-48 truncate md:inline">
               {me.data.organization_name}
             </span>
@@ -81,7 +87,7 @@ function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
         const active = isActive(pathname, item.href);
         return (
           <li key={item.href}>
-            <Link
+            <Link transitionTypes={SECTION}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cx(
@@ -147,7 +153,7 @@ function AccountMenu({ me }: { me: Me }) {
             {ROLE_LABELS[me.role]} at {me.organization_name}
           </p>
           <Button type="button" className="mt-3 w-full" onClick={signOut} busy={signingOut}>
-            Sign out
+            Sign Out
           </Button>
         </div>
       ) : null}

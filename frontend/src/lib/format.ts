@@ -4,7 +4,7 @@ export function money(cents: number, currency: string, opts: { compact?: boolean
   const key = `${currency}:${opts.compact ? "c" : "f"}`;
   let fmt = moneyFormatters.get(key);
   if (!fmt) {
-    fmt = new Intl.NumberFormat("en-US", {
+    fmt = new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
       notation: opts.compact ? "compact" : "standard",
@@ -19,14 +19,14 @@ export function percent(ratio: number | null): string {
   return ratio === null ? "n/a" : `${Math.round(ratio * 100)}%`;
 }
 
-const dateFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
-const dateYearFmt = new Intl.DateTimeFormat("en-US", {
+const dateFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+const dateYearFmt = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
   year: "numeric",
 });
-const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
-const monthFmt = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
+const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+const monthFmt = new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" });
 
 export function parseDay(value: string): Date {
   const [y, m, d] = value.split("-").map(Number);

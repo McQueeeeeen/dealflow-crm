@@ -48,7 +48,7 @@ export function ThemeToggle() {
         <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
         <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor" />
       </svg>
-      <span className="sm:hidden lg:inline">{theme === "dark" ? "Light theme" : "Dark theme"}</span>
+      <span className="sm:hidden lg:inline">{theme === "dark" ? "Light Theme" : "Dark Theme"}</span>
     </button>
   );
 }

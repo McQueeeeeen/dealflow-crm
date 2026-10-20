@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { AuthForm } from "../auth-form";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Sign In" };
 export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
