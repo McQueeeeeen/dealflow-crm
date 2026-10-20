@@ -342,9 +342,7 @@ function TargetsSection() {
                         {goal ? `of ${fmt(goal)}, ${percent(row.won_cents / goal)}` : "no target"}
                       </span>
                     </p>
-                    {isManager(me) ? (
-                      <TargetEditor row={row} month={targets.data.month} />
-                    ) : null}
+                    {isManager(me) ? <TargetEditor row={row} month={targets.data.month} /> : null}
                   </div>
                 </li>
               );

@@ -62,65 +62,65 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <LiveProvider me={me.data.id}>
-    <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <a
-        href="#main"
-        className="rounded-control bg-surface sr-only px-3 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
-      >
-        Skip to content
-      </a>
-
-      <div className="border-line bg-sidebar hidden border-r lg:block">
-        <aside
-          className="sticky top-0 flex h-dvh flex-col px-3 py-4"
-          style={{ viewTransitionName: "app-header" }}
+      <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <a
+          href="#main"
+          className="rounded-control bg-surface sr-only px-3 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
         >
-          <Brand me={me.data} />
-          <div className="mt-3">
-            <SearchButton />
-          </div>
-          <nav aria-label="Main" className="border-line mt-3 border-t pt-3">
-            <NavLinks items={items} pathname={pathname} due={due} vertical />
-          </nav>
-          <div className="border-line mt-auto flex flex-col gap-1 border-t pt-3">
-            <ThemeToggle />
-            <AccountMenu me={me.data} up />
-          </div>
-        </aside>
-      </div>
+          Skip to content
+        </a>
 
-      <div className="min-w-0">
-        <header
-          className="border-line bg-sidebar sticky top-0 z-30 border-b lg:hidden"
-          style={{ viewTransitionName: "app-header" }}
-        >
-          <div className="flex items-center gap-2 px-4">
+        <div className="border-line bg-sidebar hidden border-r lg:block">
+          <aside
+            className="sticky top-0 flex h-dvh flex-col px-3 py-4"
+            style={{ viewTransitionName: "app-header" }}
+          >
             <Brand me={me.data} />
-            <div className="ml-auto flex items-center gap-1">
-              <SearchButton compact />
-              <ThemeToggle compact />
-              <AccountMenu me={me.data} />
+            <div className="mt-3">
+              <SearchButton />
             </div>
-          </div>
-          <nav aria-label="Main" className="border-line overflow-x-auto border-t px-2">
-            <NavLinks items={items} pathname={pathname} due={due} />
-          </nav>
-        </header>
+            <nav aria-label="Main" className="border-line mt-3 border-t pt-3">
+              <NavLinks items={items} pathname={pathname} due={due} vertical />
+            </nav>
+            <div className="border-line mt-auto flex flex-col gap-1 border-t pt-3">
+              <ThemeToggle />
+              <AccountMenu me={me.data} up />
+            </div>
+          </aside>
+        </div>
 
-        {section ? (
-          <div className="border-line text-muted hidden h-14 items-center gap-2 border-b px-8 lg:flex">
-            <section.icon size={18} stroke={1.75} aria-hidden="true" />
-            <span>{section.label}</span>
-            <LiveStatus me={me.data.id} />
-          </div>
-        ) : null}
+        <div className="min-w-0">
+          <header
+            className="border-line bg-sidebar sticky top-0 z-30 border-b lg:hidden"
+            style={{ viewTransitionName: "app-header" }}
+          >
+            <div className="flex items-center gap-2 px-4">
+              <Brand me={me.data} />
+              <div className="ml-auto flex items-center gap-1">
+                <SearchButton compact />
+                <ThemeToggle compact />
+                <AccountMenu me={me.data} />
+              </div>
+            </div>
+            <nav aria-label="Main" className="border-line overflow-x-auto border-t px-2">
+              <NavLinks items={items} pathname={pathname} due={due} />
+            </nav>
+          </header>
 
-        <main id="main" className="max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          {children}
-        </main>
+          {section ? (
+            <div className="border-line text-muted hidden h-14 items-center gap-2 border-b px-8 lg:flex">
+              <section.icon size={18} stroke={1.75} aria-hidden="true" />
+              <span>{section.label}</span>
+              <LiveStatus me={me.data.id} />
+            </div>
+          ) : null}
+
+          <main id="main" className="max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            {children}
+          </main>
+        </div>
+        <CommandPalette />
       </div>
-      <CommandPalette />
-    </div>
     </LiveProvider>
   );
 }

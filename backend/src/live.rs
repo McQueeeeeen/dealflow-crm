@@ -129,10 +129,7 @@ pub fn router() -> Router<AppState> {
         .route("/live/presence", put(set_view))
 }
 
-async fn stream(
-    State(state): State<AppState>,
-    user: AuthUser,
-) -> AppResult<impl IntoResponse> {
+async fn stream(State(state): State<AppState>, user: AuthUser) -> AppResult<impl IntoResponse> {
     let name: String = sqlx::query_scalar("SELECT full_name FROM users WHERE id = $1")
         .bind(user.user_id)
         .fetch_one(&state.pool)
