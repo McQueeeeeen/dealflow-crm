@@ -111,7 +111,7 @@ function MyNumbers() {
   if (!summary.data) return null;
   const s = summary.data;
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>:first-child]:col-span-2 sm:[&>:first-child]:col-span-1">
       <Stat
         label="Your open pipeline"
         value={fmt(s.open_pipeline_cents)}

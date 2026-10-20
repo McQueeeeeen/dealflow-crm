@@ -48,24 +48,29 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
   return (
     <section aria-label="Stage" className="border-line border-y py-4">
       <ol
-        className="grid gap-1"
+        className="grid gap-3"
         style={{ gridTemplateColumns: `repeat(${open.length}, minmax(0, 1fr))` }}
       >
         {open.map((stage, i) => {
           const current = stage.id === deal.stage_id;
           const body = (
             <>
-              <span
-                className={cx(
-                  "block h-2.5 rounded-full",
-                  (deal.stage_kind === "lost" || i >= reached) && "bg-track",
-                )}
-                style={
-                  deal.stage_kind !== "lost" && i < reached
-                    ? { backgroundColor: stageHeat(stages, stage) }
-                    : undefined
-                }
-              />
+              <span aria-hidden="true" className="flex gap-[3px]">
+                {Array.from({ length: 10 }, (_, t) => (
+                  <span
+                    key={t}
+                    className={cx(
+                      "h-6 flex-1 rounded-full",
+                      (deal.stage_kind === "lost" || i >= reached) && "bg-track",
+                    )}
+                    style={
+                      deal.stage_kind !== "lost" && i < reached
+                        ? { backgroundColor: stageHeat(stages, stage) }
+                        : undefined
+                    }
+                  />
+                ))}
+              </span>
               <span
                 className={cx(
                   "text-body mt-2 block truncate",

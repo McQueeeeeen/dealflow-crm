@@ -65,10 +65,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      <aside
-        className="border-line bg-sidebar sticky top-0 hidden h-dvh flex-col border-r px-3 py-4 lg:flex"
-        style={{ viewTransitionName: "app-header" }}
-      >
+      <div className="border-line bg-sidebar hidden border-r lg:block">
+        <aside
+          className="sticky top-0 flex h-dvh flex-col px-3 py-4"
+          style={{ viewTransitionName: "app-header" }}
+        >
         <Brand me={me.data} />
         <nav aria-label="Main" className="border-line mt-3 border-t pt-3">
           <NavLinks items={items} pathname={pathname} vertical />
@@ -77,7 +78,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <ThemeToggle />
           <AccountMenu me={me.data} up />
         </div>
-      </aside>
+        </aside>
+      </div>
 
       <div className="min-w-0">
         <header
