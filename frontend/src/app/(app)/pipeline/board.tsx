@@ -164,7 +164,11 @@ export function Board({
   function step(deal: Deal, by: number) {
     const target = columns[columns.findIndex((c) => c.stage.id === deal.stage_id) + by];
     if (target) {
-      move.mutate({ deal, stageId: target.stage.id, position: positionBetween(undefined, target.deals[0]) });
+      move.mutate({
+        deal,
+        stageId: target.stage.id,
+        position: positionBetween(undefined, target.deals[0]),
+      });
     }
   }
 
@@ -299,7 +303,13 @@ function SortableDeal({ deal, onStep }: { deal: Deal; onStep: Step }) {
               }}
               className="rounded-control text-muted hover:bg-hover hover:text-ink -mt-1 -mr-1 inline-flex size-8 shrink-0 cursor-grab items-center justify-center"
             >
-              <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true" fill="currentColor">
+              <svg
+                width="10"
+                height="14"
+                viewBox="0 0 10 14"
+                aria-hidden="true"
+                fill="currentColor"
+              >
                 <circle cx="2.5" cy="2.5" r="1.25" />
                 <circle cx="7.5" cy="2.5" r="1.25" />
                 <circle cx="2.5" cy="7" r="1.25" />
