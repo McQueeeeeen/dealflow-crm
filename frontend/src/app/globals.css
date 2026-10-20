@@ -3,62 +3,32 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  color-scheme: light;
-  --canvas: #f3f4f1;
-  --surface: #ffffff;
-  --raised: #ffffff;
-  --hover: #eceee9;
-  --ink: #1d2320;
-  --ink-muted: #5a635e;
-  --line: #dce0db;
-  --line-strong: #8d9690;
-  --accent: #17654c;
-  --accent-ink: #ffffff;
-  --accent-soft: #e2eee8;
-  --critical: #a63d2f;
-  --critical-soft: #f6e4e0;
-  --track-empty: #d5dad5;
-  --elevation: 0 8px 24px rgb(20 30 25 / 0.14), 0 1px 3px rgb(20 30 25 / 0.12);
+  color-scheme: light dark;
+  --canvas: light-dark(#f4f5f7, #14161b);
+  --surface: light-dark(#fcfcfd, #1b1e25);
+  --raised: light-dark(#fcfcfd, #232731);
+  --hover: light-dark(#eceef2, #252932);
+  --ink: light-dark(#15171c, #e9ebf0);
+  --ink-muted: light-dark(#5b606b, #a2a8b4);
+  --line: light-dark(#e1e3e8, #2c313b);
+  --line-strong: light-dark(#8a909b, #6a7180);
+  --accent: light-dark(#2440f0, #7d8cff);
+  --accent-ink: light-dark(#fcfcfd, #0e1020);
+  --accent-soft: light-dark(#e6eafe, #20264a);
+  --critical: light-dark(#c2341c, #ff7a63);
+  --critical-soft: light-dark(#fbe7e3, #3a1e1a);
+  --track-empty: light-dark(#dadde3, #333845);
+  --elevation:
+    0 8px 24px light-dark(rgb(21 23 28 / 0.12), rgb(0 0 0 / 0.45)),
+    0 1px 3px light-dark(rgb(21 23 28 / 0.1), rgb(0 0 0 / 0.4));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --canvas: #151816;
-    --surface: #1d211f;
-    --raised: #252a27;
-    --hover: #272c29;
-    --ink: #e6eae7;
-    --ink-muted: #a3ada7;
-    --line: #323834;
-    --line-strong: #6b746f;
-    --accent: #5fbf98;
-    --accent-ink: #0f1512;
-    --accent-soft: #1f3a30;
-    --critical: #e8806f;
-    --critical-soft: #3d2420;
-    --track-empty: #3a413d;
-    --elevation: 0 8px 24px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.4);
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: #151816;
-  --surface: #1d211f;
-  --raised: #252a27;
-  --hover: #272c29;
-  --ink: #e6eae7;
-  --ink-muted: #a3ada7;
-  --line: #323834;
-  --line-strong: #6b746f;
-  --accent: #5fbf98;
-  --accent-ink: #0f1512;
-  --accent-soft: #1f3a30;
-  --critical: #e8806f;
-  --critical-soft: #3d2420;
-  --track-empty: #3a413d;
-  --elevation: 0 8px 24px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {
@@ -78,7 +48,7 @@
   --color-track: var(--track-empty);
 
   --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-display: var(--font-archivo), var(--font-plex), ui-sans-serif, sans-serif;
 
   --text-meta: 0.78rem;
   --text-meta--line-height: 1.1rem;
@@ -112,9 +82,11 @@ body {
 }
 
 @layer base {
-  h1 {
-    font-family: var(--font-serif);
-    letter-spacing: -0.01em;
+  h1,
+  .font-display {
+    font-family: var(--font-display);
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -139,7 +111,7 @@ body {
 }
 
 dialog::backdrop {
-  background: rgb(10 14 12 / 0.45);
+  background: rgb(14 16 22 / 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
