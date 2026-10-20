@@ -70,14 +70,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="sticky top-0 flex h-dvh flex-col px-3 py-4"
           style={{ viewTransitionName: "app-header" }}
         >
-        <Brand me={me.data} />
-        <nav aria-label="Main" className="border-line mt-3 border-t pt-3">
-          <NavLinks items={items} pathname={pathname} vertical />
-        </nav>
-        <div className="border-line mt-auto flex flex-col gap-1 border-t pt-3">
-          <ThemeToggle />
-          <AccountMenu me={me.data} up />
-        </div>
+          <Brand me={me.data} />
+          <nav aria-label="Main" className="border-line mt-3 border-t pt-3">
+            <NavLinks items={items} pathname={pathname} vertical />
+          </nav>
+          <div className="border-line mt-auto flex flex-col gap-1 border-t pt-3">
+            <ThemeToggle />
+            <AccountMenu me={me.data} up />
+          </div>
         </aside>
       </div>
 
