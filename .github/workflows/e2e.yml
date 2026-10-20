@@ -1,0 +1,91 @@
+name: E2E
+
+# Boots the whole stack (PostgreSQL, the Rust API with demo data, the production Next.js
+# build) and drives it with Playwright on desktop and phone viewports. Screenshots of every
+# screen in both themes are kept as an artifact.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CARGO_TERM_COLOR: always
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      JWT_SECRET: e2e-only-secret-that-is-long-enough-for-hs256
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - name: Build API
+        working-directory: backend
+        run: cargo build --locked --bins
+      - name: Seed demo data and start API
+        working-directory: backend
+        run: |
+          ./target/debug/seed
+          nohup ./target/debug/dealflow-api > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/health && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/api.log"; exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build web app
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          cp -r .next/static .next/standalone/.next/static
+      - name: Start web app
+        working-directory: frontend
+        env:
+          API_URL: http://localhost:8080
+          DEMO_EMAIL: demo@dealflow.dev
+          DEMO_PASSWORD: dealflow-demo
+          PORT: "3000"
+        run: |
+          nohup node .next/standalone/server.js > "$RUNNER_TEMP/web.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost:3000/login && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/web.log"; exit 1
+      - name: Install browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright
+        working-directory: frontend
+        run: npx playwright test
+      - name: Collect server logs
+        if: always()
+        run: cp "$RUNNER_TEMP"/*.log frontend/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-results
+          path: |
+            frontend/e2e/screenshots
+            frontend/playwright-report
+            frontend/*.log
+          retention-days: 14
