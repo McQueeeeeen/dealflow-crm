@@ -16,27 +16,29 @@ primary content, so numbers are set with the same care as text.
 
 ## Palette
 
+Monochrome with one saturated signal. Grey-green with a forest accent was the expected
+fintech look, so the identity now comes from a single cobalt used only where something moves
+toward a close.
+
 | Token | Light | Dark | Reason |
 |---|---|---|---|
-| canvas | `#F3F4F1` | `#151816` | Grey with a faint green cast, like ruled ledger paper, so white surfaces read as sheets on a desk. |
-| surface | `#FFFFFF` | `#1D211F` | Where data lives. |
-| ink | `#1D2320` | `#E6EAE7` | Body text. Green-leaning to match the accent instead of a stock near-black. |
-| ink-muted | `#5A635E` | `#A3ADA7` | Secondary text; 6:1 on surface in light, 7:1 in dark. |
-| line | `#DCE0DB` | `#323834` | Hairlines between rows. |
-| evergreen (accent) | `#17654C` | `#5FBF98` | The one accent: primary actions, the current nav item, won deals. Money closing is the product's purpose, so the accent means "moving toward won". |
-| brick (critical) | `#A63D2F` | `#E8806F` | Lost deals, overdue tasks, destructive actions. Reserved for "needs attention now". |
+| canvas | `#F4F5F7` | `#14161B` | Cool off-white and graphite, no warm paper tint. |
+| surface | `#FCFCFD` | `#1B1E25` | Where data lives. Not pure white, so the cobalt reads crisper. |
+| ink | `#15171C` | `#E9EBF0` | Body text. |
+| ink-muted | `#5B606B` | `#A2A8B4` | Secondary text; at least 6:1 on surface in both themes. |
+| line | `#E1E3E8` | `#2C313B` | Hairlines between rows. |
+| cobalt (accent) | `#2440F0` | `#7D8CFF` | The one accent: primary actions, the current page, won deals, the stage track. 6.8:1 with white text. |
+| brick (critical) | `#C2341C` | `#FF7A63` | Lost deals, overdue follow-ups, destructive actions only. |
 
-Two colors beyond neutrals. Charts use the evergreen ramp only.
+One accent beyond neutrals. Charts use the cobalt ramp only.
 
 ## Type
 
-Two families with separate jobs.
-
-- Source Serif 4 is the voice of the product: page titles, the wordmark and money that matters
-  (deal value, stage totals, report figures, the Today summary). Sales is about money moving,
-  and a serif with lining figures reads like a statement or a ledger, not a form.
-- IBM Plex Sans does the work: tables, forms, buttons, labels. Drawn for business software,
-  with compact numerals that line up in columns. Tabular figures on every amount and date.
+- Archivo, set 12% wider than normal, is the product's voice: page titles, the wordmark and
+  money that matters (deal value, stage totals, report figures, the Today summary). The wide
+  cut reads like a ticker or a printed statement, engineered rather than decorative.
+- IBM Plex Sans does the work: tables, forms, buttons, labels. Compact numerals that line up
+  in columns; tabular figures on every amount and date.
 
 Scale (1.2 ratio, 15px base): 12.5 / 15 / 18 / 21.6 / 34, and 48 for the sign-in headline.
 Sentence case everywhere. No uppercase labels.

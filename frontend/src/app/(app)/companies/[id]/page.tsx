@@ -70,7 +70,7 @@ function CompanyView({ company }: { company: Company }) {
             {[company.industry, company.domain].filter(Boolean).join(", ") ||
               "No industry or domain yet"}
           </p>
-          <p className="num text-lead mt-3 font-serif">
+          <p className="num text-lead mt-3 font-display">
             {company.open_deals_count > 0
               ? `${fmt(company.open_deals_value_cents)} open across ${company.open_deals_count} ${company.open_deals_count === 1 ? "deal" : "deals"}`
               : "No open deals"}
