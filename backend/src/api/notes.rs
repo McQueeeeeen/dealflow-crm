@@ -10,6 +10,7 @@ use uuid::Uuid;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
+use crate::live;
 use crate::pagination::{Page, Pagination};
 use crate::state::AppState;
 use crate::validation::Validator;
@@ -144,7 +145,19 @@ pub async fn create_note(
         .bind(id)
         .fetch_one(&state.pool)
         .await?;
+    announce(&state, &actor, id, "created").await?;
     Ok((StatusCode::CREATED, Json(note)))
+}
+
+async fn announce(state: &AppState, actor: &AuthUser, id: Uuid, action: &str) -> AppResult<()> {
+    let change = live::Change {
+        org: actor.org_id,
+        entity: "note".into(),
+        id,
+        action: action.into(),
+        actor: Some(actor.user_id),
+    };
+    live::notify(&mut *state.pool.acquire().await?, &change).await
 }
 
 pub async fn delete_note(
@@ -165,5 +178,6 @@ pub async fn delete_note(
         .bind(actor.org_id)
         .execute(&state.pool)
         .await?;
+    announce(&state, &actor, id, "deleted").await?;
     Ok(StatusCode::NO_CONTENT)
 }

@@ -140,16 +140,16 @@ pub async fn get_contact(
     Ok(Json(fetch_contact(&state.pool, user.org_id, id).await?))
 }
 
-struct CleanInput {
-    first_name: String,
-    last_name: String,
-    email: Option<String>,
-    phone: Option<String>,
-    job_title: Option<String>,
-    company_id: Option<Uuid>,
+pub(crate) struct CleanInput {
+    pub(crate) first_name: String,
+    pub(crate) last_name: String,
+    pub(crate) email: Option<String>,
+    pub(crate) phone: Option<String>,
+    pub(crate) job_title: Option<String>,
+    pub(crate) company_id: Option<Uuid>,
 }
 
-fn validate(req: ContactInput) -> AppResult<(CleanInput, Option<Uuid>)> {
+pub(crate) fn validate(req: ContactInput) -> AppResult<(CleanInput, Option<Uuid>)> {
     let input = CleanInput {
         first_name: req.first_name.trim().to_owned(),
         last_name: req.last_name.trim().to_owned(),

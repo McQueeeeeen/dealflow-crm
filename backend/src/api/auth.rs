@@ -64,6 +64,7 @@ pub struct Me {
     pub organization_id: Uuid,
     pub organization_name: String,
     pub currency: String,
+    pub stale_after_days: i16,
 }
 
 #[derive(Serialize)]
@@ -262,7 +263,7 @@ pub async fn me(State(state): State<AppState>, user: AuthUser) -> AppResult<Json
 async fn load_me(conn: &mut PgConnection, user_id: Uuid) -> AppResult<Me> {
     sqlx::query_as(
         "SELECT u.id, u.email, u.full_name, u.role, u.organization_id,
-                o.name AS organization_name, o.currency
+                o.name AS organization_name, o.currency, o.stale_after_days
          FROM users u JOIN organizations o ON o.id = u.organization_id
          WHERE u.id = $1",
     )
