@@ -5,7 +5,15 @@ import { type ReactNode } from "react";
 
 import { OwnerFilter } from "@/components/owner-select";
 import { Table } from "@/components/table";
-import { EmptyState, ErrorState, Loading, PageHeader, Panel, Select } from "@/components/ui";
+import {
+  EmptyState,
+  ErrorState,
+  Loading,
+  PageHeader,
+  Panel,
+  Select,
+  Stat,
+} from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { percent, shortDate } from "@/lib/format";
 import { WON_HEAT } from "@/lib/heat";
@@ -122,15 +130,11 @@ function SummaryStrip({ owner }: { owner: string }) {
     },
   ];
   return (
-    <dl className="rounded-card border-line bg-surface grid grid-cols-2 overflow-hidden border sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {figures.map((f) => (
-        <div key={f.label} className="border-line p-4 not-last:border-b sm:border-r lg:border-b-0">
-          <dt className="text-meta text-muted">{f.label}</dt>
-          <dd className="text-title font-display mt-1 font-semibold">{f.value}</dd>
-          <dd className="text-meta text-muted">{f.note}</dd>
-        </div>
+        <Stat key={f.label} {...f} />
       ))}
-    </dl>
+    </div>
   );
 }
 

@@ -133,14 +133,14 @@ export function TaskGroup({
     <div>
       <h3
         className={cx(
-          "border-line text-body flex items-baseline gap-2 border-b px-4 pt-4 pb-2 font-semibold",
+          "text-body flex items-baseline gap-2 px-4 pt-4 font-semibold",
           tone === "critical" && "text-critical",
         )}
       >
         {title}
         <span className="num text-meta text-muted font-normal">{tasks.length}</span>
       </h3>
-      <ul className="divide-line divide-y">
+      <ul className="row-list">
         {tasks.map((task) => (
           <TaskRow key={task.id} task={task} />
         ))}

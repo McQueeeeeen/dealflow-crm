@@ -121,7 +121,7 @@ export default function ContactsPage() {
                     c.email ? (
                       <a
                         href={`mailto:${c.email}`}
-                        className="text-accent break-all underline underline-offset-2"
+                        className="text-link break-all underline underline-offset-2"
                       >
                         {c.email}
                       </a>

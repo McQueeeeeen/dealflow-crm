@@ -10,7 +10,7 @@ import {
 
 for (const scheme of ["light", "dark"] as const) {
   test(`every screen renders cleanly in ${scheme} mode`, async ({ page }, info) => {
-    await page.emulateMedia({ colorScheme: scheme });
+    await page.addInitScript((t) => localStorage.setItem("dealflow-theme", t), scheme);
     const errors = watchErrors(page);
 
     await page.goto("/login");
@@ -19,7 +19,7 @@ for (const scheme of ["light", "dark"] as const) {
     await signInAsDemo(page);
 
     const screens: { path: string; heading: RegExp | string; name: string }[] = [
-      { path: "/today", heading: "Today", name: "today" },
+      { path: "/today", heading: /^Welcome back/, name: "today" },
       { path: "/pipeline", heading: "Pipeline", name: "pipeline" },
       { path: "/companies", heading: "Companies", name: "companies" },
       { path: "/contacts", heading: "Contacts", name: "contacts" },

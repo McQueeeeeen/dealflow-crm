@@ -191,7 +191,7 @@ function DealTasks({ dealId, onAdd }: { dealId: string; onAdd: () => void }) {
           No follow-ups planned. Add the next step so this deal does not stall.
         </p>
       ) : (
-        <ul className="divide-line border-line mt-2 divide-y border-t">
+        <ul className="row-list mt-1">
           {tasks.data.data.map((task) => (
             <TaskRow key={task.id} task={task} showLinks={false} />
           ))}

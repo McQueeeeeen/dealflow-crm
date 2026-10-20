@@ -8,7 +8,16 @@ import { DealLink, DealName } from "@/components/deal-link";
 import { StageTrack } from "@/components/stage-track";
 import { TaskFormDialog } from "@/components/task-form";
 import { TaskGroup } from "@/components/task-list";
-import { Button, EmptyState, ErrorState, Loading, PageHeader, Panel, cx } from "@/components/ui";
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  Loading,
+  PageHeader,
+  Panel,
+  Stat,
+  cx,
+} from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { parseDay, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
@@ -36,19 +45,45 @@ function groupTasks(tasks: Task[], now = new Date()) {
   return groups;
 }
 
+function useMyTasks() {
+  const me = useMe().data;
+  return useQuery({
+    queryKey: keys.tasks({ assignee: me?.id, status: "open", view: "today" }),
+    queryFn: () =>
+      get<Page<Task>>(`/tasks${query({ assignee_id: me?.id, status: "open", per_page: 100 })}`),
+    enabled: !!me,
+  });
+}
+
 export default function TodayPage() {
   const [adding, setAdding] = useState(false);
-  const todayLabel = new Intl.DateTimeFormat(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(new Date());
+  const me = useMe().data;
+  const tasks = useMyTasks().data?.data;
+  const groups = tasks ? groupTasks(tasks) : null;
 
   return (
     <>
       <PageHeader
-        title="Today"
-        description={<time suppressHydrationWarning>{todayLabel}</time>}
+        title={`Welcome back, ${me?.full_name.split(" ")[0] ?? ""}`}
+        description={
+          groups ? (
+            <>
+              <strong className="num text-ink font-semibold">{groups.today.length}</strong>{" "}
+              {groups.today.length === 1 ? "follow-up" : "follow-ups"} due today,{" "}
+              <strong
+                className={cx(
+                  "num font-semibold",
+                  groups.overdue.length > 0 ? "text-critical" : "text-ink",
+                )}
+              >
+                {groups.overdue.length}
+              </strong>{" "}
+              overdue.
+            </>
+          ) : (
+            "Loading your day…"
+          )
+        }
         actions={
           <Button variant="primary" onClick={() => setAdding(true)}>
             Add Follow-Up
@@ -76,33 +111,28 @@ function MyNumbers() {
   if (!summary.data) return null;
   const s = summary.data;
   return (
-    <p className="text-title text-muted max-w-3xl font-medium tracking-tight">
-      You have <strong className="num text-ink font-semibold">{fmt(s.open_pipeline_cents)}</strong>{" "}
-      open across <span className="num">{s.open_deals_count}</span>{" "}
-      {s.open_deals_count === 1 ? "deal" : "deals"}, about{" "}
-      <strong className="num text-ink font-semibold">{fmt(s.weighted_pipeline_cents)}</strong> once
-      weighted by stage.{" "}
-      {s.won_this_month_count > 0 ? (
-        <>
-          You closed{" "}
-          <strong className="num text-won font-semibold">{fmt(s.won_this_month_cents)}</strong> this
-          month.
-        </>
-      ) : (
-        "Nothing won yet this month."
-      )}
-    </p>
+    <div className="grid gap-3 sm:grid-cols-3">
+      <Stat
+        label="Your open pipeline"
+        value={fmt(s.open_pipeline_cents)}
+        note={`${s.open_deals_count} open ${s.open_deals_count === 1 ? "deal" : "deals"}`}
+      />
+      <Stat
+        label="Weighted by stage"
+        value={fmt(s.weighted_pipeline_cents)}
+        note="Value times stage probability"
+      />
+      <Stat
+        label="Won this month"
+        value={<span className={s.won_this_month_count > 0 ? "text-won" : undefined}>{fmt(s.won_this_month_cents)}</span>}
+        note={`${s.won_this_month_count} ${s.won_this_month_count === 1 ? "deal" : "deals"}`}
+      />
+    </div>
   );
 }
 
 function FollowUps({ onAdd }: { onAdd: () => void }) {
-  const me = useMe().data;
-  const tasks = useQuery({
-    queryKey: keys.tasks({ assignee: me?.id, status: "open", view: "today" }),
-    queryFn: () =>
-      get<Page<Task>>(`/tasks${query({ assignee_id: me?.id, status: "open", per_page: 100 })}`),
-    enabled: !!me,
-  });
+  const tasks = useMyTasks();
 
   return (
     <Panel>
@@ -161,7 +191,7 @@ function ClosingSoon() {
         <Link
           transitionTypes={SECTION}
           href="/pipeline"
-          className="text-body text-accent underline underline-offset-4"
+          className="text-body text-link underline underline-offset-4"
         >
           Open pipeline
         </Link>
@@ -179,7 +209,7 @@ function ClosingSoon() {
           body="Set an expected close date on a deal to plan the month around it."
         />
       ) : (
-        <ul className="divide-line border-line mt-3 divide-y border-t">
+        <ul className="row-list mt-1">
           {dated.map((deal) => {
             const slipped = parseDay(deal.expected_close_date!) < startOfToday;
             return (

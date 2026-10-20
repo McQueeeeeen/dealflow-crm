@@ -56,14 +56,13 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
     <div>
       <div className="text-meta text-muted mb-6 flex flex-wrap gap-x-5 gap-y-1">
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="bg-track inline-block size-3 rounded-full" />
+          <span aria-hidden="true" className="hatch border-line inline-block size-3 rounded-sm border" />
           Full value of open deals
         </span>
         <span className="flex items-center gap-2">
           <span
             aria-hidden="true"
-            className="inline-block size-3 rounded-full"
-            style={{ backgroundColor: heat(1) }}
+            className="bg-accent inline-block size-3 rounded-sm"
           />
           Weighted by stage probability
         </span>
@@ -105,15 +104,14 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
                 >
                   <span
                     className={cx(
-                      "bg-track relative block w-full max-w-6 rounded-t-lg",
+                      "hatch border-line relative block w-full max-w-10 rounded-t-lg border border-b-0",
                       focus === i && "brightness-95",
                     )}
                     style={{ height: `${(m.total_cents / max) * 100}%` }}
                   >
                     <span
-                      className="absolute inset-x-0 bottom-0 block rounded-t-lg"
+                      className="bg-accent absolute -inset-x-px bottom-0 block rounded-t-lg"
                       style={{
-                        backgroundColor: heat(1),
                         height:
                           m.total_cents > 0 ? `${(m.weighted_cents / m.total_cents) * 100}%` : 0,
                       }}
@@ -156,7 +154,7 @@ export function ForecastChart({ months }: { months: ForecastMonth[] }) {
       </div>
 
       <details className="mt-3">
-        <summary className="text-body text-accent cursor-pointer">Show as a table</summary>
+        <summary className="text-body text-link cursor-pointer">Show as a table</summary>
         <table className="text-body mt-2 w-full">
           <thead>
             <tr className="border-line text-meta text-muted border-b text-left">

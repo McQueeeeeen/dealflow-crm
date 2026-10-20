@@ -154,7 +154,7 @@ function CompanyContacts({ companyId }: { companyId: string }) {
     return <p className="text-body text-muted px-4 py-6">Nobody from this company yet.</p>;
   }
   return (
-    <ul className="divide-line border-line mt-2 divide-y border-t">
+    <ul className="row-list mt-1">
       {contacts.data.data.map((c) => (
         <li key={c.id} className="px-4 py-3">
           <Link
@@ -168,7 +168,7 @@ function CompanyContacts({ companyId }: { companyId: string }) {
           {c.email ? (
             <a
               href={`mailto:${c.email}`}
-              className="text-meta text-accent underline underline-offset-2"
+              className="text-meta text-link underline underline-offset-2"
             >
               {c.email}
             </a>

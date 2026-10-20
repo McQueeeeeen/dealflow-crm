@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { DealLink, DealName } from "@/components/deal-link";
 import { StageTrack } from "@/components/stage-track";
-import { ErrorState, Loading } from "@/components/ui";
+import { ErrorState, Loading, Pill } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
@@ -32,16 +32,24 @@ export function LinkedDeals({
   const sorted = [...deals.data.data].sort((a, b) => rank[a.stage_kind] - rank[b.stage_kind]);
 
   return (
-    <ul className="divide-line divide-y">
+    <ul className="row-list">
       {sorted.map((deal) => (
         <li key={deal.id}>
           <DealLink deal={deal} className="hover:bg-hover flex items-center gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <DealName deal={deal} className="block truncate font-medium" />
               <p className="text-meta text-muted mt-1 flex items-center gap-2">
-                <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} />
-                {deal.stage_name}
-                {deal.closed_at ? `, ${shortDate(deal.closed_at)}` : ""}
+                {deal.stage_kind === "open" ? (
+                  <>
+                    <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} />
+                    {deal.stage_name}
+                  </>
+                ) : (
+                  <>
+                    <Pill tone={deal.stage_kind}>{deal.stage_name}</Pill>
+                    {deal.closed_at ? shortDate(deal.closed_at) : null}
+                  </>
+                )}
               </p>
             </div>
             <span className="num shrink-0 font-medium">{fmt(deal.value_cents)}</span>

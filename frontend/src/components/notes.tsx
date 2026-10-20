@@ -76,7 +76,7 @@ export function NotesPanel({ parent }: { parent: Parent }) {
           No notes yet. Notes are shared with everyone in your workspace.
         </p>
       ) : (
-        <ul className="divide-line divide-y">
+        <ul className="row-list">
           {notes.data.data.map((note) => (
             <li key={note.id} className="px-4 py-3">
               <p className="break-words whitespace-pre-wrap">{note.body}</p>

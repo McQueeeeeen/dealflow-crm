@@ -1,5 +1,6 @@
 "use client";
 
+import { IconX } from "@tabler/icons-react";
 import {
   forwardRef,
   useEffect,
@@ -26,8 +27,8 @@ export function cx(...classes: (string | false | null | undefined)[]): string {
 type Variant = "primary" | "secondary" | "quiet" | "danger";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-accent-ink hover:brightness-110 border-transparent",
-  secondary: "bg-surface text-ink border-line-strong hover:bg-hover",
+  primary: "bg-accent text-accent-ink hover:brightness-110 border-transparent shadow-highlight",
+  secondary: "bg-row text-ink border-line hover:bg-hover shadow-highlight",
   quiet: "bg-transparent text-ink border-transparent hover:bg-hover",
   danger: "bg-surface text-critical border-critical hover:bg-critical-soft",
 };
@@ -55,7 +56,7 @@ export const Button = forwardRef<
 });
 
 const control =
-  "w-full rounded-control border border-line-strong bg-surface px-3 text-body text-ink placeholder:text-muted min-h-11 sm:min-h-9 aria-[invalid=true]:border-critical";
+  "w-full rounded-control border border-line bg-row px-3 text-body text-ink placeholder:text-muted min-h-11 sm:min-h-9 aria-[invalid=true]:border-critical";
 
 export function Field({
   label,
@@ -166,9 +167,7 @@ export function Dialog({
               className="rounded-control text-muted hover:bg-hover -mt-1 -mr-2 inline-flex size-11 items-center justify-center sm:size-9"
               aria-label="Close"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" />
-              </svg>
+              <IconX size={18} stroke={1.75} aria-hidden="true" />
             </button>
           </div>
           {children}
@@ -190,7 +189,7 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 pb-6">
       <div className="min-w-0">
-        <h1 className="text-display font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-display">{title}</h1>
         {description ? <p className="text-body text-muted mt-1">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -211,12 +210,44 @@ export function Panel({
     <section
       className={cx(
         "border-line",
-        quiet ? "border-t" : "rounded-card bg-surface border",
+        quiet ? "border-t" : "rounded-card bg-surface shadow-highlight border",
         className,
       )}
     >
       {children}
     </section>
+  );
+}
+
+type Tone = "open" | "won" | "lost" | "accent";
+
+const tones: Record<Tone, string> = {
+  open: "bg-open-soft text-open",
+  won: "bg-won-soft text-won",
+  lost: "bg-row text-muted",
+  accent: "bg-accent-soft text-ink",
+};
+
+export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
+  return (
+    <span
+      className={cx(
+        "text-meta inline-flex h-6 items-center rounded-full px-2.5 font-medium whitespace-nowrap",
+        tones[tone],
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function Stat({ label, value, note }: { label: string; value: ReactNode; note?: ReactNode }) {
+  return (
+    <div className="rounded-card border-line bg-surface shadow-highlight flex min-w-0 flex-col gap-3 border p-5">
+      <p className="text-body text-muted font-medium">{label}</p>
+      <p className="num text-display truncate font-semibold tracking-tight">{value}</p>
+      {note ? <p className="text-meta text-muted">{note}</p> : null}
+    </div>
   );
 }
 
@@ -391,7 +422,7 @@ export function Missing({ title, href, back }: { title: string; href: string; ba
       <Link
         transitionTypes={BACK}
         href={href}
-        className="text-accent mt-4 inline-block underline underline-offset-4"
+        className="text-link mt-4 inline-block underline underline-offset-4"
       >
         {back}
       </Link>

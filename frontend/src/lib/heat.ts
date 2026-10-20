@@ -9,7 +9,7 @@ const STOPS: Oklch[] = [
   [0.7, 0.18, 50],
 ];
 
-export const WON_HEAT = "oklch(0.63 0.21 32)";
+export const WON_HEAT = "var(--won)";
 export const LOST_HEAT = "var(--line-strong)";
 
 export function heat(t: number): string {

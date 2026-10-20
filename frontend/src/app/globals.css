@@ -1,47 +1,44 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
 :root {
-  color-scheme: light dark;
-  --canvas: light-dark(#eef1f5, #12151c);
-  --surface: light-dark(#fdfdfe, #191d26);
-  --raised: light-dark(#fdfdfe, #20252f);
-  --hover: light-dark(#e6eaf0, #232834);
-  --ink: light-dark(#1b2130, #e8ebf1);
-  --ink-muted: light-dark(#5a6275, #a1a9b8);
-  --line: light-dark(#dde2ea, #2a303c);
-  --line-strong: light-dark(#8b93a5, #69728a);
-  --accent: light-dark(#1b2130, #e8ebf1);
-  --accent-ink: light-dark(#fdfdfe, #12151c);
-  --accent-soft: light-dark(#e3e8f2, #262c38);
-  --won: light-dark(#b8461b, #ff9b66);
-  --focus: light-dark(#2f6fe4, #7aa7ff);
+  color-scheme: dark;
+  --canvas: light-dark(#f4f4f5, #161616);
+  --sidebar: light-dark(#fafafa, #121212);
+  --surface: light-dark(#ffffff, #1d1d1d);
+  --row: light-dark(#f4f4f5, #252525);
+  --raised: light-dark(#ffffff, #222222);
+  --hover: light-dark(#ececee, #2c2c2c);
+  --ink: light-dark(#18181b, #ededed);
+  --ink-muted: light-dark(#63636b, #959595);
+  --line: light-dark(#e4e4e7, #2b2b2b);
+  --line-strong: light-dark(#a1a1aa, #5e5e5e);
+  --accent: light-dark(#5b45e8, #6a55f0);
+  --accent-ink: #ffffff;
+  --link: light-dark(#5b45e8, #a395ff);
+  --accent-soft: light-dark(#ebe8fd, #2b2648);
+  --won: light-dark(#15803d, #4ade80);
+  --won-soft: light-dark(#dcfce7, #1b3325);
+  --open: light-dark(#2563eb, #7ab0ff);
+  --open-soft: light-dark(#dbeafe, #1c2a42);
+  --focus: light-dark(#5b45e8, #a395ff);
   --critical: light-dark(#c0392b, #ff7b6b);
   --critical-soft: light-dark(#fbe6e3, #3b1f1c);
-  --track-empty: light-dark(#dfe4ec, #2f3542);
-  --lift-rest:
-    0 1px 2px light-dark(rgb(27 33 48 / 0.06), rgb(0 0 0 / 0.4)),
-    0 2px 8px light-dark(rgb(27 33 48 / 0.06), rgb(0 0 0 / 0.25));
-  --lift-hover:
-    0 2px 4px light-dark(rgb(27 33 48 / 0.08), rgb(0 0 0 / 0.45)),
-    0 8px 20px light-dark(rgb(27 33 48 / 0.1), rgb(0 0 0 / 0.35));
+  --track-empty: light-dark(#e4e4e7, #333333);
+  --highlight: inset 0 1px 0 light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.05));
   --elevation:
-    0 12px 32px light-dark(rgb(27 33 48 / 0.18), rgb(0 0 0 / 0.5)),
-    0 2px 6px light-dark(rgb(27 33 48 / 0.1), rgb(0 0 0 / 0.4));
+    0 16px 40px light-dark(rgb(24 24 27 / 0.16), rgb(0 0 0 / 0.6)),
+    0 2px 6px light-dark(rgb(24 24 27 / 0.08), rgb(0 0 0 / 0.4));
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-}
-
 @theme inline {
   --color-canvas: var(--canvas);
+  --color-sidebar: var(--sidebar);
   --color-surface: var(--surface);
+  --color-row: var(--row);
   --color-raised: var(--raised);
   --color-hover: var(--hover);
   --color-ink: var(--ink);
@@ -50,34 +47,37 @@
   --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
+  --color-link: var(--link);
   --color-accent-soft: var(--accent-soft);
   --color-critical: var(--critical);
   --color-critical-soft: var(--critical-soft);
   --color-track: var(--track-empty);
   --color-won: var(--won);
+  --color-won-soft: var(--won-soft);
+  --color-open: var(--open);
+  --color-open-soft: var(--open-soft);
   --color-focus: var(--focus);
 
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --text-meta: 0.78rem;
   --text-meta--line-height: 1.1rem;
-  --text-body: 0.9375rem;
-  --text-body--line-height: 1.45rem;
-  --text-lead: 1.125rem;
-  --text-lead--line-height: 1.6rem;
-  --text-title: 1.35rem;
-  --text-title--line-height: 1.8rem;
-  --text-display: 2.125rem;
-  --text-display--line-height: 2.55rem;
-  --text-hero: 3rem;
-  --text-hero--line-height: 3.3rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.35rem;
+  --text-lead: 1rem;
+  --text-lead--line-height: 1.5rem;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.6rem;
+  --text-display: 1.75rem;
+  --text-display--line-height: 2.2rem;
+  --text-hero: 2.5rem;
+  --text-hero--line-height: 2.9rem;
 
-  --radius-control: 10px;
+  --radius-control: 8px;
   --radius-card: 14px;
-  --radius-dialog: 18px;
-  --shadow-card: var(--lift-rest);
-  --shadow-card-hover: var(--lift-hover);
+  --radius-dialog: 16px;
+  --shadow-highlight: var(--highlight);
   --shadow-float: var(--elevation);
 }
 
@@ -103,7 +103,7 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: 1.45;
-  word-spacing: 0.08em;
+  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
 }
 
@@ -117,20 +117,40 @@ body {
   h1,
   .font-display {
     font-family: var(--font-display);
-    font-weight: 800;
-    letter-spacing: -0.03em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
+}
+
+@utility row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+
+  & > li {
+    border-radius: 0.625rem;
+    background: var(--row);
+  }
+
+  & > li > a {
+    border-radius: inherit;
+  }
+}
+
+@utility hatch {
+  background: repeating-linear-gradient(-45deg, var(--track-empty) 0 2px, transparent 2px 7px);
 }
 
 @keyframes rail-fill {
   from {
-    transform: scaleX(0);
+    transform: scaleY(0);
   }
 }
 
 .rail-fill {
-  transform-origin: left;
-  animation: rail-fill 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: bottom;
+  animation: rail-fill 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .num {
@@ -147,7 +167,7 @@ dialog {
 }
 
 dialog::backdrop {
-  background: rgb(14 16 22 / 0.5);
+  background: rgb(0 0 0 / 0.6);
 }
 
 ::view-transition {
