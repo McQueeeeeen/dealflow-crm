@@ -136,7 +136,9 @@ export function LiveStatus({ me }: { me: string }) {
       <span className="flex items-center gap-1.5" role="status">
         <span
           aria-hidden="true"
-          className={connected ? "bg-won size-2 rounded-full" : "bg-line-strong size-2 rounded-full"}
+          className={
+            connected ? "bg-won size-2 rounded-full" : "bg-line-strong size-2 rounded-full"
+          }
         />
         {connected ? "Live" : "Offline"}
       </span>

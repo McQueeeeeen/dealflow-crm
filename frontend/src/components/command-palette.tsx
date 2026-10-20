@@ -185,7 +185,9 @@ export function CommandPalette() {
                 aria-expanded="true"
                 aria-controls={listId}
                 aria-autocomplete="list"
-                aria-activedescendant={items[current] ? `${listId}-${items[current].id}` : undefined}
+                aria-activedescendant={
+                  items[current] ? `${listId}-${items[current].id}` : undefined
+                }
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);

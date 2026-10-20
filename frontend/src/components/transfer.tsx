@@ -138,8 +138,8 @@ function ImportFlow({ kind, onClose }: { kind: Kind; onClose: () => void }) {
       {file ? (
         <section aria-label="Columns" className="flex flex-col gap-3">
           <p className="text-body text-muted">
-            <span className="num text-ink font-medium">{file.rows.length}</span> rows in{" "}
-            {file.name}. Match each field to a column.
+            <span className="num text-ink font-medium">{file.rows.length}</span> rows in {file.name}
+            . Match each field to a column.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {targets.map((t) => (
@@ -248,7 +248,9 @@ function Summary({ report }: { report: ImportReport }) {
             </li>
           ))}
           {report.errors.length > 8 ? (
-            <li className="text-muted">And {report.errors.length - 8} more. These rows are skipped.</li>
+            <li className="text-muted">
+              And {report.errors.length - 8} more. These rows are skipped.
+            </li>
           ) : (
             <li className="text-muted">These rows are skipped.</li>
           )}

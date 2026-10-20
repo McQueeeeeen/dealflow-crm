@@ -242,12 +242,17 @@ function GoingCold({ deal }: { deal: Deal }) {
   if (days === null) return null;
   return (
     <p className="rounded-card border-line bg-open-soft text-body mt-4 flex items-start gap-3 border px-4 py-3">
-      <IconSnowflake size={18} stroke={1.75} className="text-open mt-0.5 shrink-0" aria-hidden="true" />
+      <IconSnowflake
+        size={18}
+        stroke={1.75}
+        className="text-open mt-0.5 shrink-0"
+        aria-hidden="true"
+      />
       <span>
         <span className="font-medium">Going cold.</span>{" "}
         <span className="text-muted">
-          No notes, completed follow-ups or changes for {days} days. Log a call or schedule the
-          next step to warm it up.
+          No notes, completed follow-ups or changes for {days} days. Log a call or schedule the next
+          step to warm it up.
         </span>
       </span>
     </p>
