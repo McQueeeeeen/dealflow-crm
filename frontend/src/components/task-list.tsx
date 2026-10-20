@@ -69,7 +69,8 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
             <span>No due date</span>
           )}
           {showLinks && task.deal_id ? (
-            <Link transitionTypes={FORWARD}
+            <Link
+              transitionTypes={FORWARD}
               href={`/deals/${task.deal_id}`}
               className="hover:text-ink underline underline-offset-2"
             >
@@ -77,7 +78,8 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
             </Link>
           ) : null}
           {showLinks && task.contact_id ? (
-            <Link transitionTypes={FORWARD}
+            <Link
+              transitionTypes={FORWARD}
               href={`/contacts/${task.contact_id}`}
               className="hover:text-ink underline underline-offset-2"
             >

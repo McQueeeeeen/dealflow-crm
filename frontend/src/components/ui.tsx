@@ -388,7 +388,11 @@ export function Missing({ title, href, back }: { title: string; href: string; ba
   return (
     <div className="py-12 text-center">
       <p className="text-lead font-medium">{title}</p>
-      <Link transitionTypes={BACK} href={href} className="text-accent mt-4 inline-block underline underline-offset-4">
+      <Link
+        transitionTypes={BACK}
+        href={href}
+        className="text-accent mt-4 inline-block underline underline-offset-4"
+      >
         {back}
       </Link>
     </div>

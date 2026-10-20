@@ -8,7 +8,11 @@ export default function NotFound() {
       <p className="text-muted">
         The link may be out of date, or the record was deleted by someone on your team.
       </p>
-      <Link transitionTypes={SECTION} href="/today" className="text-accent font-medium underline underline-offset-4">
+      <Link
+        transitionTypes={SECTION}
+        href="/today"
+        className="text-accent font-medium underline underline-offset-4"
+      >
         Back to today&apos;s work
       </Link>
     </main>

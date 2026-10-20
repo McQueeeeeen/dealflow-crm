@@ -46,7 +46,8 @@ function DealView({ deal }: { deal: Deal }) {
 
   return (
     <>
-      <Link transitionTypes={BACK}
+      <Link
+        transitionTypes={BACK}
         href="/pipeline"
         className="text-body text-muted hover:text-ink underline underline-offset-4"
       >
@@ -59,7 +60,8 @@ function DealView({ deal }: { deal: Deal }) {
           </h1>
           <p className="text-muted mt-1">
             {deal.company_id ? (
-              <Link transitionTypes={FORWARD}
+              <Link
+                transitionTypes={FORWARD}
                 href={`/companies/${deal.company_id}`}
                 className="hover:text-ink underline underline-offset-4"
               >
@@ -99,7 +101,8 @@ function DealView({ deal }: { deal: Deal }) {
               <dt className="text-muted">Contact</dt>
               <dd className="min-w-0 truncate">
                 {deal.contact_id ? (
-                  <Link transitionTypes={FORWARD}
+                  <Link
+                    transitionTypes={FORWARD}
                     href={`/contacts/${deal.contact_id}`}
                     className="underline underline-offset-4"
                   >

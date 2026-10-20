@@ -59,7 +59,9 @@ export function NotesPanel({ parent }: { parent: Parent }) {
         />
         <FormError error={add.error} />
         <div className="flex items-center justify-between gap-3">
-          <span className="text-meta text-muted hidden sm:inline">{"Ctrl\u00a0or\u00a0Cmd\u00a0+\u00a0Enter to save"}</span>
+          <span className="text-meta text-muted hidden sm:inline">
+            {"Ctrl\u00a0or\u00a0Cmd\u00a0+\u00a0Enter to save"}
+          </span>
           <Button type="submit" busy={add.isPending} disabled={!body.trim()}>
             Save Note
           </Button>

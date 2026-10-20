@@ -63,7 +63,8 @@ function ContactView({ contact }: { contact: Contact }) {
 
   return (
     <>
-      <Link transitionTypes={BACK}
+      <Link
+        transitionTypes={BACK}
         href="/contacts"
         className="text-body text-muted hover:text-ink underline underline-offset-4"
       >
@@ -79,7 +80,8 @@ function ContactView({ contact }: { contact: Contact }) {
             {contact.company_id ? (
               <>
                 {" at "}
-                <Link transitionTypes={FORWARD}
+                <Link
+                  transitionTypes={FORWARD}
                   href={`/companies/${contact.company_id}`}
                   className="hover:text-ink underline underline-offset-4"
                 >

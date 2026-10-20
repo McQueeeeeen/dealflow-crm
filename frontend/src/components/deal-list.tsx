@@ -35,9 +35,7 @@ export function LinkedDeals({
     <ul className="divide-line divide-y">
       {sorted.map((deal) => (
         <li key={deal.id}>
-          <DealLink deal={deal}
-            className="hover:bg-hover flex items-center gap-3 px-4 py-3"
-          >
+          <DealLink deal={deal} className="hover:bg-hover flex items-center gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <DealName deal={deal} className="block truncate font-medium" />
               <p className="text-meta text-muted mt-1 flex items-center gap-2">

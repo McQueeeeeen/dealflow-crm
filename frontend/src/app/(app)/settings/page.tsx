@@ -417,7 +417,11 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
         )}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Win probability (%)" name="probability" error={fieldError(error, "probability")}>
+        <Field
+          label="Win probability (%)"
+          name="probability"
+          error={fieldError(error, "probability")}
+        >
           {(p) => (
             <TextInput
               {...p}

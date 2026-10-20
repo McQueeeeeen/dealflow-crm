@@ -61,10 +61,7 @@ export default function CompaniesPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <OwnerFilter
-          value={owner}
-          onChange={(v) => update({ owner: v, page: null })}
-        />
+        <OwnerFilter value={owner} onChange={(v) => update({ owner: v, page: null })} />
       </div>
       <Panel>
         {companies.isPending ? (
@@ -91,7 +88,8 @@ export default function CompaniesPage() {
                   header: "Name",
                   cell: (c) => (
                     <div className="min-w-0">
-                      <Link transitionTypes={FORWARD}
+                      <Link
+                        transitionTypes={FORWARD}
                         href={`/companies/${c.id}`}
                         className="font-medium hover:underline hover:underline-offset-2"
                       >
