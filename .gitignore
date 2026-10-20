@@ -10,3 +10,5 @@ node_modules/
 /frontend/test-results
 /frontend/playwright-report
 /frontend/e2e/screenshots
+.vercel
+.env*.local
