@@ -55,12 +55,12 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
           const current = stage.id === deal.stage_id;
           const body = (
             <>
-              <span aria-hidden="true" className="flex gap-[3px]">
-                {Array.from({ length: 10 }, (_, t) => (
+              <span aria-hidden="true" className="flex justify-between gap-[3px] overflow-hidden">
+                {Array.from({ length: 14 }, (_, t) => (
                   <span
                     key={t}
                     className={cx(
-                      "h-6 flex-1 rounded-full",
+                      "h-6 w-1.5 shrink-0 rounded-full",
                       (deal.stage_kind === "lost" || i >= reached) && "bg-track",
                     )}
                     style={
