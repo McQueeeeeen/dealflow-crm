@@ -74,7 +74,7 @@ function MyNumbers() {
   if (!summary.data) return null;
   const s = summary.data;
   return (
-    <p className="text-title text-muted max-w-3xl font-display">
+    <p className="text-title text-muted font-display max-w-3xl">
       You have <strong className="num text-ink font-semibold">{fmt(s.open_pipeline_cents)}</strong>{" "}
       open across <span className="num">{s.open_deals_count}</span>{" "}
       {s.open_deals_count === 1 ? "deal" : "deals"}, about{" "}
