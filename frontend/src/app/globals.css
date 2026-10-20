@@ -103,6 +103,7 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: 1.45;
+  word-spacing: 0.08em;
   -webkit-font-smoothing: antialiased;
 }
 
