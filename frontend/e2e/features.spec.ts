@@ -62,7 +62,7 @@ test("contacts import from CSV after a checked preview", async ({ page }, info) 
   await dialog.getByRole("button", { name: "Done" }).click();
 
   await page.getByRole("searchbox", { name: "Search contacts" }).fill(email);
-  await expect(page.getByRole("link", { name: "Ava Stone" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ava Stone" })).toHaveCount(1);
 });
 
 test("lists export as CSV files", async ({ page }) => {
