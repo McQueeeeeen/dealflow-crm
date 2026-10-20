@@ -12,7 +12,7 @@ import { NotesPanel } from "@/components/notes";
 import { StageRail } from "@/components/stage-rail";
 import { TaskFormDialog } from "@/components/task-form";
 import { TaskRow } from "@/components/task-list";
-import { Button, ErrorState, Loading, Panel, RecordView } from "@/components/ui";
+import { Button, ErrorState, Loading, Panel, Person, RecordView } from "@/components/ui";
 import { del, get, query } from "@/lib/api";
 import { dateTime, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
@@ -113,7 +113,9 @@ function DealView({ deal }: { deal: Deal }) {
                 )}
               </dd>
               <dt className="text-muted">Owner</dt>
-              <dd>{deal.owner_name}</dd>
+              <dd>
+                <Person name={deal.owner_name} />
+              </dd>
               <dt className="text-muted">Expected close</dt>
               <dd className="num">
                 {deal.expected_close_date ? shortDate(deal.expected_close_date) : "Not set"}

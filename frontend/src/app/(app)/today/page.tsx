@@ -1,5 +1,6 @@
 "use client";
 
+import { IconBriefcase, IconScale, IconTrophy } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
@@ -16,13 +17,15 @@ import {
   PageHeader,
   Panel,
   Stat,
+  TickMeter,
   cx,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
-import { parseDay, shortDate } from "@/lib/format";
+import { parseDay, percent, shortDate } from "@/lib/format";
+import { stageHeat } from "@/lib/heat";
 import { useMoney } from "@/lib/hooks";
-import { keys, useMe, useStages } from "@/lib/queries";
-import type { Deal, Page, Summary, Task } from "@/lib/types";
+import { keys, useMe, useMyTasks, useStages } from "@/lib/queries";
+import type { BoardColumn, Deal, Page, Summary, Task } from "@/lib/types";
 import { SECTION } from "@/lib/transitions";
 
 function groupTasks(tasks: Task[], now = new Date()) {
@@ -43,16 +46,6 @@ function groupTasks(tasks: Task[], now = new Date()) {
     else groups.later.push(task);
   }
   return groups;
-}
-
-function useMyTasks() {
-  const me = useMe().data;
-  return useQuery({
-    queryKey: keys.tasks({ assignee: me?.id, status: "open", view: "today" }),
-    queryFn: () =>
-      get<Page<Task>>(`/tasks${query({ assignee_id: me?.id, status: "open", per_page: 100 })}`),
-    enabled: !!me,
-  });
 }
 
 export default function TodayPage() {
@@ -93,16 +86,30 @@ export default function TodayPage() {
       <MyNumbers />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <FollowUps onAdd={() => setAdding(true)} />
-        <ClosingSoon />
+        <div className="grid gap-6">
+          <StageBreakdown />
+          <ClosingSoon />
+        </div>
       </div>
       <TaskFormDialog open={adding} onClose={() => setAdding(false)} />
     </>
   );
 }
 
+function useMyBoard() {
+  const me = useMe().data;
+  return useQuery({
+    queryKey: keys.board({ owner: me?.id, view: "today" }),
+    queryFn: () => get<BoardColumn[]>(`/deals/board${query({ owner_id: me?.id })}`),
+    enabled: !!me,
+  });
+}
+
 function MyNumbers() {
   const me = useMe().data;
   const fmt = useMoney();
+  const stages = useStages().data ?? [];
+  const open = (useMyBoard().data ?? []).filter((c) => c.stage.kind === "open");
   const summary = useQuery({
     queryKey: keys.analytics("summary", { owner: me?.id }),
     queryFn: () => get<Summary>(`/analytics/summary${query({ owner_id: me?.id })}`),
@@ -110,28 +117,99 @@ function MyNumbers() {
   });
   if (!summary.data) return null;
   const s = summary.data;
+  const weightedShare = s.weighted_pipeline_cents / Math.max(s.open_pipeline_cents, 1);
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>:first-child]:col-span-2 sm:[&>:first-child]:col-span-1">
       <Stat
         label="Your open pipeline"
+        icon={IconBriefcase}
         value={fmt(s.open_pipeline_cents)}
-        note={`${s.open_deals_count} open ${s.open_deals_count === 1 ? "deal" : "deals"}`}
+        meter={
+          <TickMeter
+            label="Open value split by stage"
+            segments={open.map((c) => ({
+              value: c.total_value_cents,
+              color: stageHeat(stages, c.stage),
+            }))}
+          />
+        }
+        note={`${s.open_deals_count} open ${s.open_deals_count === 1 ? "deal" : "deals"}, split by stage`}
       />
       <Stat
         label="Weighted by stage"
+        icon={IconScale}
         value={fmt(s.weighted_pipeline_cents)}
-        note="Value times stage probability"
+        meter={<TickMeter label={`${percent(weightedShare)} of open value`} value={weightedShare} />}
+        note={`${percent(weightedShare)} of your open value`}
       />
       <Stat
         label="Won this month"
+        icon={IconTrophy}
         value={
           <span className={s.won_this_month_count > 0 ? "text-won" : undefined}>
             {fmt(s.won_this_month_cents)}
           </span>
         }
-        note={`${s.won_this_month_count} ${s.won_this_month_count === 1 ? "deal" : "deals"}`}
+        meter={
+          <TickMeter
+            label={`Win rate ${percent(s.win_rate_90d)}`}
+            value={s.win_rate_90d ?? 0}
+            color="var(--won)"
+          />
+        }
+        note={`${s.won_this_month_count} ${s.won_this_month_count === 1 ? "deal" : "deals"}, ${percent(s.win_rate_90d)} win rate over 90 days`}
       />
     </div>
+  );
+}
+
+function StageBreakdown() {
+  const board = useMyBoard();
+  const stages = useStages().data ?? [];
+  const fmt = useMoney();
+  const open = (board.data ?? []).filter((c) => c.stage.kind === "open");
+  const top = Math.max(...open.map((c) => c.total_value_cents), 1);
+  return (
+    <Panel>
+      <h2 className="text-title px-4 pt-4 font-semibold">Your Pipeline by Stage</h2>
+      {board.isPending ? (
+        <Loading label="Loading stages…" />
+      ) : board.isError ? (
+        <ErrorState error={board.error} onRetry={() => board.refetch()} />
+      ) : (
+        <ul className="row-list mt-1">
+          {open.map((c) => {
+            const color = stageHeat(stages, c.stage);
+            return (
+              <li key={c.stage.id} className="flex flex-col gap-2.5 px-3.5 py-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="flex items-center gap-2 font-medium">
+                    <span
+                      aria-hidden="true"
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                    {c.stage.name}
+                  </span>
+                  <span className="num text-meta text-muted">
+                    <span className="text-body text-ink font-medium">
+                      {fmt(c.total_value_cents)}
+                    </span>{" "}
+                    in {c.count} {c.count === 1 ? "deal" : "deals"}
+                  </span>
+                </div>
+                <TickMeter
+                  label={`${c.stage.name}: ${fmt(c.total_value_cents)}`}
+                  value={c.total_value_cents / top}
+                  color={color}
+                  ticks={48}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
   );
 }
 

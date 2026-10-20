@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Table } from "@/components/table";
 import {
+  Avatar,
   Button,
   Dialog,
   ErrorState,
@@ -76,7 +77,8 @@ function TeamSection() {
               header: "Name",
               cell: (u) => (
                 <div className={cx(!u.is_active && "text-muted")}>
-                  <p className="font-medium">
+                  <p className="flex items-center gap-2 font-medium">
+                    <Avatar name={u.full_name} />
                     {u.full_name}
                     {u.id === me?.id ? (
                       <span className="text-muted font-normal"> (you)</span>

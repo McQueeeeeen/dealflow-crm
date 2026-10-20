@@ -1,11 +1,28 @@
 "use client";
 
+import {
+  IconBriefcase,
+  IconClockHour4,
+  IconPercentage,
+  IconScale,
+  IconTrophy,
+} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 
 import { OwnerFilter } from "@/components/owner-select";
 import { Table } from "@/components/table";
-import { EmptyState, ErrorState, Loading, PageHeader, Panel, Select, Stat } from "@/components/ui";
+import {
+  EmptyState,
+  ErrorState,
+  Loading,
+  PageHeader,
+  Panel,
+  Person,
+  Select,
+  Stat,
+  TickMeter,
+} from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { percent, shortDate } from "@/lib/format";
 import { WON_HEAT } from "@/lib/heat";
@@ -98,25 +115,43 @@ function SummaryStrip({ owner }: { owner: string }) {
   if (summary.isError)
     return <ErrorState error={summary.error} onRetry={() => summary.refetch()} />;
   const s = summary.data;
+  const weightedShare = s.weighted_pipeline_cents / Math.max(s.open_pipeline_cents, 1);
   const figures = [
     {
       label: "Open pipeline",
+      icon: IconBriefcase,
       value: fmt(s.open_pipeline_cents),
       note: `${s.open_deals_count} open deals`,
     },
     {
       label: "Weighted pipeline",
+      icon: IconScale,
       value: fmt(s.weighted_pipeline_cents),
-      note: "Value times stage probability",
+      meter: <TickMeter label={`${percent(weightedShare)} of open value`} value={weightedShare} />,
+      note: `${percent(weightedShare)} of open value`,
     },
     {
       label: "Won this month",
+      icon: IconTrophy,
       value: fmt(s.won_this_month_cents),
       note: `${s.won_this_month_count} deals`,
     },
-    { label: "Win rate", value: percent(s.win_rate_90d), note: "Closed deals, last 90 days" },
+    {
+      label: "Win rate",
+      icon: IconPercentage,
+      value: percent(s.win_rate_90d),
+      meter: (
+        <TickMeter
+          label={`Win rate ${percent(s.win_rate_90d)}`}
+          value={s.win_rate_90d ?? 0}
+          color="var(--won)"
+        />
+      ),
+      note: "Closed deals, last 90 days",
+    },
     {
       label: "Time to win",
+      icon: IconClockHour4,
       value: s.avg_days_to_win === null ? "n/a" : `${Math.round(s.avg_days_to_win)} days`,
       note: "Average, last 180 days",
     },
@@ -217,7 +252,11 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
               columns={[
                 {
                   header: "Owner",
-                  cell: (r) => <span className="font-medium">{r.full_name}</span>,
+                  cell: (r) => (
+                    <span className="font-medium">
+                      <Person name={r.full_name} />
+                    </span>
+                  ),
                 },
                 {
                   header: "Won",

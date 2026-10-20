@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { get } from "./api";
-import type { Me, Stage, User } from "./types";
+import { get, query } from "./api";
+import type { Me, Page, Stage, Task, User } from "./types";
 
 export const keys = {
   me: ["me"] as const,
@@ -41,6 +41,21 @@ export function useStages() {
     queryFn: () => get<Stage[]>("/stages"),
     staleTime: 60_000,
   });
+}
+
+export function useMyTasks() {
+  const me = useMe().data;
+  return useQuery({
+    queryKey: keys.tasks({ assignee: me?.id, status: "open", view: "today" }),
+    queryFn: () =>
+      get<Page<Task>>(`/tasks${query({ assignee_id: me?.id, status: "open", per_page: 100 })}`),
+    enabled: !!me,
+  });
+}
+
+export function dueToday(tasks: Task[], now = new Date()): number {
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return tasks.filter((t) => t.due_at && new Date(t.due_at) < end).length;
 }
 
 export function canModify(me: Me | undefined, ownerId: string): boolean {

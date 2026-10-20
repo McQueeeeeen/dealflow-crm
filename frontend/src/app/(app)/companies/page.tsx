@@ -16,6 +16,7 @@ import {
   PageHeader,
   Pagination,
   Panel,
+  Person,
   TextInput,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
@@ -100,7 +101,7 @@ export default function CompaniesPage() {
                   ),
                 },
                 { header: "Industry", cell: (c) => c.industry ?? "", hideBelow: "lg" },
-                { header: "Owner", cell: (c) => c.owner_name, hideBelow: "md" },
+                { header: "Owner", cell: (c) => <Person name={c.owner_name} />, hideBelow: "md" },
                 {
                   header: "Contacts",
                   cell: (c) => c.contacts_count,
