@@ -231,7 +231,10 @@ function LeaderboardSection({ from, owner }: { from: string; owner: string }) {
                       <span className="hidden h-3 flex-1 sm:block" aria-hidden="true">
                         <span
                           className="block h-full rounded-full"
-                          style={{ width: `${(r.won_cents / top) * 100}%`, backgroundColor: WON_HEAT }}
+                          style={{
+                            width: `${(r.won_cents / top) * 100}%`,
+                            backgroundColor: WON_HEAT,
+                          }}
                         />
                       </span>
                     </div>

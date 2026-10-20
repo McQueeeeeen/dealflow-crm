@@ -39,7 +39,9 @@ export function StageTrack({
             (kind === "lost" || i >= filled) && "bg-track",
           )}
           style={
-            kind !== "lost" && i < filled ? { backgroundColor: stageHeat(stages, stage) } : undefined
+            kind !== "lost" && i < filled
+              ? { backgroundColor: stageHeat(stages, stage) }
+              : undefined
           }
         />
       ))}

@@ -232,15 +232,7 @@ export function Board({
   );
 }
 
-function Column({
-  column,
-  color,
-  onStep,
-}: {
-  column: BoardColumn;
-  color: string;
-  onStep: Step;
-}) {
+function Column({ column, color, onStep }: { column: BoardColumn; color: string; onStep: Step }) {
   const fmt = useMoney();
   const { setNodeRef, isOver } = useDroppable({ id: column.stage.id, data: { type: "column" } });
   const { stage } = column;
@@ -255,10 +247,7 @@ function Column({
     >
       <header className="px-3 pt-3 pb-2">
         <span aria-hidden="true" className="block h-1.5 rounded-full bg-[var(--heat)]" />
-        <h2
-          id={`stage-${stage.id}`}
-          className="mt-3 flex items-center justify-between gap-2"
-        >
+        <h2 id={`stage-${stage.id}`} className="mt-3 flex items-center justify-between gap-2">
           <span className="flex items-center gap-2 font-semibold">
             <span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--heat)]" />
             {stage.name}
