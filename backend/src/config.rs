@@ -15,7 +15,8 @@ pub struct Config {
 
 impl Config {
     pub fn from_env() -> anyhow::Result<Self> {
-        let database_url = required("DATABASE_URL_UNPOOLED").or_else(|_| required("DATABASE_URL"))?;
+        let database_url =
+            required("DATABASE_URL_UNPOOLED").or_else(|_| required("DATABASE_URL"))?;
         let jwt_secret = required("JWT_SECRET")?;
         if jwt_secret.len() < 32 {
             bail!("JWT_SECRET must be at least 32 bytes long");
