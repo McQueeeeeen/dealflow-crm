@@ -1,7 +1,8 @@
 # DealFlow CRM
 
-A multi-tenant sales CRM for small B2B sales teams: a drag-and-drop pipeline, companies and
-contacts, follow-up tasks, notes, a full change history and sales reports.
+A multi-tenant sales CRM for small B2B sales teams: a drag-and-drop pipeline that updates
+live for the whole team, Cmd+K search, deals that flag themselves when they go cold, monthly
+targets, CSV import and export, follow-ups, notes, a full change history and sales reports.
 
 The backend is written in Rust (Axum, SQLx, PostgreSQL). The web app is Next.js with
 TypeScript.
@@ -16,20 +17,34 @@ sign-in page. The demo workspace is reset every night.
 
 ## What it does
 
-- **Today**: your overdue and upcoming follow-ups, and the deals you expect to close this month.
+- **Live for the whole team**: when a teammate moves a deal, adds a note or completes a
+  follow-up, every open screen updates within a second, and the header shows who else is
+  looking at the same record.
+- **Cmd+K**: one box searches deals, companies and people, tolerates typos ("copperleef"
+  finds Copperleaf), and runs actions like "New deal" or "Switch theme".
+- **Today**: your follow-ups, progress toward this month's target, your pipeline by stage,
+  deals closing this month, and deals going cold.
+- **Going cold**: an open deal with no notes, completed follow-ups or changes for 14 days
+  (adjustable per workspace) gets a snowflake on the board and a nudge on its page.
 - **Pipeline**: a kanban board of deals by stage. Drag with a mouse, press and hold on touch
   screens, or focus a deal's handle and press the left or right arrow key.
 - **Deals, companies, contacts**: linked records with notes, follow-ups and a readable history
   of every change.
 - **Reports**: open and weighted pipeline, a stage-by-stage conversion funnel, a six-month
-  forecast by expected close date, and results per salesperson for managers.
+  forecast by expected close date, monthly targets per rep (managers set them inline), and
+  results per salesperson for managers.
+- **CSV import and export**: map columns, check the file first (nothing is saved until you
+  confirm), then import; existing contacts match by email and companies by domain or name.
+  Every list exports to a spreadsheet-safe CSV.
 - **Settings**: invite teammates with a role, rename, reorder and re-weight pipeline stages.
 
-| Today | Reports, dark theme |
+| Today | Cmd+K search |
 |---|---|
-| ![Today](docs/screenshots/today.png) | ![Reports](docs/screenshots/reports-light.png) |
-| **Deal** | **Phone** |
-| ![Deal](docs/screenshots/deal.png) | ![Phone](docs/screenshots/mobile-today.png) |
+| ![Today](docs/screenshots/today.png) | ![Search](docs/screenshots/palette.png) |
+| **Reports, light theme** | **Deal** |
+| ![Reports](docs/screenshots/reports-light.png) | ![Deal](docs/screenshots/deal.png) |
+
+<img src="docs/screenshots/mobile-today.png" alt="Today on a phone" width="320">
 
 Screenshots are produced by the end-to-end suite against the seeded demo workspace.
 
@@ -37,10 +52,12 @@ Screenshots are produced by the end-to-end suite against the seeded demo workspa
 
 ```
 Browser ──► Next.js (React, TanStack Query)
-              │  /api/auth/*   sets httpOnly session cookies
-              │  /api/v1/*     same-origin proxy, adds the bearer token
-              ▼
-           Rust API (Axum) ──► PostgreSQL 16
+   ▲          │  /api/auth/*   sets httpOnly session cookies
+   │          │  /api/v1/*     same-origin streaming proxy, adds the bearer token
+   │          ▼
+   └─ SSE ── Rust API (Axum) ──► PostgreSQL 16
+                  ▲                    │
+                  └── LISTEN ◄─ NOTIFY ┘  (trigger on every audit row)
 ```
 
 ```
@@ -50,6 +67,7 @@ backend/
   src/auth/          JWT access tokens, rotating refresh tokens, Argon2id hashing
   src/authz.rs       every role rule in one place
   src/audit.rs       field-level diffs written in the same transaction as the change
+  src/live.rs        LISTEN/NOTIFY fan-out to server-sent events, presence
   src/bin/seed.rs    deterministic demo workspace with realistic stage history
   tests/api/         end-to-end tests against a real database
 frontend/
@@ -89,6 +107,24 @@ transaction as the change, and a database trigger rejects any `UPDATE` on audit 
 deal as having passed a stage if it ever reached that stage or a later one, so skipping a
 column on the board does not distort conversion. Money is stored as integer minor units in a
 single workspace currency, so sums are exact.
+
+**Live updates ride on the audit log.** Every change already writes an audit row inside its
+transaction, so a trigger on that table calls `pg_notify`. PostgreSQL delivers the
+notification only if the transaction commits, which means a browser never hears about a
+change that rolled back. Each API instance holds one `LISTEN` connection and fans
+notifications out to server-sent event streams, filtered to the caller's workspace. Browsers
+batch the events and refetch only the affected queries; a stream that falls behind gets a
+single "resync" instead of a flood. Streams close after ten minutes so the access token is
+re-checked, and the client reconnects with backoff.
+
+**Search is one trigram query per kind.** Deals, companies and contacts are matched with
+`ILIKE` for exact substrings and `pg_trgm` word similarity for typos, both served by the same
+GIN indexes, inside a transaction that sets the similarity threshold locally.
+
+**Imports preview by rolling back.** A dry run executes the real import, every validation,
+dedupe and insert, inside a transaction and then rolls it back. The preview cannot disagree
+with what the import will do, because it is the import. Exported cells that start with `=`,
+`+`, `-` or `@` are prefixed so a spreadsheet will not run them as formulas.
 
 **Errors have one shape.** Every failure is `{"error": {"code", "message", "fields"}}`.
 Constraint violations are mapped to field-level validation errors by constraint name.
@@ -136,14 +172,18 @@ role rules. The integration suite starts a fresh, migrated PostgreSQL database f
 and drives the real router: registration and login, refresh-token rotation and reuse
 detection, deactivation, tenant isolation, cross-tenant references, role permissions,
 optimistic concurrency, stage moves, the audit trail and its immutability, search and
-pagination, tasks, notes, pipeline reordering, and the numbers behind every report.
+pagination, tasks, notes, pipeline reordering, the numbers behind every report, live events
+that never cross workspaces, presence, typo-tolerant search, targets, CSV dry runs and
+dedupe, formula-safe export, and last-activity tracking.
 
 The end-to-end suite boots the whole stack in CI (PostgreSQL, the API with demo data, the
 production Next.js build) and drives it with Playwright on desktop and phone viewports. It
 visits every screen in both themes and fails on any console error, any sideways scrolling on
 a phone, or any serious WCAG 2.1 AA violation reported by axe. It also moves a deal across the
 board with the arrow keys, completes a follow-up, adds a note, checks form validation, the theme
-toggle and signing out.
+toggle and signing out, finds a company through Cmd+K with a typo, watches a deal created by
+another user appear on the open board, imports a CSV through its preview and downloads an
+export.
 
 CI runs `rustfmt`, `clippy -D warnings`, the full test suite and the seed script for the
 backend, and Prettier, ESLint, a production build and `tsc` for the frontend.
