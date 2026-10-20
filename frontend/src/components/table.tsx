@@ -23,16 +23,16 @@ export function Table<T extends { id: string }>({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-left text-body">
+      <table className="text-body w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b border-line">
+          <tr className="border-line border-b">
             {columns.map((col) => (
               <th
                 key={col.header}
                 scope="col"
                 className={cx(
-                  "px-4 py-2.5 text-meta font-medium whitespace-nowrap text-muted",
+                  "text-meta text-muted px-4 py-2.5 font-medium whitespace-nowrap",
                   col.align === "right" && "text-right",
                   col.hideBelow && hide[col.hideBelow],
                 )}
@@ -42,7 +42,7 @@ export function Table<T extends { id: string }>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-line">
+        <tbody className="divide-line divide-y">
           {rows.map((row) => (
             <tr key={row.id} className="hover:bg-hover">
               {columns.map((col) => (

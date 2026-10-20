@@ -1,11 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import {
-  REFRESH_COOKIE,
-  forwardJson,
-  unavailable,
-  withSession,
-} from "@/lib/server/session";
+import { REFRESH_COOKIE, forwardJson, unavailable, withSession } from "@/lib/server/session";
 
 export async function POST(req: NextRequest) {
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;

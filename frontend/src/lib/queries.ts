@@ -28,7 +28,11 @@ export function useMe() {
 }
 
 export function useUsers() {
-  return useQuery({ queryKey: keys.users, queryFn: () => get<User[]>("/users"), staleTime: 60_000 });
+  return useQuery({
+    queryKey: keys.users,
+    queryFn: () => get<User[]>("/users"),
+    staleTime: 60_000,
+  });
 }
 
 export function useStages() {

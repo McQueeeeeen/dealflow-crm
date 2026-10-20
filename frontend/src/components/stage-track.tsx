@@ -39,11 +39,7 @@ export function StageTrack({
           className={cx(
             "rounded-[1px]",
             size === "lg" ? "h-1.5 w-10 sm:w-14" : "h-1 w-3",
-            kind === "lost"
-              ? "bg-critical/35"
-              : i < filled
-                ? "bg-accent"
-                : "bg-track",
+            kind === "lost" ? "bg-critical/35" : i < filled ? "bg-accent" : "bg-track",
           )}
         />
       ))}

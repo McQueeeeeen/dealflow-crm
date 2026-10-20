@@ -37,8 +37,7 @@ export function AuthForm({ mode, demo }: Props) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const body =
-      mode === "login" ? { email: values.email, password: values.password } : values;
+    const body = mode === "login" ? { email: values.email, password: values.password } : values;
     try {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
@@ -48,7 +47,12 @@ export function AuthForm({ mode, demo }: Props) {
       if (!res.ok) {
         const payload = await res.json().catch(() => null);
         const err = payload?.error;
-        throw new ApiError(res.status, err?.code ?? "unknown", err?.message ?? "Request failed", err?.fields ?? []);
+        throw new ApiError(
+          res.status,
+          err?.code ?? "unknown",
+          err?.message ?? "Request failed",
+          err?.fields ?? [],
+        );
       }
       window.location.assign(safeNext(params.get("next")));
     } catch (err) {
@@ -65,7 +69,7 @@ export function AuthForm({ mode, demo }: Props) {
         <h1 className="text-display font-semibold tracking-tight">
           {isLogin ? "Sign in to your pipeline" : "Set up a workspace for your team"}
         </h1>
-        <p className="mt-3 text-lead text-muted">
+        <p className="text-lead text-muted mt-3">
           {isLogin
             ? "Pick up where you left off: today's follow-ups, deals in motion and what is likely to close this month."
             : "You become the workspace admin. Invite your team from Settings once you are in."}
@@ -75,18 +79,30 @@ export function AuthForm({ mode, demo }: Props) {
       <form
         onSubmit={submit}
         noValidate
-        className="flex flex-col gap-4 rounded-control border border-line bg-surface p-5 sm:p-6"
+        className="rounded-control border-line bg-surface flex flex-col gap-4 border p-5 sm:p-6"
       >
         {!isLogin ? (
           <>
             <Field label="Company name" error={fieldError(error, "organization_name")}>
               {(p) => (
-                <TextInput {...p} value={values.organization_name} onChange={set("organization_name")} autoComplete="organization" required />
+                <TextInput
+                  {...p}
+                  value={values.organization_name}
+                  onChange={set("organization_name")}
+                  autoComplete="organization"
+                  required
+                />
               )}
             </Field>
             <Field label="Your name" error={fieldError(error, "full_name")}>
               {(p) => (
-                <TextInput {...p} value={values.full_name} onChange={set("full_name")} autoComplete="name" required />
+                <TextInput
+                  {...p}
+                  value={values.full_name}
+                  onChange={set("full_name")}
+                  autoComplete="name"
+                  required
+                />
               )}
             </Field>
           </>
@@ -136,11 +152,11 @@ export function AuthForm({ mode, demo }: Props) {
           </Button>
         ) : null}
 
-        <p className="text-center text-body text-muted">
+        <p className="text-body text-muted text-center">
           {isLogin ? "New team? " : "Already have an account? "}
           <Link
             href={isLogin ? "/register" : "/login"}
-            className="font-medium text-accent underline underline-offset-4"
+            className="text-accent font-medium underline underline-offset-4"
           >
             {isLogin ? "Create a workspace" : "Sign in"}
           </Link>

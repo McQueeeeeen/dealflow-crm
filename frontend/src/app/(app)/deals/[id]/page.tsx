@@ -27,8 +27,11 @@ export default function DealPage() {
     return deal.error instanceof ApiError && deal.error.status === 404 ? (
       <div className="py-12 text-center">
         <p className="text-lead font-medium">This deal no longer exists</p>
-        <p className="mt-1 text-muted">It may have been deleted by a manager.</p>
-        <Link href="/pipeline" className="mt-4 inline-block text-accent underline underline-offset-4">
+        <p className="text-muted mt-1">It may have been deleted by a manager.</p>
+        <Link
+          href="/pipeline"
+          className="text-accent mt-4 inline-block underline underline-offset-4"
+        >
           Back to the pipeline
         </Link>
       </div>
@@ -58,15 +61,21 @@ function DealView({ deal }: { deal: Deal }) {
 
   return (
     <>
-      <Link href="/pipeline" className="text-body text-muted underline underline-offset-4 hover:text-ink">
+      <Link
+        href="/pipeline"
+        className="text-body text-muted hover:text-ink underline underline-offset-4"
+      >
         Pipeline
       </Link>
       <header className="mt-3 flex flex-wrap items-start justify-between gap-x-8 gap-y-4 pb-6">
         <div className="min-w-0">
           <h1 className="text-display font-semibold tracking-tight break-words">{deal.title}</h1>
-          <p className="mt-1 text-muted">
+          <p className="text-muted mt-1">
             {deal.company_id ? (
-              <Link href={`/companies/${deal.company_id}`} className="underline underline-offset-4 hover:text-ink">
+              <Link
+                href={`/companies/${deal.company_id}`}
+                className="hover:text-ink underline underline-offset-4"
+              >
                 {deal.company_name}
               </Link>
             ) : (
@@ -75,9 +84,14 @@ function DealView({ deal }: { deal: Deal }) {
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
             <span className="num text-display font-semibold">{fmt(deal.value_cents)}</span>
-            <span className="flex items-center gap-3 text-body text-muted">
-              <StageTrack stages={stages} stageId={deal.stage_id} kind={deal.stage_kind} size="lg" />
-              <span className={deal.stage_kind === "won" ? "font-medium text-accent" : undefined}>
+            <span className="text-body text-muted flex items-center gap-3">
+              <StageTrack
+                stages={stages}
+                stageId={deal.stage_id}
+                kind={deal.stage_kind}
+                size="lg"
+              />
+              <span className={deal.stage_kind === "won" ? "text-accent font-medium" : undefined}>
                 {status}
               </span>
             </span>
@@ -89,7 +103,7 @@ function DealView({ deal }: { deal: Deal }) {
             {isManager(me) ? <DeleteDeal deal={deal} /> : null}
           </div>
         ) : (
-          <p className="max-w-xs text-meta text-muted">
+          <p className="text-meta text-muted max-w-xs">
             Owned by {deal.owner_name}. Only the owner or a manager can change it.
           </p>
         )}
@@ -104,12 +118,15 @@ function DealView({ deal }: { deal: Deal }) {
         </div>
         <div className="flex flex-col gap-6">
           <Panel>
-            <h2 className="px-4 pt-4 text-title font-semibold">Details</h2>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4 text-body">
+            <h2 className="text-title px-4 pt-4 font-semibold">Details</h2>
+            <dl className="text-body grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4">
               <dt className="text-muted">Contact</dt>
               <dd className="min-w-0 truncate">
                 {deal.contact_id ? (
-                  <Link href={`/contacts/${deal.contact_id}`} className="underline underline-offset-4">
+                  <Link
+                    href={`/contacts/${deal.contact_id}`}
+                    className="underline underline-offset-4"
+                  >
                     {deal.contact_name}
                   </Link>
                 ) : (
@@ -119,7 +136,9 @@ function DealView({ deal }: { deal: Deal }) {
               <dt className="text-muted">Owner</dt>
               <dd>{deal.owner_name}</dd>
               <dt className="text-muted">Expected close</dt>
-              <dd className="num">{deal.expected_close_date ? shortDate(deal.expected_close_date) : "Not set"}</dd>
+              <dd className="num">
+                {deal.expected_close_date ? shortDate(deal.expected_close_date) : "Not set"}
+              </dd>
               <dt className="text-muted">Created</dt>
               <dd className="num">{dateTime(deal.created_at)}</dd>
               {deal.closed_at ? (
@@ -136,7 +155,11 @@ function DealView({ deal }: { deal: Deal }) {
       </div>
 
       <DealFormDialog open={editing} onClose={() => setEditing(false)} deal={deal} />
-      <TaskFormDialog open={addingTask} onClose={() => setAddingTask(false)} link={{ dealId: deal.id }} />
+      <TaskFormDialog
+        open={addingTask}
+        onClose={() => setAddingTask(false)}
+        link={{ dealId: deal.id }}
+      />
     </>
   );
 }
@@ -151,7 +174,13 @@ function MoveControl({ deal }: { deal: Deal }) {
       post<Deal>(`/deals/${deal.id}/move`, { stage_id: stageId, version: deal.version }),
     onSuccess: (saved) => {
       client.setQueryData(keys.deal(deal.id), saved);
-      for (const key of [["board"], ["deals"], ["analytics"], ["audit"], ["deal", deal.id, "stage-history"]]) {
+      for (const key of [
+        ["board"],
+        ["deals"],
+        ["analytics"],
+        ["audit"],
+        ["deal", deal.id, "stage-history"],
+      ]) {
         client.invalidateQueries({ queryKey: key });
       }
     },
@@ -176,7 +205,11 @@ function MoveControl({ deal }: { deal: Deal }) {
           ))}
         </Select>
       </label>
-      <Button onClick={() => move.mutate(target)} disabled={target === deal.stage_id} busy={move.isPending}>
+      <Button
+        onClick={() => move.mutate(target)}
+        disabled={target === deal.stage_id}
+        busy={move.isPending}
+      >
         Move deal
       </Button>
       {deal.stage_kind === "open" && won && lost ? (
@@ -190,7 +223,7 @@ function MoveControl({ deal }: { deal: Deal }) {
         </div>
       ) : null}
       {move.isError ? (
-        <p role="alert" className="w-full text-body text-critical">
+        <p role="alert" className="text-body text-critical w-full">
           {move.error instanceof ApiError && move.error.status === 409
             ? "Someone changed this deal a moment ago. The page has been refreshed, try again."
             : "The move did not save. Try again."}
@@ -217,7 +250,8 @@ function DeleteDeal({ deal }: { deal: Deal }) {
       variant="danger"
       busy={remove.isPending}
       onClick={() => {
-        if (window.confirm(`Delete "${deal.title}"? Its notes and follow-ups are deleted too.`)) remove.mutate();
+        if (window.confirm(`Delete "${deal.title}"? Its notes and follow-ups are deleted too.`))
+          remove.mutate();
       }}
     >
       Delete
@@ -243,11 +277,11 @@ function DealTasks({ dealId, onAdd }: { dealId: string; onAdd: () => void }) {
       ) : tasks.isError ? (
         <ErrorState error={tasks.error} onRetry={() => tasks.refetch()} />
       ) : tasks.data.data.length === 0 ? (
-        <p className="px-4 py-6 text-body text-muted">
+        <p className="text-body text-muted px-4 py-6">
           No follow-ups planned. Add the next step so this deal does not stall.
         </p>
       ) : (
-        <ul className="mt-2 divide-y divide-line border-t border-line">
+        <ul className="divide-line border-line mt-2 divide-y border-t">
           {tasks.data.data.map((task) => (
             <TaskRow key={task.id} task={task} showLinks={false} />
           ))}
@@ -264,7 +298,7 @@ function StageHistory({ dealId }: { dealId: string }) {
   });
   return (
     <Panel>
-      <h2 className="px-4 pt-4 text-title font-semibold">Stage path</h2>
+      <h2 className="text-title px-4 pt-4 font-semibold">Stage path</h2>
       {history.isPending ? (
         <Loading label="Loading stage path…" />
       ) : history.isError ? (
@@ -277,7 +311,9 @@ function StageHistory({ dealId }: { dealId: string }) {
                 {step.from_stage_name ? `${step.from_stage_name} to ` : "Created in "}
                 <span className="font-medium">{step.to_stage_name}</span>
               </span>
-              <span className="num shrink-0 text-meta text-muted">{shortDate(step.changed_at)}</span>
+              <span className="num text-meta text-muted shrink-0">
+                {shortDate(step.changed_at)}
+              </span>
             </li>
           ))}
         </ol>

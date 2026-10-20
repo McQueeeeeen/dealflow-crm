@@ -94,7 +94,10 @@ export default function CompaniesPage() {
                   header: "Name",
                   cell: (c) => (
                     <div className="min-w-0">
-                      <Link href={`/companies/${c.id}`} className="font-medium hover:underline hover:underline-offset-2">
+                      <Link
+                        href={`/companies/${c.id}`}
+                        className="font-medium hover:underline hover:underline-offset-2"
+                      >
                         {c.name}
                       </Link>
                       {c.domain ? <p className="text-meta text-muted">{c.domain}</p> : null}
@@ -103,7 +106,12 @@ export default function CompaniesPage() {
                 },
                 { header: "Industry", cell: (c) => c.industry ?? "", hideBelow: "lg" },
                 { header: "Owner", cell: (c) => c.owner_name, hideBelow: "md" },
-                { header: "Contacts", cell: (c) => c.contacts_count, align: "right", hideBelow: "sm" },
+                {
+                  header: "Contacts",
+                  cell: (c) => c.contacts_count,
+                  align: "right",
+                  hideBelow: "sm",
+                },
                 {
                   header: "Open pipeline",
                   align: "right",
@@ -111,7 +119,7 @@ export default function CompaniesPage() {
                     c.open_deals_count > 0 ? (
                       <>
                         {fmt(c.open_deals_value_cents)}
-                        <span className="block text-meta text-muted">
+                        <span className="text-meta text-muted block">
                           {c.open_deals_count} {c.open_deals_count === 1 ? "deal" : "deals"}
                         </span>
                       </>
@@ -121,7 +129,12 @@ export default function CompaniesPage() {
                 },
               ]}
             />
-            <Pagination page={page} perPage={companies.data.per_page} total={companies.data.total} onPage={setPage} />
+            <Pagination
+              page={page}
+              perPage={companies.data.per_page}
+              total={companies.data.total}
+              onPage={setPage}
+            />
           </>
         )}
       </Panel>
