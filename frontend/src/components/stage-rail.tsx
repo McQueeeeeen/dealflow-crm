@@ -23,7 +23,13 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
       post<Deal>(`/deals/${deal.id}/move`, { stage_id: stageId, version: deal.version }),
     onSuccess: (saved) => {
       client.setQueryData(keys.deal(deal.id), saved);
-      for (const key of [["board"], ["deals"], ["analytics"], ["audit"], keys.stageHistory(deal.id)]) {
+      for (const key of [
+        ["board"],
+        ["deals"],
+        ["analytics"],
+        ["audit"],
+        keys.stageHistory(deal.id),
+      ]) {
         client.invalidateQueries({ queryKey: key });
       }
     },
@@ -51,7 +57,11 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
               <span
                 className={cx(
                   "block h-2 rounded-[2px]",
-                  deal.stage_kind === "lost" ? "bg-critical/35" : i < reached ? "bg-accent" : "bg-track",
+                  deal.stage_kind === "lost"
+                    ? "bg-critical/35"
+                    : i < reached
+                      ? "bg-accent"
+                      : "bg-track",
                 )}
               />
               <span
