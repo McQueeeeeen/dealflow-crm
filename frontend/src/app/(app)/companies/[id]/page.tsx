@@ -58,7 +58,8 @@ function CompanyView({ company }: { company: Company }) {
 
   return (
     <>
-      <Link transitionTypes={BACK}
+      <Link
+        transitionTypes={BACK}
         href="/companies"
         className="text-body text-muted hover:text-ink underline underline-offset-4"
       >
@@ -156,7 +157,8 @@ function CompanyContacts({ companyId }: { companyId: string }) {
     <ul className="divide-line border-line mt-2 divide-y border-t">
       {contacts.data.data.map((c) => (
         <li key={c.id} className="px-4 py-3">
-          <Link transitionTypes={FORWARD}
+          <Link
+            transitionTypes={FORWARD}
             href={`/contacts/${c.id}`}
             className="font-medium hover:underline hover:underline-offset-2"
           >

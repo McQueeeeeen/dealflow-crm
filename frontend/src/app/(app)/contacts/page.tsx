@@ -61,10 +61,7 @@ export default function ContactsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <OwnerFilter
-          value={owner}
-          onChange={(v) => update({ owner: v, page: null })}
-        />
+        <OwnerFilter value={owner} onChange={(v) => update({ owner: v, page: null })} />
       </div>
       <Panel>
         {contacts.isPending ? (
@@ -91,7 +88,8 @@ export default function ContactsPage() {
                   header: "Name",
                   cell: (c) => (
                     <div className="min-w-0">
-                      <Link transitionTypes={FORWARD}
+                      <Link
+                        transitionTypes={FORWARD}
                         href={`/contacts/${c.id}`}
                         className="font-medium hover:underline hover:underline-offset-2"
                       >
@@ -105,7 +103,8 @@ export default function ContactsPage() {
                   header: "Company",
                   cell: (c) =>
                     c.company_id ? (
-                      <Link transitionTypes={FORWARD}
+                      <Link
+                        transitionTypes={FORWARD}
                         href={`/companies/${c.company_id}`}
                         className="hover:underline hover:underline-offset-2"
                       >

@@ -53,10 +53,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         style={{ viewTransitionName: "app-header" }}
       >
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 sm:px-6">
-          <Link transitionTypes={SECTION} href="/today" className="flex min-h-14 items-baseline gap-2 py-2">
+          <Link
+            transitionTypes={SECTION}
+            href="/today"
+            className="flex min-h-14 items-baseline gap-2 py-2"
+          >
             <span className="text-lead font-display font-semibold" translate="no">
-            DealFlow
-          </span>
+              DealFlow
+            </span>
             <span className="text-meta text-muted hidden max-w-48 truncate md:inline">
               {me.data.organization_name}
             </span>
@@ -87,7 +91,8 @@ function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
         const active = isActive(pathname, item.href);
         return (
           <li key={item.href}>
-            <Link transitionTypes={SECTION}
+            <Link
+              transitionTypes={SECTION}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cx(

@@ -158,7 +158,11 @@ function ClosingSoon() {
     <Panel>
       <div className="flex items-baseline justify-between gap-3 px-4 pt-4">
         <h2 className="text-title font-semibold">Closing This Month</h2>
-        <Link transitionTypes={SECTION} href="/pipeline" className="text-body text-accent underline underline-offset-4">
+        <Link
+          transitionTypes={SECTION}
+          href="/pipeline"
+          className="text-body text-accent underline underline-offset-4"
+        >
           Open pipeline
         </Link>
       </div>
@@ -180,9 +184,7 @@ function ClosingSoon() {
             const slipped = parseDay(deal.expected_close_date!) < startOfToday;
             return (
               <li key={deal.id}>
-                <DealLink deal={deal}
-                  className="hover:bg-hover flex items-center gap-3 px-4 py-3"
-                >
+                <DealLink deal={deal} className="hover:bg-hover flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <DealName deal={deal} className="block truncate font-medium" />
                     <p className="text-meta text-muted mt-1 flex items-center gap-2">

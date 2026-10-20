@@ -108,7 +108,11 @@ export function AuthForm({ mode, demo }: Props) {
       >
         {!isLogin ? (
           <>
-            <Field label="Company name" name="organization_name" error={fieldError(error, "organization_name")}>
+            <Field
+              label="Company name"
+              name="organization_name"
+              error={fieldError(error, "organization_name")}
+            >
               {(p) => (
                 <TextInput
                   {...p}

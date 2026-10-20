@@ -119,7 +119,11 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
             />
           )}
         </Field>
-        <Field label="Expected close" name="expected_close_date" error={fieldError(error, "expected_close_date")}>
+        <Field
+          label="Expected close"
+          name="expected_close_date"
+          error={fieldError(error, "expected_close_date")}
+        >
           {(p) => (
             <TextInput
               {...p}

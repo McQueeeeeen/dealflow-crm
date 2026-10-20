@@ -43,7 +43,11 @@ export default function ReportsPage() {
         <OwnerFilter value={owner} onChange={(v) => update({ owner: v })} label="Deals of" />
         <label className="flex items-center gap-2">
           <span className="text-muted">Period</span>
-          <Select value={days} onChange={(e) => update({ days: e.target.value === "180" ? null : e.target.value })} className="w-auto">
+          <Select
+            value={days}
+            onChange={(e) => update({ days: e.target.value === "180" ? null : e.target.value })}
+            className="w-auto"
+          >
             {PERIODS.map((p) => (
               <option key={p.days} value={p.days}>
                 {p.label}
