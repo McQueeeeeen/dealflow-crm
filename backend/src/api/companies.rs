@@ -121,11 +121,7 @@ pub async fn list_companies(
     Ok(Json(pagination.wrap(companies, total)))
 }
 
-pub async fn fetch_company(
-    pool: &sqlx::PgPool,
-    org_id: Uuid,
-    id: Uuid,
-) -> AppResult<Company> {
+pub async fn fetch_company(pool: &sqlx::PgPool, org_id: Uuid, id: Uuid) -> AppResult<Company> {
     sqlx::query_as(&format!(
         "{SELECT_COMPANY} WHERE c.organization_id = $1 AND c.id = $2"
     ))
@@ -264,8 +260,15 @@ pub async fn update_company(
     .await?;
     let changes = audit::diff(&before, &after);
     if !audit::is_empty_diff(&changes) {
-        audit::record(&mut tx, &actor, EntityType::Company, id, AuditAction::Updated, changes)
-            .await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::Company,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     tx.commit().await?;
     Ok(Json(fetch_company(&state.pool, actor.org_id, id).await?))

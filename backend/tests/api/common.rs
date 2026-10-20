@@ -60,7 +60,11 @@ impl Response {
 
     #[track_caller]
     pub fn assert_status(&self, expected: StatusCode) -> &Self {
-        assert_eq!(self.status, expected, "unexpected status, body: {}", self.body);
+        assert_eq!(
+            self.status, expected,
+            "unexpected status, body: {}",
+            self.body
+        );
         self
     }
 }
@@ -100,7 +104,12 @@ impl TestApp {
         }
         .expect("valid request");
 
-        let response = self.router.clone().oneshot(request).await.expect("infallible");
+        let response = self
+            .router
+            .clone()
+            .oneshot(request)
+            .await
+            .expect("infallible");
         let status = response.status();
         let bytes = response
             .into_body()
@@ -111,9 +120,8 @@ impl TestApp {
         let body = if bytes.is_empty() {
             Value::Null
         } else {
-            serde_json::from_slice(&bytes).unwrap_or_else(|_| {
-                Value::String(String::from_utf8_lossy(&bytes).into_owned())
-            })
+            serde_json::from_slice(&bytes)
+                .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()))
         };
         Response { status, body }
     }
@@ -123,15 +131,18 @@ impl TestApp {
     }
 
     pub async fn post(&self, path: &str, s: &Session, body: Value) -> Response {
-        self.request(Method::POST, path, Some(&s.token), Some(body)).await
+        self.request(Method::POST, path, Some(&s.token), Some(body))
+            .await
     }
 
     pub async fn put(&self, path: &str, s: &Session, body: Value) -> Response {
-        self.request(Method::PUT, path, Some(&s.token), Some(body)).await
+        self.request(Method::PUT, path, Some(&s.token), Some(body))
+            .await
     }
 
     pub async fn delete(&self, path: &str, s: &Session) -> Response {
-        self.request(Method::DELETE, path, Some(&s.token), None).await
+        self.request(Method::DELETE, path, Some(&s.token), None)
+            .await
     }
 
     /// Creates a new organization and returns its admin's session.
@@ -211,9 +222,19 @@ impl TestApp {
 
 fn session_from(body: &Value) -> Session {
     Session {
-        token: body["access_token"].as_str().expect("access token").to_owned(),
-        refresh: body["refresh_token"].as_str().expect("refresh token").to_owned(),
+        token: body["access_token"]
+            .as_str()
+            .expect("access token")
+            .to_owned(),
+        refresh: body["refresh_token"]
+            .as_str()
+            .expect("refresh token")
+            .to_owned(),
         user_id: body["user"]["id"].as_str().unwrap().parse().unwrap(),
-        org_id: body["user"]["organization_id"].as_str().unwrap().parse().unwrap(),
+        org_id: body["user"]["organization_id"]
+            .as_str()
+            .unwrap()
+            .parse()
+            .unwrap(),
     }
 }

@@ -80,8 +80,18 @@ mod tests {
 
     #[test]
     fn diff_reports_only_changed_fields() {
-        let before = Deal { title: "Renewal", value_cents: 100, version: 1, updated_at: "a" };
-        let after = Deal { title: "Renewal", value_cents: 250, version: 2, updated_at: "b" };
+        let before = Deal {
+            title: "Renewal",
+            value_cents: 100,
+            version: 1,
+            updated_at: "a",
+        };
+        let after = Deal {
+            title: "Renewal",
+            value_cents: 250,
+            version: 2,
+            updated_at: "b",
+        };
         assert_eq!(
             diff(&before, &after),
             json!({ "value_cents": { "from": 100, "to": 250 } })
@@ -90,14 +100,29 @@ mod tests {
 
     #[test]
     fn identical_snapshots_produce_empty_diff() {
-        let a = Deal { title: "X", value_cents: 1, version: 1, updated_at: "a" };
-        let b = Deal { title: "X", value_cents: 1, version: 7, updated_at: "z" };
+        let a = Deal {
+            title: "X",
+            value_cents: 1,
+            version: 1,
+            updated_at: "a",
+        };
+        let b = Deal {
+            title: "X",
+            value_cents: 1,
+            version: 7,
+            updated_at: "z",
+        };
         assert!(is_empty_diff(&diff(&a, &b)));
     }
 
     #[test]
     fn snapshot_strips_bookkeeping_fields() {
-        let snap = snapshot(&Deal { title: "X", value_cents: 1, version: 3, updated_at: "a" });
+        let snap = snapshot(&Deal {
+            title: "X",
+            value_cents: 1,
+            version: 3,
+            updated_at: "a",
+        });
         assert_eq!(snap, json!({ "title": "X", "value_cents": 1 }));
     }
 }

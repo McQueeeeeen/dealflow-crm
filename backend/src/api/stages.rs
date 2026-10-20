@@ -170,7 +170,15 @@ pub async fn update_stage(
     .await?;
     let changes = audit::diff(&before, &after);
     if !audit::is_empty_diff(&changes) {
-        audit::record(&mut tx, &actor, EntityType::Stage, id, AuditAction::Updated, changes).await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::Stage,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     tx.commit().await?;
     Ok(Json(after))
@@ -250,9 +258,9 @@ pub async fn delete_stage(
         .execute(&mut *tx)
         .await
         .map_err(|err| match AppError::from(err) {
-            AppError::Validation(_) | AppError::Conflict(_) => AppError::Conflict(
-                "move or delete the deals in this stage first".into(),
-            ),
+            AppError::Validation(_) | AppError::Conflict(_) => {
+                AppError::Conflict("move or delete the deals in this stage first".into())
+            }
             other => other,
         })?;
     audit::record(

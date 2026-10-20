@@ -21,7 +21,17 @@ async fn register_creates_workspace_with_default_pipeline(pool: PgPool) {
         .iter()
         .map(|s| s["name"].as_str().unwrap().to_owned())
         .collect();
-    assert_eq!(names, ["Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"]);
+    assert_eq!(
+        names,
+        [
+            "Lead",
+            "Qualified",
+            "Proposal",
+            "Negotiation",
+            "Won",
+            "Lost"
+        ]
+    );
 }
 
 #[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
@@ -44,7 +54,13 @@ async fn register_validates_every_field(pool: PgPool) {
     res.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(
         res.error_fields(),
-        ["organization_name", "full_name", "email", "password", "currency"]
+        [
+            "organization_name",
+            "full_name",
+            "email",
+            "password",
+            "currency"
+        ]
     );
 }
 
@@ -141,10 +157,12 @@ async fn replaying_a_spent_refresh_token_revokes_the_whole_session(pool: PgPool)
         .to_owned();
 
     // Move the rotation outside the grace window, as if an attacker replayed a stolen token later.
-    sqlx::query("UPDATE refresh_tokens SET used_at = now() - interval '1 minute' WHERE used_at IS NOT NULL")
-        .execute(&app.pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        "UPDATE refresh_tokens SET used_at = now() - interval '1 minute' WHERE used_at IS NOT NULL",
+    )
+    .execute(&app.pool)
+    .await
+    .unwrap();
 
     refresh(&app, &session.refresh)
         .await

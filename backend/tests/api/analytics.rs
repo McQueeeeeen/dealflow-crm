@@ -14,16 +14,25 @@ async fn summary_weights_open_pipeline_by_stage_probability(pool: PgPool) {
     let lost = app.stage_id(&admin, "Lost").await;
 
     // Lead is 10%, Proposal is 50%.
-    app.create_deal(&admin, json!({ "title": "A", "value_cents": 1000 })).await;
+    app.create_deal(&admin, json!({ "title": "A", "value_cents": 1000 }))
+        .await;
     app.create_deal(
         &admin,
         json!({ "title": "B", "value_cents": 2000, "stage_id": proposal }),
     )
     .await;
-    let c = app.create_deal(&admin, json!({ "title": "C", "value_cents": 5000 })).await;
-    app.move_deal(&admin, &c.body, won).await.assert_status(StatusCode::OK);
-    let d = app.create_deal(&admin, json!({ "title": "D", "value_cents": 700 })).await;
-    app.move_deal(&admin, &d.body, lost).await.assert_status(StatusCode::OK);
+    let c = app
+        .create_deal(&admin, json!({ "title": "C", "value_cents": 5000 }))
+        .await;
+    app.move_deal(&admin, &c.body, won)
+        .await
+        .assert_status(StatusCode::OK);
+    let d = app
+        .create_deal(&admin, json!({ "title": "D", "value_cents": 700 }))
+        .await;
+    app.move_deal(&admin, &d.body, lost)
+        .await
+        .assert_status(StatusCode::OK);
 
     let summary = app.get("/api/v1/analytics/summary", &admin).await;
     summary.assert_status(StatusCode::OK);
@@ -37,7 +46,10 @@ async fn summary_weights_open_pipeline_by_stage_probability(pool: PgPool) {
 
     let filtered = app
         .get(
-            &format!("/api/v1/analytics/summary?owner_id={}", uuid::Uuid::now_v7()),
+            &format!(
+                "/api/v1/analytics/summary?owner_id={}",
+                uuid::Uuid::now_v7()
+            ),
             &admin,
         )
         .await;
@@ -51,22 +63,34 @@ async fn funnel_counts_skipped_stages_as_passed(pool: PgPool) {
     let qualified = app.stage_id(&admin, "Qualified").await;
     let won = app.stage_id(&admin, "Won").await;
 
-    app.create_deal(&admin, json!({ "title": "Stays in lead" })).await;
+    app.create_deal(&admin, json!({ "title": "Stays in lead" }))
+        .await;
     for title in ["Qualifies 1", "Qualifies 2"] {
         let deal = app.create_deal(&admin, json!({ "title": title })).await;
         app.move_deal(&admin, &deal.body, qualified)
             .await
             .assert_status(StatusCode::OK);
     }
-    let fast = app.create_deal(&admin, json!({ "title": "Straight to won" })).await;
-    app.move_deal(&admin, &fast.body, won).await.assert_status(StatusCode::OK);
+    let fast = app
+        .create_deal(&admin, json!({ "title": "Straight to won" }))
+        .await;
+    app.move_deal(&admin, &fast.body, won)
+        .await
+        .assert_status(StatusCode::OK);
 
     let funnel = app.get("/api/v1/analytics/funnel", &admin).await;
     funnel.assert_status(StatusCode::OK);
     assert_eq!(funnel.body["cohort_size"], 4);
     let stages = funnel.body["stages"].as_array().unwrap();
-    let reached: Vec<_> = stages.iter().map(|s| s["reached"].as_i64().unwrap()).collect();
-    assert_eq!(reached, [4, 3, 1, 1, 1], "Lead, Qualified, Proposal, Negotiation, Won");
+    let reached: Vec<_> = stages
+        .iter()
+        .map(|s| s["reached"].as_i64().unwrap())
+        .collect();
+    assert_eq!(
+        reached,
+        [4, 3, 1, 1, 1],
+        "Lead, Qualified, Proposal, Negotiation, Won"
+    );
     assert!(stages[0]["conversion_from_previous"].is_null());
     assert_eq!(stages[1]["conversion_from_previous"], 0.75);
     assert!(stages.iter().all(|s| s["kind"] != "lost"));
@@ -88,7 +112,8 @@ async fn forecast_buckets_open_deals_by_expected_close_month(pool: PgPool) {
         json!({ "title": "Late", "value_cents": 300, "expected_close_date": "2020-03-15" }),
     )
     .await;
-    app.create_deal(&admin, json!({ "title": "Undated", "value_cents": 50 })).await;
+    app.create_deal(&admin, json!({ "title": "Undated", "value_cents": 50 }))
+        .await;
 
     let forecast = app.get("/api/v1/analytics/forecast?months=3", &admin).await;
     forecast.assert_status(StatusCode::OK);
@@ -115,7 +140,9 @@ async fn leaderboard_ranks_by_won_value(pool: PgPool) {
     let deal = app
         .create_deal(&rep, json!({ "title": "Rep win", "value_cents": 9000 }))
         .await;
-    app.move_deal(&rep, &deal.body, won).await.assert_status(StatusCode::OK);
+    app.move_deal(&rep, &deal.body, won)
+        .await
+        .assert_status(StatusCode::OK);
 
     app.get("/api/v1/analytics/leaderboard", &rep)
         .await

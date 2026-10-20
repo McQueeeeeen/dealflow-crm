@@ -189,7 +189,15 @@ pub async fn update_user(
 
     let changes = audit::diff(&before, &after);
     if !audit::is_empty_diff(&changes) {
-        audit::record(&mut tx, &actor, EntityType::User, id, AuditAction::Updated, changes).await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::User,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     tx.commit().await?;
     Ok(Json(after))

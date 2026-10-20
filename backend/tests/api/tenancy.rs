@@ -14,13 +14,20 @@ async fn records_of_another_organization_behave_as_missing(pool: PgPool) {
         .post("/api/v1/companies", &acme, json!({ "name": "Acme Client" }))
         .await;
     let deal = app
-        .create_deal(&acme, json!({ "title": "Acme secret deal", "value_cents": 100 }))
+        .create_deal(
+            &acme,
+            json!({ "title": "Acme secret deal", "value_cents": 100 }),
+        )
         .await;
     let deal_url = format!("/api/v1/deals/{}", deal.id());
     let company_url = format!("/api/v1/companies/{}", company.id());
 
-    app.get(&deal_url, &globex).await.assert_status(StatusCode::NOT_FOUND);
-    app.get(&company_url, &globex).await.assert_status(StatusCode::NOT_FOUND);
+    app.get(&deal_url, &globex)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
+    app.get(&company_url, &globex)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
     app.put(
         &deal_url,
         &globex,
@@ -28,7 +35,9 @@ async fn records_of_another_organization_behave_as_missing(pool: PgPool) {
     )
     .await
     .assert_status(StatusCode::NOT_FOUND);
-    app.delete(&deal_url, &globex).await.assert_status(StatusCode::NOT_FOUND);
+    app.delete(&deal_url, &globex)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
 
     let listed = app.get("/api/v1/deals", &globex).await;
     assert_eq!(listed.body["total"], 0);

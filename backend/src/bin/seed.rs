@@ -34,38 +34,98 @@ const STAGES: [(&str, i16, StageKind); 6] = [
 ];
 
 const COMPANY_PREFIXES: [&str; 16] = [
-    "Harbor", "Granite", "Cedar", "Northwind", "Bluebell", "Ironwood", "Silverline", "Maple",
-    "Riverstone", "Summit", "Lighthouse", "Copperleaf", "Westfield", "Oakridge", "Brightwater",
+    "Harbor",
+    "Granite",
+    "Cedar",
+    "Northwind",
+    "Bluebell",
+    "Ironwood",
+    "Silverline",
+    "Maple",
+    "Riverstone",
+    "Summit",
+    "Lighthouse",
+    "Copperleaf",
+    "Westfield",
+    "Oakridge",
+    "Brightwater",
     "Fieldstone",
 ];
 const COMPANY_SUFFIXES: [&str; 10] = [
-    "Logistics", "Foods", "Clinics", "Robotics", "Hotels", "Builders", "Analytics", "Textiles",
-    "Energy", "Media",
+    "Logistics",
+    "Foods",
+    "Clinics",
+    "Robotics",
+    "Hotels",
+    "Builders",
+    "Analytics",
+    "Textiles",
+    "Energy",
+    "Media",
 ];
 const INDUSTRIES: [&str; 8] = [
-    "Logistics", "Food & beverage", "Healthcare", "Manufacturing", "Hospitality", "Construction",
-    "Software", "Retail",
+    "Logistics",
+    "Food & beverage",
+    "Healthcare",
+    "Manufacturing",
+    "Hospitality",
+    "Construction",
+    "Software",
+    "Retail",
 ];
 const FIRST_NAMES: [&str; 20] = [
     "Emma", "Liam", "Olivia", "Noah", "Ava", "Mateo", "Mia", "Lucas", "Amara", "Ethan", "Leila",
     "Kenji", "Nora", "Omar", "Ingrid", "Tomas", "Zara", "Felix", "Hana", "Rafael",
 ];
 const LAST_NAMES: [&str; 20] = [
-    "Novak", "Fischer", "Costa", "Haddad", "Kowalski", "Nakamura", "Silva", "Brennan", "Dubois",
-    "Moreau", "Lindqvist", "Petrov", "Rossi", "Andersen", "Varga", "Kim", "Mendes", "Walsh",
-    "Ibrahim", "Sato",
+    "Novak",
+    "Fischer",
+    "Costa",
+    "Haddad",
+    "Kowalski",
+    "Nakamura",
+    "Silva",
+    "Brennan",
+    "Dubois",
+    "Moreau",
+    "Lindqvist",
+    "Petrov",
+    "Rossi",
+    "Andersen",
+    "Varga",
+    "Kim",
+    "Mendes",
+    "Walsh",
+    "Ibrahim",
+    "Sato",
 ];
 const JOB_TITLES: [&str; 7] = [
-    "Head of Operations", "Procurement Manager", "CFO", "IT Director", "COO", "Office Manager",
+    "Head of Operations",
+    "Procurement Manager",
+    "CFO",
+    "IT Director",
+    "COO",
+    "Office Manager",
     "VP of Sales",
 ];
 const DEAL_KINDS: [&str; 8] = [
-    "Annual license", "Pilot rollout", "Fleet expansion", "Support renewal", "Multi-site upgrade",
-    "Onboarding package", "Data migration", "Seat expansion",
+    "Annual license",
+    "Pilot rollout",
+    "Fleet expansion",
+    "Support renewal",
+    "Multi-site upgrade",
+    "Onboarding package",
+    "Data migration",
+    "Seat expansion",
 ];
 const TASK_TITLES: [&str; 8] = [
-    "Send revised proposal", "Schedule demo with the operations team", "Follow up on pricing questions",
-    "Prepare contract draft", "Call to confirm budget", "Share case study", "Book onsite visit",
+    "Send revised proposal",
+    "Schedule demo with the operations team",
+    "Follow up on pricing questions",
+    "Prepare contract draft",
+    "Call to confirm budget",
+    "Share case study",
+    "Book onsite visit",
     "Check in after the trial",
 ];
 const NOTE_BODIES: [&str; 6] = [
@@ -86,7 +146,10 @@ struct Ids {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
-    let pool = PgPoolOptions::new().max_connections(2).connect(&database_url).await?;
+    let pool = PgPoolOptions::new()
+        .max_connections(2)
+        .connect(&database_url)
+        .await?;
     MIGRATOR.run(&pool).await?;
 
     let mut rng = StdRng::seed_from_u64(2026);
@@ -116,10 +179,12 @@ async fn main() -> anyhow::Result<()> {
 
 async fn seed_workspace(tx: &mut Transaction<'_, Postgres>) -> anyhow::Result<Ids> {
     let org = Uuid::now_v7();
-    sqlx::query("INSERT INTO organizations (id, name, currency) VALUES ($1, 'Demo workspace', 'USD')")
-        .bind(org)
-        .execute(&mut **tx)
-        .await?;
+    sqlx::query(
+        "INSERT INTO organizations (id, name, currency) VALUES ($1, 'Demo workspace', 'USD')",
+    )
+    .bind(org)
+    .execute(&mut **tx)
+    .await?;
 
     let hash = hash_password(DEMO_PASSWORD)?;
     let mut users = Vec::new();
@@ -220,7 +285,11 @@ async fn seed_contacts(
             .bind(ids.org)
             .bind(first)
             .bind(last)
-            .bind(format!("{}.{}@example.com", first.to_lowercase(), last.to_lowercase()))
+            .bind(format!(
+                "{}.{}@example.com",
+                first.to_lowercase(),
+                last.to_lowercase()
+            ))
             .bind(format!("+1 555 01{:02}", rng.gen_range(0..100)))
             .bind(*JOB_TITLES.choose(rng).expect("non-empty"))
             .bind(company)
@@ -265,7 +334,11 @@ async fn seed_deals(
         let age_days = (Utc::now() - created).num_days();
         let reached_end = path.len() == open.len();
         let outcome = if age_days > 45 && rng.gen_bool(if reached_end { 0.75 } else { 0.4 }) {
-            Some(if reached_end && rng.gen_bool(0.7) { won } else { lost })
+            Some(if reached_end && rng.gen_bool(0.7) {
+                won
+            } else {
+                lost
+            })
         } else {
             None
         };
@@ -280,7 +353,13 @@ async fn seed_deals(
         let expected_close: Option<NaiveDate> = match outcome {
             None => Some(Utc::now().date_naive() + Days::new(rng.gen_range(0..150)))
                 .filter(|_| rng.gen_bool(0.85))
-                .map(|d| if rng.gen_bool(0.1) { d - Days::new(60) } else { d }),
+                .map(|d| {
+                    if rng.gen_bool(0.1) {
+                        d - Days::new(60)
+                    } else {
+                        d
+                    }
+                }),
             Some(_) => closed_at.map(|c| c.date_naive()),
         };
 
@@ -294,7 +373,11 @@ async fn seed_deals(
         )
         .bind(id)
         .bind(ids.org)
-        .bind(format!("{} #{}", DEAL_KINDS.choose(rng).expect("non-empty"), 1040 + n))
+        .bind(format!(
+            "{} #{}",
+            DEAL_KINDS.choose(rng).expect("non-empty"),
+            1040 + n
+        ))
         .bind(value)
         .bind(stage)
         .bind(f64::from(n) * 1024.0)

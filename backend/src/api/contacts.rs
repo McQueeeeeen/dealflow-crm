@@ -288,8 +288,15 @@ pub async fn update_contact(
     .await?;
     let changes = audit::diff(&before, &after);
     if !audit::is_empty_diff(&changes) {
-        audit::record(&mut tx, &actor, EntityType::Contact, id, AuditAction::Updated, changes)
-            .await?;
+        audit::record(
+            &mut tx,
+            &actor,
+            EntityType::Contact,
+            id,
+            AuditAction::Updated,
+            changes,
+        )
+        .await?;
     }
     tx.commit().await?;
     Ok(Json(fetch_contact(&state.pool, actor.org_id, id).await?))
