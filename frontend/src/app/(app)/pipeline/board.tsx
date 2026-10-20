@@ -25,7 +25,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, type KeyboardEventHandler, type ReactNode } from "react";
 
 import { cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
@@ -303,7 +303,7 @@ function SortableDeal({ deal }: { deal: Deal }) {
               type="button"
               ref={setActivatorNodeRef}
               {...attributes}
-              onKeyDown={onKeyDown}
+              onKeyDown={onKeyDown as KeyboardEventHandler | undefined}
               aria-roledescription="draggable deal"
               aria-label={`Move ${deal.title}`}
               className="rounded-control text-muted hover:bg-hover hover:text-ink -mt-1 -mr-1 inline-flex size-8 shrink-0 cursor-grab items-center justify-center"

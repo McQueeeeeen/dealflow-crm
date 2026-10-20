@@ -1,0 +1,51 @@
+# Full stack on one machine: `docker compose up --build`, then open http://localhost:3000.
+# Load demo data with `docker compose run --rm seed`.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: dealflow
+      POSTGRES_PASSWORD: dealflow
+      POSTGRES_DB: dealflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dealflow"]
+      interval: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgres://dealflow:dealflow@db:5432/dealflow
+      JWT_SECRET: local-development-secret-change-me-please
+      LOG_FORMAT: pretty
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  web:
+    build: ./frontend
+    environment:
+      API_URL: http://api:8080
+      DEMO_EMAIL: demo@dealflow.dev
+      DEMO_PASSWORD: dealflow-demo
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+  seed:
+    build: ./backend
+    command: ["seed"]
+    environment:
+      DATABASE_URL: postgres://dealflow:dealflow@db:5432/dealflow
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["tools"]
+
+volumes:
+  pgdata:
