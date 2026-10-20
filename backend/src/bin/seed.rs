@@ -151,12 +151,19 @@ async fn main() -> anyhow::Result<()> {
 
     let mut rng = StdRng::seed_from_u64(2026);
     let mut tx = pool.begin().await?;
-    sqlx::query(
-        "DELETE FROM organizations WHERE id IN (SELECT organization_id FROM users WHERE email = $1)",
-    )
-    .bind(DEMO_EMAIL)
-    .execute(&mut *tx)
-    .await?;
+    for table in ["deal_stage_changes", "audit_log", "organizations"] {
+        let column = if table == "organizations" {
+            "id"
+        } else {
+            "organization_id"
+        };
+        sqlx::query(&format!(
+            "DELETE FROM {table} WHERE {column} IN (SELECT organization_id FROM users WHERE email = $1)"
+        ))
+        .bind(DEMO_EMAIL)
+        .execute(&mut *tx)
+        .await?;
+    }
 
     let ids = seed_workspace(&mut tx).await?;
     let companies = seed_companies(&mut tx, &ids, &mut rng).await?;
