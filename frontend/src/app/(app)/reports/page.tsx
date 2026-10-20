@@ -5,15 +5,7 @@ import { type ReactNode } from "react";
 
 import { OwnerFilter } from "@/components/owner-select";
 import { Table } from "@/components/table";
-import {
-  EmptyState,
-  ErrorState,
-  Loading,
-  PageHeader,
-  Panel,
-  Select,
-  Stat,
-} from "@/components/ui";
+import { EmptyState, ErrorState, Loading, PageHeader, Panel, Select, Stat } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { percent, shortDate } from "@/lib/format";
 import { WON_HEAT } from "@/lib/heat";

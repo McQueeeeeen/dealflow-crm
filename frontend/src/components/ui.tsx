@@ -241,7 +241,15 @@ export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
   );
 }
 
-export function Stat({ label, value, note }: { label: string; value: ReactNode; note?: ReactNode }) {
+export function Stat({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: ReactNode;
+  note?: ReactNode;
+}) {
   return (
     <div className="rounded-card border-line bg-surface shadow-highlight flex min-w-0 flex-col gap-3 border p-5">
       <p className="text-body text-muted font-medium">{label}</p>
