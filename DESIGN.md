@@ -25,7 +25,7 @@ colour.
 | ink / muted | `#ededed` / `#959595` | `#18181b` / `#63636b` | Text |
 | accent | `#6a55f0` | `#5b45e8` | Primary button, active state |
 | link | `#a395ff` | `#5b45e8` | Text links (AA on every surface) |
-| won / open | `#4ade80` / `#7ab0ff` | `#15803d` / `#2563eb` | Status pills |
+| won / open | `#4ade80` / `#7ab0ff` | `#15803d` / `#1d4ed8` | Status pills |
 
 Surfaces carry a 1px top highlight (`shadow-highlight`) instead of drop shadows. Only floating
 layers (menus, dialogs, a dragged card) get a real shadow.
