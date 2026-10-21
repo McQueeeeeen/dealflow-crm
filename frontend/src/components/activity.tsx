@@ -58,7 +58,9 @@ export function ActivityPanel({ entityType, entityId }: { entityType: string; en
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3">
                 <p className="num text-meta text-muted">{dateTime(entry.created_at)}</p>
                 {entry.action === "updated" &&
-                Object.keys(entry.changes).some((f) => REVERTIBLE[entry.entity_type]?.includes(f)) ? (
+                Object.keys(entry.changes).some((f) =>
+                  REVERTIBLE[entry.entity_type]?.includes(f),
+                ) ? (
                   <Undo entry={entry} />
                 ) : null}
               </div>
