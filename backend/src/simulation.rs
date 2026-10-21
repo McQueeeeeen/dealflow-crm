@@ -69,7 +69,12 @@ impl StageModel {
     }
 }
 
-fn close_day<R: Rng>(stages: &[StageModel], deal: &OpenDeal, limit: f64, rng: &mut R) -> Option<f64> {
+fn close_day<R: Rng>(
+    stages: &[StageModel],
+    deal: &OpenDeal,
+    limit: f64,
+    rng: &mut R,
+) -> Option<f64> {
     let mut stage = deal.stage;
     let mut day = stages.get(stage)?.remaining_days(rng, deal.days_in_stage);
     loop {
@@ -221,7 +226,10 @@ mod tests {
         let summary = summarize(&mut totals, 10);
         assert!((summary.mean_cents - 2500).abs() < 60, "{summary:?}");
         assert!(summary.p10_cents < summary.p50_cents && summary.p50_cents < summary.p90_cents);
-        assert_eq!(summary.histogram.iter().map(|b| b.runs).sum::<usize>(), 4000);
+        assert_eq!(
+            summary.histogram.iter().map(|b| b.runs).sum::<usize>(),
+            4000
+        );
         assert!((share_at_least(&totals, 2500) - 0.55).abs() < 0.05);
     }
 

@@ -79,7 +79,10 @@ async fn learn(pool: &PgPool, org_id: Uuid, stages: &[Stage]) -> AppResult<Vec<V
     .fetch_all(pool)
     .await?;
     let by_id: HashMap<Uuid, &Stage> = stages.iter().map(|s| (s.id, s)).collect();
-    let open: Vec<&Stage> = stages.iter().filter(|s| s.kind == StageKind::Open).collect();
+    let open: Vec<&Stage> = stages
+        .iter()
+        .filter(|s| s.kind == StageKind::Open)
+        .collect();
     let index: HashMap<Uuid, usize> = open.iter().enumerate().map(|(i, s)| (s.id, i)).collect();
 
     let mut transitions = vec![Vec::new(); open.len()];
@@ -110,14 +113,21 @@ pub async fn simulate(
 ) -> AppResult<Json<Simulation>> {
     let runs = query.runs.unwrap_or(DEFAULT_RUNS).clamp(1_000, 20_000);
     let stages = fetch_stages(&state.pool, user.org_id).await?;
-    let open: Vec<&Stage> = stages.iter().filter(|s| s.kind == StageKind::Open).collect();
+    let open: Vec<&Stage> = stages
+        .iter()
+        .filter(|s| s.kind == StageKind::Open)
+        .collect();
     let transitions = learn(&state.pool, user.org_id, &stages).await?;
     let models: Vec<StageModel> = open
         .iter()
         .enumerate()
         .map(|(i, stage)| {
             let next = open.get(i + 1).map_or(100.0, |s| f64::from(s.probability));
-            let prior = if next > 0.0 { f64::from(stage.probability) / next } else { 0.5 };
+            let prior = if next > 0.0 {
+                f64::from(stage.probability) / next
+            } else {
+                0.5
+            };
             StageModel::learn(&transitions[i], prior)
         })
         .collect();
@@ -152,7 +162,9 @@ pub async fn simulate(
     let windows = periods(now.date_naive());
     let horizons: Vec<f64> = windows
         .iter()
-        .map(|(_, _, end)| (end.and_time(chrono::NaiveTime::MIN).and_utc() - now).num_seconds() as f64 / 86_400.0)
+        .map(|(_, _, end)| {
+            (end.and_time(chrono::NaiveTime::MIN).and_utc() - now).num_seconds() as f64 / 86_400.0
+        })
         .collect();
     let (seed, sim_models, sim_deals) = (query.seed.unwrap_or(2026), models.clone(), deals.clone());
     let totals = tokio::task::spawn_blocking(move || {
