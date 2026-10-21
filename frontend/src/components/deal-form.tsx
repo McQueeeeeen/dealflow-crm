@@ -8,7 +8,7 @@ import { CompanySelect, ContactSelect } from "@/components/record-pickers";
 import { Dialog, Field, ModalForm, Select, TextInput, fieldError } from "@/components/ui";
 import { ApiError, post, put } from "@/lib/api";
 import { centsToInput, parseMoneyInput } from "@/lib/format";
-import { useMe, useStages } from "@/lib/queries";
+import { useInvalidate, useMe, useStages } from "@/lib/queries";
 import type { Deal } from "@/lib/types";
 
 interface Props {
@@ -31,6 +31,7 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
   const me = useMe().data;
   const stages = useStages().data ?? [];
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     title: deal?.title ?? "",
     value: deal ? centsToInput(deal.value_cents) : "",
@@ -46,19 +47,13 @@ function DealForm({ deal, defaults, onClose, onSaved }: Props) {
     mutationFn: (body: Record<string, unknown>) =>
       deal ? put<Deal>(`/deals/${deal.id}`, body) : post<Deal>("/deals", body),
     onSuccess: (saved) => {
-      client.invalidateQueries({ queryKey: ["board"] });
-      client.invalidateQueries({ queryKey: ["deals"] });
-      client.invalidateQueries({ queryKey: ["analytics"] });
-      client.invalidateQueries({ queryKey: ["audit"] });
+      invalidate("deal");
       client.setQueryData(["deal", saved.id], saved);
       onSaved?.(saved);
       onClose();
     },
     onError: (err) => {
-      if (err instanceof ApiError && err.status === 409 && deal) {
-        client.invalidateQueries({ queryKey: ["deal", deal.id] });
-        client.invalidateQueries({ queryKey: ["board"] });
-      }
+      if (err instanceof ApiError && err.status === 409) invalidate("deal");
     },
   });
 

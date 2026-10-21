@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 import { get, query } from "./api";
 import type { Me, Page, Stage, Targets, Task, User } from "./types";
@@ -22,6 +23,33 @@ export const keys = {
   audit: (filters: object) => ["audit", filters] as const,
   analytics: (report: string, filters: object) => ["analytics", report, filters] as const,
 };
+
+export type Entity = "deal" | "task" | "note" | "company" | "contact" | "stage" | "user" | "target";
+
+const AFFECTS: Record<Entity, string[]> = {
+  deal: ["board", "deals", "deal", "analytics", "audit", "targets", "companies"],
+  task: ["tasks", "board", "deals", "deal", "audit"],
+  note: ["notes", "board", "deals", "deal"],
+  company: ["companies", "company", "deals", "board", "audit"],
+  contact: ["contacts", "contact", "companies", "audit"],
+  stage: ["stages", "board", "analytics", "audit"],
+  user: ["users", "me", "audit"],
+  target: ["targets"],
+};
+
+export function affected(...entities: string[]): string[] {
+  return [...new Set(entities.flatMap((e) => AFFECTS[e as Entity] ?? []))];
+}
+
+export function useInvalidate() {
+  const client = useQueryClient();
+  return useCallback(
+    (...entities: Entity[]) => {
+      for (const key of affected(...entities)) client.invalidateQueries({ queryKey: [key] });
+    },
+    [client],
+  );
+}
 
 export function useMe() {
   return useQuery({ queryKey: keys.me, queryFn: () => get<Me>("/auth/me"), staleTime: 60_000 });

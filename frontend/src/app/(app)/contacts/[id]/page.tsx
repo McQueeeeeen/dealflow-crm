@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +15,7 @@ import { TaskRow } from "@/components/task-list";
 import { Button, ErrorState, Loading, Panel, RecordView } from "@/components/ui";
 import { del, get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
-import { canModify, isManager, keys, useMe } from "@/lib/queries";
+import { canModify, isManager, keys, useInvalidate, useMe } from "@/lib/queries";
 import type { Contact, Page, Task } from "@/lib/types";
 import { BACK, FORWARD } from "@/lib/transitions";
 
@@ -42,7 +42,7 @@ export default function ContactPage() {
 function ContactView({ contact }: { contact: Contact }) {
   const me = useMe().data;
   const router = useRouter();
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [editing, setEditing] = useState(false);
   const [addingDeal, setAddingDeal] = useState(false);
   const [addingTask, setAddingTask] = useState(false);
@@ -51,7 +51,7 @@ function ContactView({ contact }: { contact: Contact }) {
   const remove = useMutation({
     mutationFn: () => del(`/contacts/${contact.id}`),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["contacts"] });
+      invalidate("contact");
       router.push("/contacts");
     },
   });

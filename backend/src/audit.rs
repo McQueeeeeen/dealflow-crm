@@ -32,6 +32,42 @@ pub async fn record(
     Ok(())
 }
 
+pub async fn created<T: Serialize>(
+    conn: &mut PgConnection,
+    actor: &AuthUser,
+    entity: EntityType,
+    id: Uuid,
+    fields: &T,
+) -> AppResult<()> {
+    record(conn, actor, entity, id, AuditAction::Created, snapshot(fields)).await
+}
+
+pub async fn deleted<T: Serialize>(
+    conn: &mut PgConnection,
+    actor: &AuthUser,
+    entity: EntityType,
+    id: Uuid,
+    fields: &T,
+) -> AppResult<()> {
+    record(conn, actor, entity, id, AuditAction::Deleted, snapshot(fields)).await
+}
+
+pub async fn updated<T: Serialize>(
+    conn: &mut PgConnection,
+    actor: &AuthUser,
+    entity: EntityType,
+    id: Uuid,
+    before: &T,
+    after: &T,
+) -> AppResult<bool> {
+    let changes = diff(before, after);
+    if is_empty_diff(&changes) {
+        return Ok(false);
+    }
+    record(conn, actor, entity, id, AuditAction::Updated, changes).await?;
+    Ok(true)
+}
+
 pub fn snapshot<T: Serialize>(value: &T) -> Value {
     let mut value = serde_json::to_value(value).unwrap_or(Value::Null);
     if let Value::Object(map) = &mut value {

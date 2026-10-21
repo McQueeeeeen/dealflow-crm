@@ -13,8 +13,8 @@ use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
 use crate::live;
-use crate::models::{AuditAction, EntityType, StageKind};
-use crate::pagination::{Page, Pagination};
+use crate::models::{EntityType, StageKind};
+use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
 use crate::validation::{clean, like_pattern, Validator};
 
@@ -180,33 +180,19 @@ pub async fn list_deals(
     let pagination = Pagination::new(query.page, query.per_page);
     let pattern = clean(query.q).map(|q| like_pattern(&q));
 
-    let total: i64 = sqlx::query_scalar(&format!(
-        "SELECT count(*) FROM deals d JOIN pipeline_stages s ON s.id = d.stage_id {FILTER}"
-    ))
-    .bind(user.org_id)
-    .bind(&pattern)
-    .bind(query.stage_id)
-    .bind(query.owner_id)
-    .bind(query.company_id)
-    .bind(query.contact_id)
-    .bind(query.status)
-    .fetch_one(&state.pool)
-    .await?;
-    let deals = sqlx::query_as(&format!(
-        "{SELECT_DEAL} {FILTER} ORDER BY d.updated_at DESC, d.id LIMIT $8 OFFSET $9"
-    ))
-    .bind(user.org_id)
-    .bind(&pattern)
-    .bind(query.stage_id)
-    .bind(query.owner_id)
-    .bind(query.company_id)
-    .bind(query.contact_id)
-    .bind(query.status)
-    .bind(pagination.limit())
-    .bind(pagination.offset())
-    .fetch_all(&state.pool)
-    .await?;
-    Ok(Json(pagination.wrap(deals, total)))
+    let params = Params::default()
+        .bind(user.org_id)?
+        .bind(&pattern)?
+        .bind(query.stage_id)?
+        .bind(query.owner_id)?
+        .bind(query.company_id)?
+        .bind(query.contact_id)?
+        .bind(query.status)?;
+    let sql = format!("{SELECT_DEAL} {FILTER}");
+    let page = pagination
+        .fetch(&state.pool, &sql, "d.updated_at DESC, d.id", params)
+        .await?;
+    Ok(Json(page))
 }
 
 pub async fn board(
@@ -369,14 +355,7 @@ pub async fn create_deal(
     .fetch_one(&mut *tx)
     .await?;
     record_stage_change(&mut tx, &actor, id, None, stage_id).await?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Deal,
-        id,
-        AuditAction::Created,
-        audit::snapshot(&fields),
-    )
+    audit::created(&mut tx, &actor, EntityType::Deal, id, &fields)
     .await?;
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
@@ -444,18 +423,8 @@ pub async fn update_deal(
     .bind(req.expected_close_date)
     .fetch_one(&mut *tx)
     .await?;
-    let changes = audit::diff(&before, &after);
-    if !audit::is_empty_diff(&changes) {
-        audit::record(
-            &mut tx,
-            &actor,
-            EntityType::Deal,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+    audit::updated(&mut tx, &actor, EntityType::Deal, id, &before, &after)
         .await?;
-    }
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok(Json(deal))
@@ -512,15 +481,7 @@ pub async fn move_deal(
             req.stage_id,
         )
         .await?;
-        let changes = audit::diff(&locked.fields, &after);
-        audit::record(
-            &mut tx,
-            &actor,
-            EntityType::Deal,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+        audit::updated(&mut tx, &actor, EntityType::Deal, id, &locked.fields, &after)
         .await?;
     } else {
         let change = live::Change {
@@ -552,14 +513,7 @@ pub async fn delete_deal(
     .fetch_optional(&mut *tx)
     .await?;
     let deleted = deleted.ok_or(AppError::NotFound("deal"))?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Deal,
-        id,
-        AuditAction::Deleted,
-        audit::snapshot(&deleted),
-    )
+    audit::deleted(&mut tx, &actor, EntityType::Deal, id, &deleted)
     .await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)

@@ -7,7 +7,7 @@ import { OwnerOptions } from "@/components/owner-select";
 import { CompanySelect } from "@/components/record-pickers";
 import { Dialog, Field, ModalForm, Select, TextInput, fieldError } from "@/components/ui";
 import { post, put } from "@/lib/api";
-import { useMe } from "@/lib/queries";
+import { useInvalidate, useMe } from "@/lib/queries";
 import type { Company, Contact } from "@/lib/types";
 
 interface CompanyProps {
@@ -32,6 +32,7 @@ export function CompanyFormDialog(props: CompanyProps) {
 function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
   const me = useMe().data;
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     name: company?.name ?? "",
     domain: company?.domain ?? "",
@@ -44,8 +45,7 @@ function CompanyForm({ company, onClose, onSaved }: CompanyProps) {
         ? put<Company>(`/companies/${company.id}`, values)
         : post<Company>("/companies", values),
     onSuccess: (saved) => {
-      client.invalidateQueries({ queryKey: ["companies"] });
-      client.invalidateQueries({ queryKey: ["audit"] });
+      invalidate("company");
       client.setQueryData(["company", saved.id], saved);
       onSaved?.(saved);
       onClose();
@@ -115,6 +115,7 @@ export function ContactFormDialog(props: ContactProps) {
 function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
   const me = useMe().data;
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     first_name: contact?.first_name ?? "",
     last_name: contact?.last_name ?? "",
@@ -132,9 +133,7 @@ function ContactForm({ contact, companyId, onClose, onSaved }: ContactProps) {
         : post<Contact>("/contacts", body);
     },
     onSuccess: (saved) => {
-      client.invalidateQueries({ queryKey: ["contacts"] });
-      client.invalidateQueries({ queryKey: ["companies"] });
-      client.invalidateQueries({ queryKey: ["audit"] });
+      invalidate("contact");
       client.setQueryData(["contact", saved.id], saved);
       onSaved?.(saved);
       onClose();

@@ -11,7 +11,7 @@ use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
 use crate::live;
-use crate::pagination::{Page, Pagination};
+use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
 use crate::validation::Validator;
 
@@ -97,25 +97,16 @@ pub async fn list_notes(
     parent.require_single()?;
     let pagination = Pagination::new(query.page, query.per_page);
 
-    let total: i64 = sqlx::query_scalar(&format!("SELECT count(*) FROM notes n {FILTER}"))
-        .bind(user.org_id)
-        .bind(parent.deal_id)
-        .bind(parent.contact_id)
-        .bind(parent.company_id)
-        .fetch_one(&state.pool)
+    let params = Params::default()
+        .bind(user.org_id)?
+        .bind(parent.deal_id)?
+        .bind(parent.contact_id)?
+        .bind(parent.company_id)?;
+    let sql = format!("{SELECT_NOTE} {FILTER}");
+    let page = pagination
+        .fetch(&state.pool, &sql, "n.created_at DESC, n.id DESC", params)
         .await?;
-    let notes = sqlx::query_as(&format!(
-        "{SELECT_NOTE} {FILTER} ORDER BY n.created_at DESC, n.id DESC LIMIT $5 OFFSET $6"
-    ))
-    .bind(user.org_id)
-    .bind(parent.deal_id)
-    .bind(parent.contact_id)
-    .bind(parent.company_id)
-    .bind(pagination.limit())
-    .bind(pagination.offset())
-    .fetch_all(&state.pool)
-    .await?;
-    Ok(Json(pagination.wrap(notes, total)))
+    Ok(Json(page))
 }
 
 pub async fn create_note(

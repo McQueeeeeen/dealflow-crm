@@ -10,7 +10,7 @@ use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::ApiQuery;
 use crate::models::{AuditAction, EntityType};
-use crate::pagination::{Page, Pagination};
+use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
@@ -59,28 +59,17 @@ pub async fn list_audit(
     };
     let pagination = Pagination::new(query.page, query.per_page);
 
-    let total: i64 = sqlx::query_scalar(&format!("SELECT count(*) FROM audit_log a {FILTER}"))
-        .bind(user.org_id)
-        .bind(entity_type)
-        .bind(query.entity_id)
-        .bind(query.actor_id)
-        .fetch_one(&state.pool)
-        .await?;
-    let entries = sqlx::query_as(&format!(
+    let params = Params::default()
+        .bind(user.org_id)?
+        .bind(entity_type)?
+        .bind(query.entity_id)?
+        .bind(query.actor_id)?;
+    let sql = format!(
         "SELECT a.id, a.actor_id, u.full_name AS actor_name, a.entity_type, a.entity_id,
                 a.action, a.changes, a.created_at
          FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
-         {FILTER}
-         ORDER BY a.created_at DESC, a.id DESC
-         LIMIT $5 OFFSET $6"
-    ))
-    .bind(user.org_id)
-    .bind(entity_type)
-    .bind(query.entity_id)
-    .bind(query.actor_id)
-    .bind(pagination.limit())
-    .bind(pagination.offset())
-    .fetch_all(&state.pool)
-    .await?;
-    Ok(Json(pagination.wrap(entries, total)))
+         {FILTER}"
+    );
+    let order = "a.created_at DESC, a.id DESC";
+    Ok(Json(pagination.fetch(&state.pool, &sql, order, params).await?))
 }

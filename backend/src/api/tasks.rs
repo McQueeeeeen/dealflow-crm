@@ -11,8 +11,8 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
-use crate::models::{AuditAction, EntityType};
-use crate::pagination::{Page, Pagination};
+use crate::models::EntityType;
+use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
 use crate::validation::{clean, Validator};
 
@@ -126,31 +126,16 @@ pub async fn list_tasks(
     let pagination = Pagination::new(query.page, query.per_page);
     let status = status_filter(query.status);
 
-    let total: i64 = sqlx::query_scalar(&format!("SELECT count(*) FROM tasks t {FILTER}"))
-        .bind(user.org_id)
-        .bind(query.assignee_id)
-        .bind(query.deal_id)
-        .bind(query.contact_id)
-        .bind(status)
-        .bind(query.due_before)
-        .fetch_one(&state.pool)
-        .await?;
-    let tasks = sqlx::query_as(&format!(
-        "{SELECT_TASK} {FILTER}
-         ORDER BY t.completed_at IS NOT NULL, t.due_at NULLS LAST, t.created_at DESC, t.id
-         LIMIT $7 OFFSET $8"
-    ))
-    .bind(user.org_id)
-    .bind(query.assignee_id)
-    .bind(query.deal_id)
-    .bind(query.contact_id)
-    .bind(status)
-    .bind(query.due_before)
-    .bind(pagination.limit())
-    .bind(pagination.offset())
-    .fetch_all(&state.pool)
-    .await?;
-    Ok(Json(pagination.wrap(tasks, total)))
+    let params = Params::default()
+        .bind(user.org_id)?
+        .bind(query.assignee_id)?
+        .bind(query.deal_id)?
+        .bind(query.contact_id)?
+        .bind(status)?
+        .bind(query.due_before)?;
+    let sql = format!("{SELECT_TASK} {FILTER}");
+    let order = "t.completed_at IS NOT NULL, t.due_at NULLS LAST, t.created_at DESC, t.id";
+    Ok(Json(pagination.fetch(&state.pool, &sql, order, params).await?))
 }
 
 async fn fetch_task(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResult<Task> {
@@ -230,14 +215,7 @@ pub async fn create_task(
     .bind(req.contact_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Task,
-        id,
-        AuditAction::Created,
-        audit::snapshot(&fields),
-    )
+    audit::created(&mut tx, &actor, EntityType::Task, id, &fields)
     .await?;
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
@@ -270,18 +248,8 @@ pub async fn update_task(
     .bind(req.contact_id)
     .fetch_one(&mut *tx)
     .await?;
-    let changes = audit::diff(&before, &after);
-    if !audit::is_empty_diff(&changes) {
-        audit::record(
-            &mut tx,
-            &actor,
-            EntityType::Task,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+    audit::updated(&mut tx, &actor, EntityType::Task, id, &before, &after)
         .await?;
-    }
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok(Json(task))
@@ -307,15 +275,7 @@ async fn set_completion(
         .bind(completed)
         .fetch_one(&mut *tx)
         .await?;
-        let changes = audit::diff(&before, &after);
-        audit::record(
-            &mut tx,
-            actor,
-            EntityType::Task,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+        audit::updated(&mut tx, actor, EntityType::Task, id, &before, &after)
         .await?;
     }
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
@@ -351,14 +311,7 @@ pub async fn delete_task(
         .bind(actor.org_id)
         .execute(&mut *tx)
         .await?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Task,
-        id,
-        AuditAction::Deleted,
-        audit::snapshot(&task),
-    )
+    audit::deleted(&mut tx, &actor, EntityType::Task, id, &task)
     .await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)

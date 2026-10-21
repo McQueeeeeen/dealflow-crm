@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,7 +14,7 @@ import { Button, ErrorState, Loading, Panel, RecordView } from "@/components/ui"
 import { del, get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
-import { canModify, isManager, keys, useMe } from "@/lib/queries";
+import { canModify, isManager, keys, useInvalidate, useMe } from "@/lib/queries";
 import type { Company, Contact, Page } from "@/lib/types";
 import { BACK, FORWARD } from "@/lib/transitions";
 
@@ -42,7 +42,7 @@ function CompanyView({ company }: { company: Company }) {
   const me = useMe().data;
   const fmt = useMoney();
   const router = useRouter();
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [editing, setEditing] = useState(false);
   const [addingContact, setAddingContact] = useState(false);
   const [addingDeal, setAddingDeal] = useState(false);
@@ -51,7 +51,7 @@ function CompanyView({ company }: { company: Company }) {
   const remove = useMutation({
     mutationFn: () => del(`/companies/${company.id}`),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["companies"] });
+      invalidate("company");
       router.push("/companies");
     },
   });
@@ -135,7 +135,7 @@ function CompanyView({ company }: { company: Company }) {
         open={addingDeal}
         onClose={() => setAddingDeal(false)}
         defaults={{ companyId: company.id }}
-        onSaved={() => client.invalidateQueries({ queryKey: keys.company(company.id) })}
+        onSaved={() => invalidate("company")}
       />
     </>
   );

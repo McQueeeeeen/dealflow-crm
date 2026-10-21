@@ -15,7 +15,7 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath};
-use crate::models::{AuditAction, EntityType};
+use crate::models::EntityType;
 use crate::state::AppState;
 
 const MAX_ROWS: usize = 1000;
@@ -296,15 +296,7 @@ async fn insert_company(
     .bind(actor.user_id)
     .fetch_one(&mut *conn)
     .await?;
-    let snapshot = audit::snapshot(&fields);
-    audit::record(
-        conn,
-        actor,
-        EntityType::Company,
-        id,
-        AuditAction::Created,
-        snapshot,
-    )
+    audit::created(conn, actor, EntityType::Company, id, &fields)
     .await?;
     Ok(id)
 }
@@ -351,12 +343,12 @@ async fn record_update<T: Serialize>(
     before: &T,
     after: &T,
 ) -> AppResult<AppResult<Outcome>> {
-    let changes = audit::diff(before, after);
-    if audit::is_empty_diff(&changes) {
-        return Ok(Ok(Outcome::Unchanged));
-    }
-    audit::record(conn, actor, entity, id, AuditAction::Updated, changes).await?;
-    Ok(Ok(Outcome::Updated))
+    let changed = audit::updated(conn, actor, entity, id, before, after).await?;
+    Ok(Ok(if changed {
+        Outcome::Updated
+    } else {
+        Outcome::Unchanged
+    }))
 }
 
 pub async fn import_contacts(
@@ -460,15 +452,7 @@ async fn upsert_contact(
         .bind(actor.user_id)
         .fetch_one(&mut *conn)
         .await?;
-        let snapshot = audit::snapshot(&fields);
-        audit::record(
-            conn,
-            actor,
-            EntityType::Contact,
-            id,
-            AuditAction::Created,
-            snapshot,
-        )
+        audit::created(conn, actor, EntityType::Contact, id, &fields)
         .await?;
         return Ok(Ok(Outcome::Created));
     };

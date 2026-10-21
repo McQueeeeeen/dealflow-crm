@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 
 import { Avatar, cx } from "@/components/ui";
 import { put } from "@/lib/api";
+import { affected } from "@/lib/queries";
 import type { Viewer } from "@/lib/types";
 
 interface Change {
@@ -21,25 +22,15 @@ interface Live {
 
 const LiveContext = createContext<Live>({ connected: false, viewers: [] });
 
-const AFFECTS: Record<string, string[][]> = {
-  deal: [["board"], ["deals"], ["deal"], ["analytics"], ["audit"], ["targets"]],
-  task: [["tasks"], ["board"], ["deals"], ["deal"]],
-  note: [["notes"], ["board"], ["deals"], ["deal"]],
-  company: [["companies"], ["company"], ["deals"], ["board"]],
-  contact: [["contacts"], ["contact"], ["companies"]],
-  stage: [["stages"], ["board"], ["analytics"]],
-  user: [["users"], ["me"]],
-  target: [["targets"]],
-};
 
 function batcher(client: QueryClient) {
   const pending = new Set<string>();
   let timer: ReturnType<typeof setTimeout> | undefined;
-  return (keys: string[][]) => {
-    for (const key of keys) pending.add(JSON.stringify(key));
+  return (keys: string[]) => {
+    for (const key of keys) pending.add(key);
     clearTimeout(timer);
     timer = setTimeout(() => {
-      for (const key of pending) client.invalidateQueries({ queryKey: JSON.parse(key) });
+      for (const key of pending) client.invalidateQueries({ queryKey: [key] });
       pending.clear();
     }, 250);
   };
@@ -72,7 +63,7 @@ export function LiveProvider({ me, children }: { me: string; children: ReactNode
       });
       source.addEventListener("change", (e) => {
         const change: Change = JSON.parse((e as MessageEvent<string>).data);
-        if (change.actor !== me) invalidate(AFFECTS[change.entity] ?? []);
+        if (change.actor !== me) invalidate(affected(change.entity));
       });
       source.addEventListener("presence", (e) => {
         const viewers: Viewer[] = JSON.parse((e as MessageEvent<string>).data);

@@ -1,11 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { Dialog, Field, ModalForm, Select, TextArea, TextInput, fieldError } from "@/components/ui";
 import { post, put } from "@/lib/api";
-import { useMe, useUsers } from "@/lib/queries";
+import { useInvalidate, useMe, useUsers } from "@/lib/queries";
 import type { Task } from "@/lib/types";
 
 interface Props {
@@ -44,7 +44,7 @@ function tomorrowMorning(): string {
 function TaskForm({ task, link, onClose }: Props) {
   const me = useMe().data;
   const users = useUsers().data ?? [];
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     title: task?.title ?? "",
     details: task?.details ?? "",
@@ -56,8 +56,7 @@ function TaskForm({ task, link, onClose }: Props) {
     mutationFn: (body: Record<string, unknown>) =>
       task ? put<Task>(`/tasks/${task.id}`, body) : post<Task>("/tasks", body),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["tasks"] });
-      client.invalidateQueries({ queryKey: ["audit"] });
+      invalidate("task");
       onClose();
     },
   });

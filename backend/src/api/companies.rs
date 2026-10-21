@@ -11,8 +11,8 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
-use crate::models::{AuditAction, EntityType};
-use crate::pagination::{Page, Pagination};
+use crate::models::EntityType;
+use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
 use crate::validation::{clean, like_pattern, normalize_domain, Validator};
 
@@ -91,23 +91,15 @@ pub async fn list_companies(
     let pagination = Pagination::new(query.page, query.per_page);
     let pattern = clean(query.q).map(|q| like_pattern(&q));
 
-    let total: i64 = sqlx::query_scalar(&format!("SELECT count(*) FROM companies c {FILTER}"))
-        .bind(user.org_id)
-        .bind(&pattern)
-        .bind(query.owner_id)
-        .fetch_one(&state.pool)
+    let params = Params::default()
+        .bind(user.org_id)?
+        .bind(&pattern)?
+        .bind(query.owner_id)?;
+    let sql = format!("{SELECT_COMPANY} {FILTER}");
+    let page = pagination
+        .fetch(&state.pool, &sql, "c.name, c.id", params)
         .await?;
-    let companies = sqlx::query_as(&format!(
-        "{SELECT_COMPANY} {FILTER} ORDER BY c.name, c.id LIMIT $4 OFFSET $5"
-    ))
-    .bind(user.org_id)
-    .bind(&pattern)
-    .bind(query.owner_id)
-    .bind(pagination.limit())
-    .bind(pagination.offset())
-    .fetch_all(&state.pool)
-    .await?;
-    Ok(Json(pagination.wrap(companies, total)))
+    Ok(Json(page))
 }
 
 pub async fn fetch_company(pool: &sqlx::PgPool, org_id: Uuid, id: Uuid) -> AppResult<Company> {
@@ -172,14 +164,7 @@ pub async fn create_company(
     .bind(owner_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Company,
-        id,
-        AuditAction::Created,
-        audit::snapshot(&fields),
-    )
+    audit::created(&mut tx, &actor, EntityType::Company, id, &fields)
     .await?;
     tx.commit().await?;
 
@@ -224,18 +209,8 @@ pub async fn update_company(
     .bind(owner_id)
     .fetch_one(&mut *tx)
     .await?;
-    let changes = audit::diff(&before, &after);
-    if !audit::is_empty_diff(&changes) {
-        audit::record(
-            &mut tx,
-            &actor,
-            EntityType::Company,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+    audit::updated(&mut tx, &actor, EntityType::Company, id, &before, &after)
         .await?;
-    }
     tx.commit().await?;
     Ok(Json(fetch_company(&state.pool, actor.org_id, id).await?))
 }
@@ -256,14 +231,7 @@ pub async fn delete_company(
     .fetch_optional(&mut *tx)
     .await?;
     let deleted = deleted.ok_or(AppError::NotFound("company"))?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Company,
-        id,
-        AuditAction::Deleted,
-        audit::snapshot(&deleted),
-    )
+    audit::deleted(&mut tx, &actor, EntityType::Company, id, &deleted)
     .await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
