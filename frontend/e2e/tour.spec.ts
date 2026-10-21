@@ -26,6 +26,12 @@ for (const scheme of ["light", "dark"] as const) {
       { path: "/contacts", heading: "Contacts", name: "contacts" },
       { path: "/reports", heading: "Reports", name: "reports" },
       { path: "/settings", heading: "Settings", name: "settings" },
+      { path: "/automations", heading: "Automations", name: "automations" },
+      {
+        path: "/contacts/duplicates",
+        heading: "Possible Duplicate Contacts",
+        name: "duplicates",
+      },
     ];
     for (const screen of screens) {
       await page.goto(screen.path);
