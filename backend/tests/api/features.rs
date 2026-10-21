@@ -824,13 +824,21 @@ async fn duplicate_contacts_merge_with_everything_attached(pool: PgPool) {
         .await;
     merged.assert_status(StatusCode::OK);
     assert_eq!(merged.body["kept"]["last_name"], "Novack");
-    assert_eq!(merged.body["kept"]["phone"], "+1 555 0100", "blanks are filled");
-    assert_eq!(merged.body["moved"], json!({ "deals": 1, "tasks": 1, "notes": 1 }));
+    assert_eq!(
+        merged.body["kept"]["phone"], "+1 555 0100",
+        "blanks are filled"
+    );
+    assert_eq!(
+        merged.body["moved"],
+        json!({ "deals": 1, "tasks": 1, "notes": 1 })
+    );
 
     app.get(&format!("/api/v1/contacts/{}", twin.id()), &admin)
         .await
         .assert_status(StatusCode::NOT_FOUND);
-    let deal = app.get(&format!("/api/v1/deals/{}", deal.id()), &admin).await;
+    let deal = app
+        .get(&format!("/api/v1/deals/{}", deal.id()), &admin)
+        .await;
     assert_eq!(deal.body["contact_id"], keep.id().to_string());
     let notes = app
         .get(&format!("/api/v1/notes?contact_id={}", keep.id()), &admin)
@@ -853,13 +861,25 @@ async fn similar_company_names_pair_up_and_merges_respect_ownership(pool: PgPool
     let admin = app.register("Acme", "owner@acme.test").await;
     let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
     let first = app
-        .post("/api/v1/companies", &admin, json!({ "name": "Harbor Logistics" }))
+        .post(
+            "/api/v1/companies",
+            &admin,
+            json!({ "name": "Harbor Logistics" }),
+        )
         .await;
     let second = app
-        .post("/api/v1/companies", &rep, json!({ "name": "Harbor Logistic" }))
+        .post(
+            "/api/v1/companies",
+            &rep,
+            json!({ "name": "Harbor Logistic" }),
+        )
         .await;
-    app.post("/api/v1/companies", &admin, json!({ "name": "Granite Foods" }))
-        .await;
+    app.post(
+        "/api/v1/companies",
+        &admin,
+        json!({ "name": "Granite Foods" }),
+    )
+    .await;
 
     let pairs = app.get("/api/v1/duplicates/companies", &rep).await;
     let pairs = pairs.body.as_array().unwrap();

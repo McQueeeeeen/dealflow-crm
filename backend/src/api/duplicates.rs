@@ -39,9 +39,21 @@ const CONTACTS: Kind = Kind {
     alias: "ct",
     name: "{t}.first_name || ' ' || {t}.last_name",
     key: "email",
-    fields: &["first_name", "last_name", "email", "phone", "job_title", "company_id", "owner_id"],
+    fields: &[
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "job_title",
+        "company_id",
+        "owner_id",
+    ],
     nullable: &["email", "phone", "job_title", "company_id"],
-    references: &[("deals", "contact_id"), ("tasks", "contact_id"), ("notes", "contact_id")],
+    references: &[
+        ("deals", "contact_id"),
+        ("tasks", "contact_id"),
+        ("notes", "contact_id"),
+    ],
 };
 
 const COMPANIES: Kind = Kind {
@@ -53,7 +65,11 @@ const COMPANIES: Kind = Kind {
     key: "domain",
     fields: &["name", "domain", "industry", "owner_id"],
     nullable: &["domain", "industry"],
-    references: &[("contacts", "company_id"), ("deals", "company_id"), ("notes", "company_id")],
+    references: &[
+        ("contacts", "company_id"),
+        ("deals", "company_id"),
+        ("notes", "company_id"),
+    ],
 };
 
 fn kind(raw: &str) -> AppResult<&'static Kind> {
@@ -92,7 +108,12 @@ pub struct Merged {
     pub moved: HashMap<&'static str, u64>,
 }
 
-async fn records(conn: &mut PgConnection, kind: &Kind, org_id: Uuid, ids: &[Uuid]) -> AppResult<HashMap<Uuid, Value>> {
+async fn records(
+    conn: &mut PgConnection,
+    kind: &Kind,
+    org_id: Uuid,
+    ids: &[Uuid],
+) -> AppResult<HashMap<Uuid, Value>> {
     let rows: Vec<(Uuid, Value)> = sqlx::query_as(&format!(
         "SELECT id, to_jsonb(r) FROM ({} WHERE {a}.organization_id = $1 AND {a}.id = ANY($2)) r",
         kind.select,
@@ -129,7 +150,10 @@ pub async fn find_pairs(
     .fetch_all(&state.pool)
     .await?;
 
-    let ids: Vec<Uuid> = candidates.iter().flat_map(|(a, b, _, _)| [*a, *b]).collect();
+    let ids: Vec<Uuid> = candidates
+        .iter()
+        .flat_map(|(a, b, _, _)| [*a, *b])
+        .collect();
     let mut conn = state.pool.acquire().await?;
     let found = records(&mut conn, kind, user.org_id, &ids).await?;
     let pairs = candidates
@@ -167,7 +191,10 @@ pub async fn merge(
         return Err(AppError::validation("remove", "pick two different records"));
     }
     if let Some(unknown) = req.take.iter().find(|f| !kind.fields.contains(&f.as_str())) {
-        return Err(AppError::validation("take", &format!("“{unknown}” cannot be merged")));
+        return Err(AppError::validation(
+            "take",
+            &format!("“{unknown}” cannot be merged"),
+        ));
     }
 
     let mut tx = state.pool.begin().await?;
@@ -180,7 +207,11 @@ pub async fn merge(
     .fetch_all(&mut *tx)
     .await?;
     if owners.len() != 2 {
-        return Err(AppError::NotFound(if kind.table == "contacts" { "contact" } else { "company" }));
+        return Err(AppError::NotFound(if kind.table == "contacts" {
+            "contact"
+        } else {
+            "company"
+        }));
     }
     for (_, owner) in &owners {
         actor.require_can_modify(*owner)?;
