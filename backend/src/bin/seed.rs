@@ -340,14 +340,12 @@ async fn seed_targets(
     rng: &mut StdRng,
 ) -> anyhow::Result<()> {
     for &user in &ids.users {
-        let likely: i64 = sqlx::query_scalar(
-            "SELECT coalesce(sum(CASE
-                       WHEN s.kind = 'won' AND d.closed_at >= date_trunc('month', now())
-                           THEN d.value_cents
-                       WHEN s.kind = 'open'
-                            AND d.expected_close_date < date_trunc('month', now()) + interval '1 month'
-                           THEN d.value_cents * s.probability / 100
-                   END), 0)::bigint
+        let (won, weighted): (i64, i64) = sqlx::query_as(
+            "SELECT coalesce(sum(d.value_cents) FILTER (
+                        WHERE s.kind = 'won' AND d.closed_at >= date_trunc('month', now())), 0)::bigint,
+                    coalesce(sum(d.value_cents * s.probability / 100) FILTER (
+                        WHERE s.kind = 'open'
+                          AND d.expected_close_date < date_trunc('month', now()) + interval '1 month'), 0)::bigint
              FROM deals d JOIN pipeline_stages s ON s.id = d.stage_id
              WHERE d.organization_id = $1 AND d.owner_id = $2",
         )
@@ -355,7 +353,7 @@ async fn seed_targets(
         .bind(user)
         .fetch_one(&mut **tx)
         .await?;
-        let stretch = likely as f64 * rng.gen_range(1.05..1.5) / 500_000.0;
+        let stretch = (won as f64 + weighted as f64 * rng.gen_range(0.25..0.55)) / 500_000.0;
         sqlx::query(
             "INSERT INTO sales_targets (organization_id, user_id, month, amount_cents)
              VALUES ($1, $2, date_trunc('month', now())::date, $3)",
