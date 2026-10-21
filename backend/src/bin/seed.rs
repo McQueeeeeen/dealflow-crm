@@ -172,6 +172,7 @@ async fn main() -> anyhow::Result<()> {
     seed_tasks_and_notes(&mut tx, &ids, &deals, &mut rng).await?;
     seed_targets(&mut tx, &ids, &mut rng).await?;
     seed_automations(&mut tx, &ids, &deals).await?;
+    seed_duplicates(&mut tx, &ids).await?;
     tx.commit().await?;
 
     println!(
@@ -229,6 +230,32 @@ async fn seed_workspace(tx: &mut Transaction<'_, Postgres>) -> anyhow::Result<Id
         stages.push((id, kind));
     }
     Ok(Ids { org, users, stages })
+}
+
+async fn seed_duplicates(tx: &mut Transaction<'_, Postgres>, ids: &Ids) -> anyhow::Result<()> {
+    for sql in [
+        "INSERT INTO contacts (id, organization_id, first_name, last_name, email, phone, company_id,
+                               owner_id, created_at, updated_at)
+         SELECT $2, organization_id, first_name, last_name || 's', email, '+1 555 0142', company_id,
+                owner_id, now() - interval '20 days', now() - interval '20 days'
+         FROM contacts WHERE organization_id = $1 AND email IS NOT NULL ORDER BY id LIMIT 1",
+        "INSERT INTO contacts (id, organization_id, first_name, last_name, job_title, owner_id,
+                               created_at, updated_at)
+         SELECT $2, organization_id, first_name, last_name, 'Procurement lead', owner_id,
+                now() - interval '9 days', now() - interval '9 days'
+         FROM contacts WHERE organization_id = $1 ORDER BY id OFFSET 3 LIMIT 1",
+        "INSERT INTO companies (id, organization_id, name, domain, owner_id, created_at, updated_at)
+         SELECT $2, organization_id, name || ' Inc', domain, owner_id,
+                now() - interval '15 days', now() - interval '15 days'
+         FROM companies WHERE organization_id = $1 AND domain IS NOT NULL ORDER BY id LIMIT 1",
+    ] {
+        sqlx::query(sql)
+            .bind(ids.org)
+            .bind(Uuid::now_v7())
+            .execute(&mut **tx)
+            .await?;
+    }
+    Ok(())
 }
 
 async fn seed_automations(

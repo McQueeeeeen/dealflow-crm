@@ -5,6 +5,7 @@ pub mod automations;
 pub mod companies;
 pub mod contacts;
 pub mod deals;
+pub mod duplicates;
 pub mod notes;
 pub mod organization;
 pub mod search;
@@ -33,6 +34,7 @@ pub fn router() -> Router<AppState> {
         .merge(companies::router())
         .merge(contacts::router())
         .merge(deals::router())
+        .merge(duplicates::router())
         .merge(tasks::router())
         .merge(notes::router())
         .merge(audit_log::router())

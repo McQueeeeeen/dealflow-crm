@@ -73,7 +73,7 @@ pub struct ContactQuery {
     pub per_page: Option<u32>,
 }
 
-const SELECT_CONTACT: &str = "
+pub(crate) const SELECT_CONTACT: &str = "
     SELECT ct.id, ct.first_name, ct.last_name, ct.email, ct.phone, ct.job_title,
            ct.company_id, co.name AS company_name, ct.owner_id, u.full_name AS owner_name,
            ct.created_at, ct.updated_at

@@ -64,7 +64,7 @@ pub struct CompanyQuery {
     pub per_page: Option<u32>,
 }
 
-const SELECT_COMPANY: &str = "
+pub(crate) const SELECT_COMPANY: &str = "
     SELECT c.id, c.name, c.domain, c.industry, c.owner_id, u.full_name AS owner_name,
            (SELECT count(*) FROM contacts ct
              WHERE ct.organization_id = c.organization_id AND ct.company_id = c.id) AS contacts_count,

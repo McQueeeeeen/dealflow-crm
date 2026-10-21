@@ -759,3 +759,129 @@ async fn completing_a_follow_up_can_trigger_a_rule(pool: PgPool) {
     let audit = app.get("/api/v1/audit?entity_type=rule", &admin).await;
     assert_eq!(audit.body["total"], 2);
 }
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn duplicate_contacts_merge_with_everything_attached(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let keep = app
+        .post(
+            "/api/v1/contacts",
+            &admin,
+            json!({ "first_name": "Emma", "last_name": "Novak", "email": "emma@harbor.example" }),
+        )
+        .await;
+    let twin = app
+        .post(
+            "/api/v1/contacts",
+            &admin,
+            json!({ "first_name": "Emma", "last_name": "Novack", "email": "Emma@Harbor.example",
+                    "phone": "+1 555 0100" }),
+        )
+        .await;
+    app.post(
+        "/api/v1/contacts",
+        &admin,
+        json!({ "first_name": "Liam", "last_name": "Stone" }),
+    )
+    .await;
+    let deal = app
+        .create_deal(&admin, json!({ "title": "Fleet", "contact_id": twin.id() }))
+        .await;
+    app.post(
+        "/api/v1/tasks",
+        &admin,
+        json!({ "title": "Call Emma", "contact_id": twin.id() }),
+    )
+    .await
+    .assert_status(StatusCode::CREATED);
+    app.post(
+        "/api/v1/notes",
+        &admin,
+        json!({ "body": "Prefers email", "contact_id": twin.id() }),
+    )
+    .await
+    .assert_status(StatusCode::CREATED);
+
+    let pairs = app.get("/api/v1/duplicates/contacts", &admin).await;
+    let pairs = pairs.body.as_array().unwrap();
+    assert_eq!(pairs.len(), 1, "{pairs:?}");
+    assert_eq!(pairs[0]["same_key"], true);
+
+    app.post(
+        "/api/v1/duplicates/contacts/merge",
+        &admin,
+        json!({ "keep": keep.id(), "remove": twin.id(), "take": ["password_hash"] }),
+    )
+    .await
+    .assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+    let merged = app
+        .post(
+            "/api/v1/duplicates/contacts/merge",
+            &admin,
+            json!({ "keep": keep.id(), "remove": twin.id(), "take": ["last_name"] }),
+        )
+        .await;
+    merged.assert_status(StatusCode::OK);
+    assert_eq!(merged.body["kept"]["last_name"], "Novack");
+    assert_eq!(merged.body["kept"]["phone"], "+1 555 0100", "blanks are filled");
+    assert_eq!(merged.body["moved"], json!({ "deals": 1, "tasks": 1, "notes": 1 }));
+
+    app.get(&format!("/api/v1/contacts/{}", twin.id()), &admin)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
+    let deal = app.get(&format!("/api/v1/deals/{}", deal.id()), &admin).await;
+    assert_eq!(deal.body["contact_id"], keep.id().to_string());
+    let notes = app
+        .get(&format!("/api/v1/notes?contact_id={}", keep.id()), &admin)
+        .await;
+    assert_eq!(notes.body["total"], 1);
+    let history = app
+        .get(
+            &format!("/api/v1/audit?entity_type=contact&entity_id={}", keep.id()),
+            &admin,
+        )
+        .await;
+    assert_eq!(history.body["data"][0]["action"], "updated");
+    let empty = app.get("/api/v1/duplicates/contacts", &admin).await;
+    assert_eq!(empty.body, json!([]));
+}
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn similar_company_names_pair_up_and_merges_respect_ownership(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
+    let first = app
+        .post("/api/v1/companies", &admin, json!({ "name": "Harbor Logistics" }))
+        .await;
+    let second = app
+        .post("/api/v1/companies", &rep, json!({ "name": "Harbor Logistic" }))
+        .await;
+    app.post("/api/v1/companies", &admin, json!({ "name": "Granite Foods" }))
+        .await;
+
+    let pairs = app.get("/api/v1/duplicates/companies", &rep).await;
+    let pairs = pairs.body.as_array().unwrap();
+    assert_eq!(pairs.len(), 1);
+    assert_eq!(pairs[0]["same_key"], false);
+    assert!(pairs[0]["similarity"].as_f64().unwrap() > 0.55);
+
+    let body = json!({ "keep": second.id(), "remove": first.id() });
+    app.post("/api/v1/duplicates/companies/merge", &rep, body.clone())
+        .await
+        .assert_status(StatusCode::FORBIDDEN);
+    app.post(
+        "/api/v1/duplicates/companies/merge",
+        &admin,
+        json!({ "keep": first.id(), "remove": first.id() }),
+    )
+    .await
+    .assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+    app.post("/api/v1/duplicates/companies/merge", &admin, body)
+        .await
+        .assert_status(StatusCode::OK);
+    app.get("/api/v1/duplicates/users", &admin)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
+}
