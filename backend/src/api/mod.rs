@@ -1,6 +1,7 @@
 pub mod analytics;
 pub mod audit_log;
 pub mod auth;
+pub mod automations;
 pub mod companies;
 pub mod contacts;
 pub mod deals;
@@ -26,6 +27,7 @@ use crate::state::AppState;
 pub fn router() -> Router<AppState> {
     Router::new()
         .merge(auth::router())
+        .merge(automations::router())
         .merge(users::router())
         .merge(stages::router())
         .merge(companies::router())

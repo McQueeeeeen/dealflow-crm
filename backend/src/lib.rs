@@ -1,6 +1,7 @@
 pub mod api;
 pub mod audit;
 pub mod auth;
+pub mod automation;
 pub mod authz;
 pub mod config;
 pub mod dql;
