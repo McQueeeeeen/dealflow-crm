@@ -197,7 +197,12 @@ function RunLog() {
           {runs.data.map((run) => (
             <li key={run.id} className="flex gap-3 px-3.5 py-3">
               {run.succeeded ? (
-                <IconCircleCheck size={18} stroke={1.75} className="text-won mt-0.5 shrink-0" aria-label="Done" />
+                <IconCircleCheck
+                  size={18}
+                  stroke={1.75}
+                  className="text-won mt-0.5 shrink-0"
+                  aria-label="Done"
+                />
               ) : (
                 <IconAlertTriangle
                   size={18}
@@ -218,7 +223,9 @@ function RunLog() {
                     {run.deal_title}
                   </Link>
                 </p>
-                <p className={cx("text-meta mt-0.5", run.succeeded ? "text-muted" : "text-critical")}>
+                <p
+                  className={cx("text-meta mt-0.5", run.succeeded ? "text-muted" : "text-critical")}
+                >
                   {run.detail}
                 </p>
               </div>
