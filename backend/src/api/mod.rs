@@ -12,6 +12,7 @@ pub mod stages;
 pub mod targets;
 pub mod tasks;
 pub mod transfer;
+pub mod views;
 pub mod users;
 
 use axum::extract::State;
@@ -39,6 +40,7 @@ pub fn router() -> Router<AppState> {
         .merge(simulation::router())
         .merge(targets::router())
         .merge(transfer::router())
+        .merge(views::router())
         .merge(crate::live::router())
 }
 

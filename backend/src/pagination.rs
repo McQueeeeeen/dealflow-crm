@@ -46,6 +46,14 @@ pub struct Params {
 }
 
 impl Params {
+    pub fn arguments(self) -> PgArguments {
+        self.args
+    }
+
+    pub fn placeholder(&self) -> String {
+        format!("${}", self.len + 1)
+    }
+
     pub fn bind<'q, T>(mut self, value: T) -> AppResult<Self>
     where
         T: 'q + Encode<'q, Postgres> + Type<Postgres>,
