@@ -7,9 +7,9 @@ use serde_json::{Map, Value};
 use sqlx::FromRow;
 use uuid::Uuid;
 
+use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
-use crate::audit;
 use crate::extract::{ApiPath, ApiQuery};
 use crate::models::{AuditAction, EntityType};
 use crate::pagination::{Page, Pagination, Params};
@@ -84,14 +84,33 @@ const REVERTIBLE: [(EntityType, &str, &[&str]); 3] = [
     (
         EntityType::Deal,
         "deals",
-        &["title", "value_cents", "company_id", "contact_id", "owner_id", "expected_close_date"],
+        &[
+            "title",
+            "value_cents",
+            "company_id",
+            "contact_id",
+            "owner_id",
+            "expected_close_date",
+        ],
     ),
     (
         EntityType::Contact,
         "contacts",
-        &["first_name", "last_name", "email", "phone", "job_title", "company_id", "owner_id"],
+        &[
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "job_title",
+            "company_id",
+            "owner_id",
+        ],
     ),
-    (EntityType::Company, "companies", &["name", "domain", "industry", "owner_id"]),
+    (
+        EntityType::Company,
+        "companies",
+        &["name", "domain", "industry", "owner_id"],
+    ),
 ];
 
 #[derive(Serialize)]
@@ -122,7 +141,9 @@ pub async fn revert(
         .find(|(e, _, _)| e.as_str() == entity_type)
         .filter(|_| action == AuditAction::Updated)
     else {
-        return Err(AppError::BadRequest("only edits to deals, contacts and companies can be undone".into()));
+        return Err(AppError::BadRequest(
+            "only edits to deals, contacts and companies can be undone".into(),
+        ));
     };
     let fields: Vec<&'static str> = revertible
         .iter()
@@ -130,7 +151,9 @@ pub async fn revert(
         .filter(|f| changes.get(*f).is_some())
         .collect();
     if fields.is_empty() {
-        return Err(AppError::BadRequest("nothing in this change can be undone".into()));
+        return Err(AppError::BadRequest(
+            "nothing in this change can be undone".into(),
+        ));
     }
     let side = |key: &str| -> Value {
         Value::Object(
@@ -160,7 +183,11 @@ pub async fn revert(
     }
 
     let assignments: Vec<String> = fields.iter().map(|f| format!("{f} = r.{f}")).collect();
-    let version = if table == "deals" { ", version = t.version + 1" } else { "" };
+    let version = if table == "deals" {
+        ", version = t.version + 1"
+    } else {
+        ""
+    };
     let after: Value = sqlx::query_scalar(&format!(
         "UPDATE {table} t SET {}, updated_at = now(){version}
          FROM jsonb_populate_record(NULL::{table}, $2) r

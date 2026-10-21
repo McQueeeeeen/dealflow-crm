@@ -914,9 +914,7 @@ async fn edits_can_be_undone_unless_something_changed_since(pool: PgPool) {
     let deal = app
         .create_deal(&admin, json!({ "title": "Fleet", "value_cents": 1_000 }))
         .await;
-    let edit = |title: &str, value: i64, version: i64| {
-        json!({ "title": title, "value_cents": value, "expected_close_date": "2026-12-31", "version": version })
-    };
+    let edit = |title: &str, value: i64, version: i64| json!({ "title": title, "value_cents": value, "expected_close_date": "2026-12-31", "version": version });
     let path = format!("/api/v1/deals/{}", deal.id());
     app.put(&path, &admin, edit("Fleet renewal", 5_000, 1))
         .await
@@ -933,7 +931,10 @@ async fn edits_can_be_undone_unless_something_changed_since(pool: PgPool) {
         .post(&format!("/api/v1/audit/{latest}/revert"), &admin, json!({}))
         .await;
     undone.assert_status(StatusCode::OK);
-    assert_eq!(undone.body["fields"], json!(["title", "value_cents", "expected_close_date"]));
+    assert_eq!(
+        undone.body["fields"],
+        json!(["title", "value_cents", "expected_close_date"])
+    );
     let restored = app.get(&path, &admin).await;
     assert_eq!(restored.body["title"], "Fleet");
     assert_eq!(restored.body["value_cents"], 1_000);
@@ -947,9 +948,13 @@ async fn edits_can_be_undone_unless_something_changed_since(pool: PgPool) {
     let created = entries.as_array().unwrap().last().unwrap()["id"]
         .as_i64()
         .unwrap();
-    app.post(&format!("/api/v1/audit/{created}/revert"), &admin, json!({}))
-        .await
-        .assert_status(StatusCode::BAD_REQUEST);
+    app.post(
+        &format!("/api/v1/audit/{created}/revert"),
+        &admin,
+        json!({}),
+    )
+    .await
+    .assert_status(StatusCode::BAD_REQUEST);
     let redo = entries[0]["id"].as_i64().unwrap();
     app.post(&format!("/api/v1/audit/{redo}/revert"), &admin, json!({}))
         .await
