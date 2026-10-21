@@ -25,15 +25,7 @@ export const keys = {
 };
 
 export type Entity =
-  | "deal"
-  | "task"
-  | "note"
-  | "company"
-  | "contact"
-  | "stage"
-  | "user"
-  | "target"
-  | "view";
+  "deal" | "task" | "note" | "company" | "contact" | "stage" | "user" | "target" | "view";
 
 const AFFECTS: Record<Entity, string[]> = {
   deal: ["board", "deals", "deal", "analytics", "audit", "targets", "companies"],
