@@ -539,3 +539,205 @@ async fn saved_views_are_private_unless_shared(pool: PgPool) {
         .await
         .assert_status(StatusCode::NO_CONTENT);
 }
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn automations_act_inside_the_change_that_triggers_them(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
+    let proposal = app.stage_id(&admin, "Proposal").await;
+
+    let rule = json!({
+        "name": "Big proposals get a follow-up",
+        "trigger": { "type": "stage_entered", "stage_id": proposal },
+        "condition": "value>=50k",
+        "actions": [
+            { "type": "create_task", "title": "Chase {deal} at {company}", "due_in_days": 2, "assignee_id": null },
+            { "type": "add_note", "body": "{deal} reached {stage}" },
+            { "type": "set_close_date", "days_from_now": 30 }
+        ]
+    });
+    app.post("/api/v1/automations", &rep, rule.clone())
+        .await
+        .assert_status(StatusCode::FORBIDDEN);
+    app.post("/api/v1/automations", &admin, rule)
+        .await
+        .assert_status(StatusCode::CREATED);
+
+    let big = app
+        .create_deal(&rep, json!({ "title": "Fleet", "value_cents": 9_000_000 }))
+        .await;
+    let small = app
+        .create_deal(&rep, json!({ "title": "Pilot", "value_cents": 100_000 }))
+        .await;
+    let moved = app.move_deal(&rep, &big.body, proposal).await;
+    moved.assert_status(StatusCode::OK);
+    assert!(moved.body["expected_close_date"].is_string(), "{}", moved.body);
+    app.move_deal(&rep, &small.body, proposal)
+        .await
+        .assert_status(StatusCode::OK);
+
+    let tasks = app
+        .get(&format!("/api/v1/tasks?deal_id={}", big.id()), &rep)
+        .await;
+    assert_eq!(tasks.body["total"], 1);
+    assert_eq!(tasks.body["data"][0]["title"], "Chase Fleet at no company");
+    assert_eq!(tasks.body["data"][0]["assignee_id"], rep.user_id.to_string());
+    let notes = app
+        .get(&format!("/api/v1/notes?deal_id={}", big.id()), &rep)
+        .await;
+    assert_eq!(notes.body["data"][0]["body"], "Fleet reached Proposal");
+    let untouched = app
+        .get(&format!("/api/v1/tasks?deal_id={}", small.id()), &rep)
+        .await;
+    assert_eq!(untouched.body["total"], 0, "the condition filters deals");
+
+    let runs = app.get("/api/v1/automations/runs", &admin).await;
+    let runs = runs.body.as_array().unwrap();
+    assert_eq!(runs.len(), 1);
+    assert_eq!(runs[0]["succeeded"], true);
+    assert!(runs[0]["detail"]
+        .as_str()
+        .unwrap()
+        .starts_with("created the follow-up"));
+    let rules = app.get("/api/v1/automations", &admin).await;
+    assert_eq!(rules.body[0]["runs_7d"], 1);
+}
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn a_failing_automation_never_blocks_the_change(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let helper = app.add_user(&admin, "helper@acme.test", "sales_rep").await;
+
+    app.post(
+        "/api/v1/automations",
+        &admin,
+        json!({
+            "name": "Hand new deals to the helper",
+            "trigger": { "type": "deal_created" },
+            "actions": [{ "type": "assign_owner", "user_id": helper.user_id }]
+        }),
+    )
+    .await
+    .assert_status(StatusCode::CREATED);
+    app.post(
+        "/api/v1/automations",
+        &admin,
+        json!({
+            "name": "Welcome note",
+            "trigger": { "type": "deal_created" },
+            "actions": [{ "type": "add_note", "body": "New deal" }]
+        }),
+    )
+    .await
+    .assert_status(StatusCode::CREATED);
+    app.put(
+        &format!("/api/v1/users/{}", helper.user_id),
+        &admin,
+        json!({ "full_name": "Helper", "role": "sales_rep", "is_active": false }),
+    )
+    .await
+    .assert_status(StatusCode::OK);
+
+    let deal = app.create_deal(&admin, json!({ "title": "Fleet" })).await;
+    assert_eq!(deal.body["owner_id"], admin.user_id.to_string());
+    let notes = app
+        .get(&format!("/api/v1/notes?deal_id={}", deal.id()), &admin)
+        .await;
+    assert_eq!(notes.body["total"], 1, "the next rule still ran");
+
+    let runs = app.get("/api/v1/automations/runs", &admin).await;
+    let failed: Vec<_> = runs
+        .body
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|r| r["succeeded"] == false)
+        .collect();
+    assert_eq!(failed.len(), 1);
+    assert_eq!(failed[0]["detail"], "active user not found");
+}
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn automations_validate_their_parts(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let other = app.register("Globex", "owner@globex.test").await;
+    let foreign_stage = app.stage_id(&other, "Proposal").await;
+    let note = json!([{ "type": "add_note", "body": "x" }]);
+
+    let bad_filter = app
+        .post(
+            "/api/v1/automations",
+            &admin,
+            json!({ "name": "x", "trigger": { "type": "deal_created" }, "condition": "valu>1", "actions": note }),
+        )
+        .await;
+    assert_eq!(bad_filter.error_code(), "invalid_filter");
+    let foreign = app
+        .post(
+            "/api/v1/automations",
+            &admin,
+            json!({ "name": "x", "trigger": { "type": "stage_entered", "stage_id": foreign_stage }, "actions": note }),
+        )
+        .await;
+    assert_eq!(foreign.error_fields(), ["trigger"]);
+    let late = app
+        .post(
+            "/api/v1/automations",
+            &admin,
+            json!({ "name": "x", "trigger": { "type": "deal_created" },
+                    "actions": [{ "type": "create_task", "title": "t", "due_in_days": 999, "assignee_id": null }] }),
+        )
+        .await;
+    assert_eq!(late.error_fields(), ["actions"]);
+    let none = app
+        .post(
+            "/api/v1/automations",
+            &admin,
+            json!({ "name": "x", "trigger": { "type": "deal_created" }, "actions": [] }),
+        )
+        .await;
+    assert_eq!(none.error_fields(), ["actions"]);
+}
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn completing_a_follow_up_can_trigger_a_rule(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let rule = app
+        .post(
+            "/api/v1/automations",
+            &admin,
+            json!({
+                "name": "Plan the next step",
+                "trigger": { "type": "task_completed" },
+                "actions": [{ "type": "create_task", "title": "Next step for {deal}", "due_in_days": 1, "assignee_id": null }]
+            }),
+        )
+        .await;
+    let deal = app.create_deal(&admin, json!({ "title": "Fleet" })).await;
+    let task = app
+        .post(
+            "/api/v1/tasks",
+            &admin,
+            json!({ "title": "Call", "deal_id": deal.id() }),
+        )
+        .await;
+    app.post(&format!("/api/v1/tasks/{}/complete", task.id()), &admin, json!({}))
+        .await
+        .assert_status(StatusCode::OK);
+    let open = app
+        .get(&format!("/api/v1/tasks?deal_id={}&status=open", deal.id()), &admin)
+        .await;
+    assert_eq!(open.body["data"][0]["title"], "Next step for Fleet");
+
+    let mut disabled = rule.body.clone();
+    disabled["enabled"] = json!(false);
+    app.put(&format!("/api/v1/automations/{}", rule.id()), &admin, disabled)
+        .await
+        .assert_status(StatusCode::OK);
+    let audit = app.get("/api/v1/audit?entity_type=rule", &admin).await;
+    assert_eq!(audit.body["total"], 2);
+}

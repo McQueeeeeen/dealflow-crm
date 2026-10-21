@@ -9,6 +9,7 @@ use uuid::Uuid;
 
 use crate::api::stages::{fetch_stages, Stage};
 use crate::audit;
+use crate::automation::{self, Trigger};
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
@@ -144,7 +145,7 @@ pub struct StageChange {
     pub changed_at: DateTime<Utc>,
 }
 
-const SELECT_DEAL: &str = "
+pub(crate) const SELECT_DEAL: &str = "
     SELECT d.id, d.title, d.value_cents, d.stage_id, s.name AS stage_name, s.kind AS stage_kind,
            s.probability, d.board_position, d.company_id, co.name AS company_name, d.contact_id,
            trim(ct.first_name || ' ' || ct.last_name) AS contact_name,
@@ -251,7 +252,7 @@ pub async fn board(
     Ok(Json(columns))
 }
 
-async fn fetch_deal(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResult<Deal> {
+pub(crate) async fn fetch_deal(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResult<Deal> {
     sqlx::query_as(&format!(
         "{SELECT_DEAL} WHERE d.organization_id = $1 AND d.id = $2"
     ))
@@ -371,6 +372,8 @@ pub async fn create_deal(
     .await?;
     record_stage_change(&mut tx, &actor, id, None, stage_id).await?;
     audit::created(&mut tx, &actor, EntityType::Deal, id, &fields).await?;
+    automation::fire(&mut tx, &actor, Trigger::DealCreated, id).await?;
+    automation::fire(&mut tx, &actor, Trigger::StageEntered { stage_id }, id).await?;
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(deal)))
@@ -503,6 +506,10 @@ pub async fn move_deal(
             &after,
         )
         .await?;
+        let entered = Trigger::StageEntered {
+            stage_id: req.stage_id,
+        };
+        automation::fire(&mut tx, &actor, entered, id).await?;
     } else {
         let change = live::Change {
             org: actor.org_id,

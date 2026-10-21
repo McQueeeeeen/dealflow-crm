@@ -36,10 +36,11 @@ pub enum EntityType {
     User,
     Stage,
     Target,
+    Rule,
 }
 
 impl EntityType {
-    pub const ALL: [EntityType; 7] = [
+    pub const ALL: [EntityType; 8] = [
         Self::Company,
         Self::Contact,
         Self::Deal,
@@ -47,6 +48,7 @@ impl EntityType {
         Self::User,
         Self::Stage,
         Self::Target,
+        Self::Rule,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -58,6 +60,7 @@ impl EntityType {
             Self::User => "user",
             Self::Stage => "stage",
             Self::Target => "target",
+            Self::Rule => "rule",
         }
     }
 

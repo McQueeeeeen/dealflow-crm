@@ -8,6 +8,7 @@ use sqlx::{FromRow, PgConnection};
 use uuid::Uuid;
 
 use crate::audit;
+use crate::automation::{self, Trigger};
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
@@ -276,6 +277,9 @@ async fn set_completion(
         .fetch_one(&mut *tx)
         .await?;
         audit::updated(&mut tx, actor, EntityType::Task, id, &before, &after).await?;
+        if let (true, Some(deal_id)) = (completed, after.deal_id) {
+            automation::fire(&mut tx, actor, Trigger::TaskCompleted, deal_id).await?;
+        }
     }
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
