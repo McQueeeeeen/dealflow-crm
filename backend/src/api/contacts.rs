@@ -106,7 +106,12 @@ pub async fn list_contacts(
         .bind(query.owner_id)?;
     let sql = format!("{SELECT_CONTACT} {FILTER}");
     let page = pagination
-        .fetch(&state.pool, &sql, "ct.first_name, ct.last_name, ct.id", params)
+        .fetch(
+            &state.pool,
+            &sql,
+            "ct.first_name, ct.last_name, ct.id",
+            params,
+        )
         .await?;
     Ok(Json(page))
 }
@@ -188,8 +193,7 @@ pub async fn create_contact(
     .bind(owner_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::created(&mut tx, &actor, EntityType::Contact, id, &fields)
-    .await?;
+    audit::created(&mut tx, &actor, EntityType::Contact, id, &fields).await?;
     tx.commit().await?;
     let contact = fetch_contact(&state.pool, actor.org_id, id).await?;
     Ok((StatusCode::CREATED, Json(contact)))
@@ -236,8 +240,7 @@ pub async fn update_contact(
     .bind(owner_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::updated(&mut tx, &actor, EntityType::Contact, id, &before, &after)
-        .await?;
+    audit::updated(&mut tx, &actor, EntityType::Contact, id, &before, &after).await?;
     tx.commit().await?;
     Ok(Json(fetch_contact(&state.pool, actor.org_id, id).await?))
 }
@@ -257,8 +260,7 @@ pub async fn delete_contact(
     .fetch_optional(&mut *tx)
     .await?;
     let deleted = deleted.ok_or(AppError::NotFound("contact"))?;
-    audit::deleted(&mut tx, &actor, EntityType::Contact, id, &deleted)
-    .await?;
+    audit::deleted(&mut tx, &actor, EntityType::Contact, id, &deleted).await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }

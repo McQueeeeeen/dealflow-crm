@@ -164,8 +164,7 @@ pub async fn create_company(
     .bind(owner_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::created(&mut tx, &actor, EntityType::Company, id, &fields)
-    .await?;
+    audit::created(&mut tx, &actor, EntityType::Company, id, &fields).await?;
     tx.commit().await?;
 
     let company = fetch_company(&state.pool, actor.org_id, id).await?;
@@ -209,8 +208,7 @@ pub async fn update_company(
     .bind(owner_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::updated(&mut tx, &actor, EntityType::Company, id, &before, &after)
-        .await?;
+    audit::updated(&mut tx, &actor, EntityType::Company, id, &before, &after).await?;
     tx.commit().await?;
     Ok(Json(fetch_company(&state.pool, actor.org_id, id).await?))
 }
@@ -231,8 +229,7 @@ pub async fn delete_company(
     .fetch_optional(&mut *tx)
     .await?;
     let deleted = deleted.ok_or(AppError::NotFound("company"))?;
-    audit::deleted(&mut tx, &actor, EntityType::Company, id, &deleted)
-    .await?;
+    audit::deleted(&mut tx, &actor, EntityType::Company, id, &deleted).await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }

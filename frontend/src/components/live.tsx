@@ -22,7 +22,6 @@ interface Live {
 
 const LiveContext = createContext<Live>({ connected: false, viewers: [] });
 
-
 function batcher(client: QueryClient) {
   const pending = new Set<string>();
   let timer: ReturnType<typeof setTimeout> | undefined;

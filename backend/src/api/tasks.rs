@@ -135,7 +135,9 @@ pub async fn list_tasks(
         .bind(query.due_before)?;
     let sql = format!("{SELECT_TASK} {FILTER}");
     let order = "t.completed_at IS NOT NULL, t.due_at NULLS LAST, t.created_at DESC, t.id";
-    Ok(Json(pagination.fetch(&state.pool, &sql, order, params).await?))
+    Ok(Json(
+        pagination.fetch(&state.pool, &sql, order, params).await?,
+    ))
 }
 
 async fn fetch_task(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResult<Task> {
@@ -215,8 +217,7 @@ pub async fn create_task(
     .bind(req.contact_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::created(&mut tx, &actor, EntityType::Task, id, &fields)
-    .await?;
+    audit::created(&mut tx, &actor, EntityType::Task, id, &fields).await?;
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(task)))
@@ -248,8 +249,7 @@ pub async fn update_task(
     .bind(req.contact_id)
     .fetch_one(&mut *tx)
     .await?;
-    audit::updated(&mut tx, &actor, EntityType::Task, id, &before, &after)
-        .await?;
+    audit::updated(&mut tx, &actor, EntityType::Task, id, &before, &after).await?;
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok(Json(task))
@@ -275,8 +275,7 @@ async fn set_completion(
         .bind(completed)
         .fetch_one(&mut *tx)
         .await?;
-        audit::updated(&mut tx, actor, EntityType::Task, id, &before, &after)
-        .await?;
+        audit::updated(&mut tx, actor, EntityType::Task, id, &before, &after).await?;
     }
     let task = fetch_task(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
@@ -311,8 +310,7 @@ pub async fn delete_task(
         .bind(actor.org_id)
         .execute(&mut *tx)
         .await?;
-    audit::deleted(&mut tx, &actor, EntityType::Task, id, &task)
-    .await?;
+    audit::deleted(&mut tx, &actor, EntityType::Task, id, &task).await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }
