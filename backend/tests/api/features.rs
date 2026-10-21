@@ -572,7 +572,11 @@ async fn automations_act_inside_the_change_that_triggers_them(pool: PgPool) {
         .await;
     let moved = app.move_deal(&rep, &big.body, proposal).await;
     moved.assert_status(StatusCode::OK);
-    assert!(moved.body["expected_close_date"].is_string(), "{}", moved.body);
+    assert!(
+        moved.body["expected_close_date"].is_string(),
+        "{}",
+        moved.body
+    );
     app.move_deal(&rep, &small.body, proposal)
         .await
         .assert_status(StatusCode::OK);
@@ -582,7 +586,10 @@ async fn automations_act_inside_the_change_that_triggers_them(pool: PgPool) {
         .await;
     assert_eq!(tasks.body["total"], 1);
     assert_eq!(tasks.body["data"][0]["title"], "Chase Fleet at no company");
-    assert_eq!(tasks.body["data"][0]["assignee_id"], rep.user_id.to_string());
+    assert_eq!(
+        tasks.body["data"][0]["assignee_id"],
+        rep.user_id.to_string()
+    );
     let notes = app
         .get(&format!("/api/v1/notes?deal_id={}", big.id()), &rep)
         .await;
@@ -725,19 +732,30 @@ async fn completing_a_follow_up_can_trigger_a_rule(pool: PgPool) {
             json!({ "title": "Call", "deal_id": deal.id() }),
         )
         .await;
-    app.post(&format!("/api/v1/tasks/{}/complete", task.id()), &admin, json!({}))
-        .await
-        .assert_status(StatusCode::OK);
+    app.post(
+        &format!("/api/v1/tasks/{}/complete", task.id()),
+        &admin,
+        json!({}),
+    )
+    .await
+    .assert_status(StatusCode::OK);
     let open = app
-        .get(&format!("/api/v1/tasks?deal_id={}&status=open", deal.id()), &admin)
+        .get(
+            &format!("/api/v1/tasks?deal_id={}&status=open", deal.id()),
+            &admin,
+        )
         .await;
     assert_eq!(open.body["data"][0]["title"], "Next step for Fleet");
 
     let mut disabled = rule.body.clone();
     disabled["enabled"] = json!(false);
-    app.put(&format!("/api/v1/automations/{}", rule.id()), &admin, disabled)
-        .await
-        .assert_status(StatusCode::OK);
+    app.put(
+        &format!("/api/v1/automations/{}", rule.id()),
+        &admin,
+        disabled,
+    )
+    .await
+    .assert_status(StatusCode::OK);
     let audit = app.get("/api/v1/audit?entity_type=rule", &admin).await;
     assert_eq!(audit.body["total"], 2);
 }
