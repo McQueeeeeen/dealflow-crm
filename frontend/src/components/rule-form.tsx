@@ -199,7 +199,9 @@ function RuleForm({ rule, onClose }: { rule?: Rule; onClose: () => void }) {
                     <Select
                       {...p}
                       value={action.type}
-                      onChange={(e) => replace(index, blank(e.target.value as Action["type"], users))}
+                      onChange={(e) =>
+                        replace(index, blank(e.target.value as Action["type"], users))
+                      }
                     >
                       {Object.entries(ACTIONS).map(([type, label]) => (
                         <option key={type} value={type}>
