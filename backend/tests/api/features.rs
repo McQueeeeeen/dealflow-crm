@@ -348,3 +348,66 @@ async fn cold_threshold_and_last_activity(pool: PgPool) {
     let after = active.body["last_activity_at"].as_str().unwrap();
     assert!(after > before.as_str(), "{before} -> {after}");
 }
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn simulation_counts_won_revenue_and_spreads_the_rest(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let won = app.stage_id(&admin, "Won").await;
+    let closed = app
+        .create_deal(&admin, json!({ "title": "Signed", "value_cents": 50_000 }))
+        .await;
+    app.move_deal(&admin, &closed.body, won)
+        .await
+        .assert_status(StatusCode::OK);
+    for i in 0..6 {
+        app.create_deal(
+            &admin,
+            json!({ "title": format!("Open {i}"), "value_cents": 100_000 }),
+        )
+        .await;
+    }
+    let month = Utc::now().date_naive().with_day(1).unwrap();
+    app.put(
+        &format!("/api/v1/targets/{}", admin.user_id),
+        &admin,
+        json!({ "month": month, "amount_cents": 200_000 }),
+    )
+    .await
+    .assert_status(StatusCode::NO_CONTENT);
+
+    let sim = app
+        .get("/api/v1/analytics/simulation?runs=50", &admin)
+        .await;
+    sim.assert_status(StatusCode::OK);
+    assert_eq!(sim.body["runs"], 1000, "runs are clamped");
+    assert_eq!(sim.body["open_deals"], 6);
+    let month = &sim.body["periods"][0];
+    assert_eq!(month["key"], "month");
+    assert_eq!(month["won_cents"], 50_000);
+    assert_eq!(month["target_cents"], 200_000);
+    let chance = month["chance_to_hit_target"].as_f64().unwrap();
+    assert!((0.0..=1.0).contains(&chance));
+    let d = &month["distribution"];
+    let (p10, p50, p90) = (
+        d["p10_cents"].as_i64().unwrap(),
+        d["p50_cents"].as_i64().unwrap(),
+        d["p90_cents"].as_i64().unwrap(),
+    );
+    assert!(50_000 <= p10 && p10 <= p50 && p50 <= p90 && p90 <= 650_000, "{d}");
+    let binned: u64 = d["histogram"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["runs"].as_u64().unwrap())
+        .sum();
+    assert_eq!(binned, 1000);
+    let quarter = &sim.body["periods"][1];
+    assert!(quarter["distribution"]["p50_cents"].as_i64().unwrap() >= p50);
+    assert_eq!(sim.body["stages"].as_array().unwrap().len(), 4);
+
+    let again = app
+        .get("/api/v1/analytics/simulation?runs=50", &admin)
+        .await;
+    assert_eq!(again.body["periods"], sim.body["periods"], "seeded runs repeat");
+}

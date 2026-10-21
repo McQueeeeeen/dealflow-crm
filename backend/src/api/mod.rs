@@ -7,6 +7,7 @@ pub mod deals;
 pub mod notes;
 pub mod organization;
 pub mod search;
+pub mod simulation;
 pub mod stages;
 pub mod targets;
 pub mod tasks;
@@ -35,6 +36,7 @@ pub fn router() -> Router<AppState> {
         .merge(analytics::router())
         .merge(organization::router())
         .merge(search::router())
+        .merge(simulation::router())
         .merge(targets::router())
         .merge(transfer::router())
         .merge(crate::live::router())
