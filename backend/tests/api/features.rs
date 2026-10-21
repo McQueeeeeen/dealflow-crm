@@ -905,3 +905,54 @@ async fn similar_company_names_pair_up_and_merges_respect_ownership(pool: PgPool
         .await
         .assert_status(StatusCode::NOT_FOUND);
 }
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn edits_can_be_undone_unless_something_changed_since(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
+    let deal = app
+        .create_deal(&admin, json!({ "title": "Fleet", "value_cents": 1_000 }))
+        .await;
+    let edit = |title: &str, value: i64, version: i64| {
+        json!({ "title": title, "value_cents": value, "expected_close_date": "2026-12-31", "version": version })
+    };
+    let path = format!("/api/v1/deals/{}", deal.id());
+    app.put(&path, &admin, edit("Fleet renewal", 5_000, 1))
+        .await
+        .assert_status(StatusCode::OK);
+    let history = format!("/api/v1/audit?entity_type=deal&entity_id={}", deal.id());
+    let latest = app.get(&history, &admin).await.body["data"][0]["id"]
+        .as_i64()
+        .unwrap();
+
+    app.post(&format!("/api/v1/audit/{latest}/revert"), &rep, json!({}))
+        .await
+        .assert_status(StatusCode::FORBIDDEN);
+    let undone = app
+        .post(&format!("/api/v1/audit/{latest}/revert"), &admin, json!({}))
+        .await;
+    undone.assert_status(StatusCode::OK);
+    assert_eq!(undone.body["fields"], json!(["title", "value_cents", "expected_close_date"]));
+    let restored = app.get(&path, &admin).await;
+    assert_eq!(restored.body["title"], "Fleet");
+    assert_eq!(restored.body["value_cents"], 1_000);
+    assert!(restored.body["expected_close_date"].is_null());
+    assert_eq!(restored.body["version"], 3, "an undo is an edit too");
+
+    app.post(&format!("/api/v1/audit/{latest}/revert"), &admin, json!({}))
+        .await
+        .assert_status(StatusCode::CONFLICT);
+    let entries = app.get(&history, &admin).await.body["data"].clone();
+    let created = entries.as_array().unwrap().last().unwrap()["id"]
+        .as_i64()
+        .unwrap();
+    app.post(&format!("/api/v1/audit/{created}/revert"), &admin, json!({}))
+        .await
+        .assert_status(StatusCode::BAD_REQUEST);
+    let redo = entries[0]["id"].as_i64().unwrap();
+    app.post(&format!("/api/v1/audit/{redo}/revert"), &admin, json!({}))
+        .await
+        .assert_status(StatusCode::OK);
+    assert_eq!(app.get(&path, &admin).await.body["title"], "Fleet renewal");
+}
