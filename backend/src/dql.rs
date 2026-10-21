@@ -84,7 +84,13 @@ fn lex(input: &[char]) -> Result<Vec<Token>, ParseError> {
     let mut i = 0;
     while i < input.len() {
         let start = i;
-        let after_op = matches!(tokens.last(), Some(Token { tok: Tok::Op(_), .. }));
+        let after_op = matches!(
+            tokens.last(),
+            Some(Token {
+                tok: Tok::Op(_),
+                ..
+            })
+        );
         let tok = match input[i] {
             c if c.is_whitespace() => {
                 i += 1;
@@ -112,7 +118,10 @@ fn lex(input: &[char]) -> Result<Vec<Token>, ParseError> {
                 Tok::Quoted(input[start + 1..i].iter().collect())
             }
             _ => {
-                let len = input[i..].iter().position(|c| is_special(*c)).unwrap_or(input.len() - i);
+                let len = input[i..]
+                    .iter()
+                    .position(|c| is_special(*c))
+                    .unwrap_or(input.len() - i);
                 i += len - 1;
                 Tok::Word(input[start..=i].iter().collect())
             }
@@ -141,7 +150,8 @@ impl Parser {
     }
 
     fn here(&self) -> (usize, usize) {
-        self.peek().map_or((self.len, self.len), |t| (t.start, t.end))
+        self.peek()
+            .map_or((self.len, self.len), |t| (t.start, t.end))
     }
 
     fn or(&mut self) -> Result<Expr, ParseError> {
@@ -150,7 +160,11 @@ impl Parser {
             self.pos += 1;
             items.push(self.and()?);
         }
-        Ok(if items.len() == 1 { items.remove(0) } else { Expr::Or(items) })
+        Ok(if items.len() == 1 {
+            items.remove(0)
+        } else {
+            Expr::Or(items)
+        })
     }
 
     fn and(&mut self) -> Result<Expr, ParseError> {
@@ -193,7 +207,11 @@ impl Parser {
                 Ok(inner)
             }
             Tok::Close => fail("nothing to close here", token.start, token.end),
-            Tok::Op(_) => fail("a comparison needs a field before it", token.start, token.end),
+            Tok::Op(_) => fail(
+                "a comparison needs a field before it",
+                token.start,
+                token.end,
+            ),
             Tok::Quoted(text) => Ok(Expr::Cond(Cond::Text(text))),
             Tok::Word(word) => match self.peek().map(|t| t.tok.clone()) {
                 Some(Tok::Op(cmp)) => {
@@ -227,16 +245,28 @@ impl Parser {
             if cmp == Cmp::Eq {
                 Ok(cond)
             } else {
-                fail(format!("use {field}:value, this field cannot be compared"), op.0, op.1)
+                fail(
+                    format!("use {field}:value, this field cannot be compared"),
+                    op.0,
+                    op.1,
+                )
             }
         };
         let cond = match field.to_lowercase().as_str() {
             "value" | "amount" => match money(v) {
                 Some(cents) => Cond::Value(cmp, cents),
-                None => return fail(format!("“{v}” is not an amount, try 50k or 1.2m"), start, end),
+                None => {
+                    return fail(
+                        format!("“{v}” is not an amount, try 50k or 1.2m"),
+                        start,
+                        end,
+                    )
+                }
             },
             "stage" => exact(Cond::Stage(v.to_owned()))?,
-            "owner" => exact(Cond::Owner((!v.eq_ignore_ascii_case("me")).then(|| v.to_owned())))?,
+            "owner" => exact(Cond::Owner(
+                (!v.eq_ignore_ascii_case("me")).then(|| v.to_owned()),
+            ))?,
             "company" => exact(Cond::Company(v.to_owned()))?,
             "status" => exact(Cond::Status(match v.to_lowercase().as_str() {
                 "open" => StageKind::Open,
@@ -246,7 +276,13 @@ impl Parser {
             }))?,
             "closes" | "close" => match date(v, self.today) {
                 Some(day) => Cond::Closes(cmp, day),
-                None => return fail("dates look like 2026-12-31, today, 30d, 2w or 3m", start, end),
+                None => {
+                    return fail(
+                        "dates look like 2026-12-31, today, 30d, 2w or 3m",
+                        start,
+                        end,
+                    )
+                }
             },
             "age" | "quiet" => match days(v) {
                 Some(n) if field.eq_ignore_ascii_case("age") => Cond::Age(cmp, n),
@@ -308,13 +344,19 @@ fn days(raw: &str) -> Option<i32> {
         'm' => 30,
         _ => return None,
     };
-    i32::try_from(n.checked_mul(factor)?).ok().filter(|n| *n >= 0)
+    i32::try_from(n.checked_mul(factor)?)
+        .ok()
+        .filter(|n| *n >= 0)
 }
 
 pub fn parse(input: &str, today: NaiveDate) -> Result<Option<Expr>, ParseError> {
     let chars: Vec<char> = input.chars().collect();
     if chars.len() > MAX_CHARS {
-        return fail(format!("keep the filter under {MAX_CHARS} characters"), MAX_CHARS, chars.len());
+        return fail(
+            format!("keep the filter under {MAX_CHARS} characters"),
+            MAX_CHARS,
+            chars.len(),
+        );
     }
     let tokens = lex(&chars)?;
     if tokens.is_empty() {
@@ -352,7 +394,10 @@ struct Compiler {
 }
 
 impl Compiler {
-    fn bind<'q, T: 'q + Encode<'q, Postgres> + Type<Postgres>>(&mut self, value: T) -> AppResult<String> {
+    fn bind<'q, T: 'q + Encode<'q, Postgres> + Type<Postgres>>(
+        &mut self,
+        value: T,
+    ) -> AppResult<String> {
         let placeholder = self.params.placeholder();
         self.params = std::mem::take(&mut self.params).bind(value)?;
         Ok(placeholder)
@@ -363,15 +408,23 @@ impl Compiler {
             Expr::Cond(cond) => format!("coalesce({}, false)", self.cond(cond)?),
             Expr::Not(inner) => format!("NOT {}", self.expr(inner)?),
             Expr::And(items) | Expr::Or(items) => {
-                let joiner = if matches!(expr, Expr::And(_)) { " AND " } else { " OR " };
-                let parts = items.iter().map(|e| self.expr(e)).collect::<AppResult<Vec<_>>>()?;
+                let joiner = if matches!(expr, Expr::And(_)) {
+                    " AND "
+                } else {
+                    " OR "
+                };
+                let parts = items
+                    .iter()
+                    .map(|e| self.expr(e))
+                    .collect::<AppResult<Vec<_>>>()?;
                 format!("({})", parts.join(joiner))
             }
         })
     }
 
     fn cond(&mut self, cond: &Cond) -> AppResult<String> {
-        let days_since = |column: &str| format!("floor(extract(epoch FROM now() - {column}) / 86400)");
+        let days_since =
+            |column: &str| format!("floor(extract(epoch FROM now() - {column}) / 86400)");
         Ok(match cond {
             Cond::Text(text) => format!("title ILIKE {}", self.bind(like_pattern(text))?),
             Cond::Value(cmp, cents) => format!("value_cents {} {}", cmp.sql(), self.bind(*cents)?),
@@ -383,13 +436,27 @@ impl Compiler {
                 let me = self.me;
                 format!("owner_id = {}", self.bind(me)?)
             }
-            Cond::Owner(Some(name)) => format!("owner_name ILIKE {}", self.bind(like_pattern(name))?),
+            Cond::Owner(Some(name)) => {
+                format!("owner_name ILIKE {}", self.bind(like_pattern(name))?)
+            }
             Cond::Company(name) => format!("company_name ILIKE {}", self.bind(like_pattern(name))?),
             Cond::Status(kind) => format!("stage_kind = {}", self.bind(*kind)?),
-            Cond::Closes(cmp, day) => format!("expected_close_date {} {}", cmp.sql(), self.bind(*day)?),
-            Cond::Age(cmp, n) => format!("{} {} {}", days_since("created_at"), cmp.sql(), self.bind(*n)?),
+            Cond::Closes(cmp, day) => {
+                format!("expected_close_date {} {}", cmp.sql(), self.bind(*day)?)
+            }
+            Cond::Age(cmp, n) => format!(
+                "{} {} {}",
+                days_since("created_at"),
+                cmp.sql(),
+                self.bind(*n)?
+            ),
             Cond::Quiet(cmp, n) => {
-                format!("{} {} {}", days_since("last_activity_at"), cmp.sql(), self.bind(*n)?)
+                format!(
+                    "{} {} {}",
+                    days_since("last_activity_at"),
+                    cmp.sql(),
+                    self.bind(*n)?
+                )
             }
         })
     }
@@ -427,7 +494,10 @@ mod tests {
 
     #[test]
     fn words_are_title_searches_joined_by_and() {
-        assert_eq!(ok("fleet renewal"), Expr::And(vec![text("fleet"), text("renewal")]));
+        assert_eq!(
+            ok("fleet renewal"),
+            Expr::And(vec![text("fleet"), text("renewal")])
+        );
         assert_eq!(ok("\"fleet renewal\""), text("fleet renewal"));
         assert_eq!(parse("   ", today()), Ok(None));
     }
@@ -450,16 +520,32 @@ mod tests {
         let lost = Expr::Not(Box::new(Expr::Cond(Cond::Status(StageKind::Lost))));
         assert_eq!(ok("-status:lost"), lost);
         assert_eq!(ok("NOT status:lost"), lost);
-        assert_eq!(ok("follow-up"), text("follow-up"), "a dash inside a word is text");
+        assert_eq!(
+            ok("follow-up"),
+            text("follow-up"),
+            "a dash inside a word is text"
+        );
     }
 
     #[test]
     fn typed_fields() {
-        assert_eq!(ok("value>=50k"), Expr::Cond(Cond::Value(Cmp::Ge, 5_000_000)));
-        assert_eq!(ok("amount<$1.5m"), Expr::Cond(Cond::Value(Cmp::Lt, 150_000_000)));
-        assert_eq!(ok("value:12,500"), Expr::Cond(Cond::Value(Cmp::Eq, 1_250_000)));
+        assert_eq!(
+            ok("value>=50k"),
+            Expr::Cond(Cond::Value(Cmp::Ge, 5_000_000))
+        );
+        assert_eq!(
+            ok("amount<$1.5m"),
+            Expr::Cond(Cond::Value(Cmp::Lt, 150_000_000))
+        );
+        assert_eq!(
+            ok("value:12,500"),
+            Expr::Cond(Cond::Value(Cmp::Eq, 1_250_000))
+        );
         assert_eq!(ok("owner:me"), Expr::Cond(Cond::Owner(None)));
-        assert_eq!(ok("owner:\"Priya R\""), Expr::Cond(Cond::Owner(Some("Priya R".into()))));
+        assert_eq!(
+            ok("owner:\"Priya R\""),
+            Expr::Cond(Cond::Owner(Some("Priya R".into())))
+        );
         assert_eq!(ok("stage:prop"), Expr::Cond(Cond::Stage("prop".into())));
         assert_eq!(ok("quiet>2w"), Expr::Cond(Cond::Quiet(Cmp::Gt, 14)));
         assert_eq!(ok("age<=30"), Expr::Cond(Cond::Age(Cmp::Le, 30)));
@@ -468,11 +554,26 @@ mod tests {
     #[test]
     fn dates_are_absolute_or_relative_to_today() {
         let on = |y, m, d| NaiveDate::from_ymd_opt(y, m, d).unwrap();
-        assert_eq!(ok("closes<30d"), Expr::Cond(Cond::Closes(Cmp::Lt, on(2026, 11, 20))));
-        assert_eq!(ok("closes>-1w"), Expr::Cond(Cond::Closes(Cmp::Gt, on(2026, 10, 14))));
-        assert_eq!(ok("closes<=3m"), Expr::Cond(Cond::Closes(Cmp::Le, on(2027, 1, 21))));
-        assert_eq!(ok("closes:2026-12-31"), Expr::Cond(Cond::Closes(Cmp::Eq, on(2026, 12, 31))));
-        assert_eq!(ok("closes<today"), Expr::Cond(Cond::Closes(Cmp::Lt, today())));
+        assert_eq!(
+            ok("closes<30d"),
+            Expr::Cond(Cond::Closes(Cmp::Lt, on(2026, 11, 20)))
+        );
+        assert_eq!(
+            ok("closes>-1w"),
+            Expr::Cond(Cond::Closes(Cmp::Gt, on(2026, 10, 14)))
+        );
+        assert_eq!(
+            ok("closes<=3m"),
+            Expr::Cond(Cond::Closes(Cmp::Le, on(2027, 1, 21)))
+        );
+        assert_eq!(
+            ok("closes:2026-12-31"),
+            Expr::Cond(Cond::Closes(Cmp::Eq, on(2026, 12, 31)))
+        );
+        assert_eq!(
+            ok("closes<today"),
+            Expr::Cond(Cond::Closes(Cmp::Lt, today()))
+        );
     }
 
     #[test]
@@ -482,16 +583,27 @@ mod tests {
             (format!("unknown field “valu”, try {FIELDS}"), 6, 10)
         );
         assert_eq!(err("value>lots").1..err("value>lots").2, 6..10);
-        assert_eq!(err("stage>3").0, "use stage:value, this field cannot be compared");
+        assert_eq!(
+            err("stage>3").0,
+            "use stage:value, this field cannot be compared"
+        );
         assert_eq!(err("status:maybe").0, "status is open, won or lost");
-        assert_eq!(err("(a b"), ("this parenthesis is never closed".into(), 0, 1));
+        assert_eq!(
+            err("(a b"),
+            ("this parenthesis is never closed".into(), 0, 1)
+        );
         assert_eq!(err("a b)"), ("nothing to close here".into(), 3, 4));
         assert_eq!(err("a OR"), ("expected a search term here".into(), 4, 4));
-        assert_eq!(err("value>"), ("expected a value after “value”".into(), 5, 6));
+        assert_eq!(
+            err("value>"),
+            ("expected a value after “value”".into(), 5, 6)
+        );
         assert_eq!(err("\"open"), ("this quote is never closed".into(), 0, 5));
         assert_eq!(err(">5").0, "a comparison needs a field before it");
         assert_eq!(err(&"(".repeat(20)).0, "too many nested parentheses");
-        assert!(err(&"x ".repeat(300)).0.starts_with("keep the filter under"));
+        assert!(err(&"x ".repeat(300))
+            .0
+            .starts_with("keep the filter under"));
     }
 
     #[test]

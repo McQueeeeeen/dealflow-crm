@@ -43,7 +43,10 @@ const SELECT_VIEW: &str = "
     SELECT v.id, v.name, v.filter, v.shared, v.user_id, u.full_name AS owner_name, v.created_at
     FROM saved_views v JOIN users u ON u.id = v.user_id";
 
-pub async fn list_views(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Vec<SavedView>>> {
+pub async fn list_views(
+    State(state): State<AppState>,
+    user: AuthUser,
+) -> AppResult<Json<Vec<SavedView>>> {
     let views = sqlx::query_as(&format!(
         "{SELECT_VIEW} WHERE v.organization_id = $1 AND (v.user_id = $2 OR v.shared)
          ORDER BY v.user_id <> $2, lower(v.name), v.id"

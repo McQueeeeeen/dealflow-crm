@@ -12,8 +12,8 @@ pub mod stages;
 pub mod targets;
 pub mod tasks;
 pub mod transfer;
-pub mod views;
 pub mod users;
+pub mod views;
 
 use axum::extract::State;
 use axum::http::StatusCode;

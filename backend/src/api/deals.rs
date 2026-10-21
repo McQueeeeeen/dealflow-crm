@@ -12,11 +12,11 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
-use crate::{dql, live};
 use crate::models::{EntityType, StageKind};
 use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
 use crate::validation::{clean, like_pattern, Validator};
+use crate::{dql, live};
 
 const MAX_VALUE_CENTS: i64 = 1_000_000_000_000_000;
 const BOARD_GAP: f64 = 1024.0;
@@ -190,7 +190,10 @@ pub async fn list_deals(
         .bind(query.company_id)?
         .bind(query.contact_id)?
         .bind(query.status)?;
-    let filter = dql::parse(query.filter.as_deref().unwrap_or(""), Utc::now().date_naive())?;
+    let filter = dql::parse(
+        query.filter.as_deref().unwrap_or(""),
+        Utc::now().date_naive(),
+    )?;
     let (condition, params) = dql::compile(filter.as_ref(), params, user.user_id)?;
     let sql = format!("SELECT * FROM ({SELECT_DEAL} {FILTER}) AS deal WHERE {condition}");
     let page = pagination
@@ -206,7 +209,10 @@ pub async fn board(
 ) -> AppResult<Json<Vec<BoardColumn>>> {
     let stages = fetch_stages(&state.pool, user.org_id).await?;
     let pattern = clean(query.q).map(|q| like_pattern(&q));
-    let filter = dql::parse(query.filter.as_deref().unwrap_or(""), Utc::now().date_naive())?;
+    let filter = dql::parse(
+        query.filter.as_deref().unwrap_or(""),
+        Utc::now().date_naive(),
+    )?;
     let params = Params::default()
         .bind(user.org_id)?
         .bind(&pattern)?

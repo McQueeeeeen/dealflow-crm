@@ -423,12 +423,21 @@ async fn deal_filters_compile_safely_and_report_errors(pool: PgPool) {
     let app = TestApp::new(pool);
     let admin = app.register("Acme", "owner@acme.test").await;
     let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
-    app.create_deal(&admin, json!({ "title": "Fleet renewal", "value_cents": 9_000_000 }))
-        .await;
-    app.create_deal(&admin, json!({ "title": "Small pilot", "value_cents": 200_000 }))
-        .await;
-    app.create_deal(&rep, json!({ "title": "Fleet pilot", "value_cents": 6_000_000 }))
-        .await;
+    app.create_deal(
+        &admin,
+        json!({ "title": "Fleet renewal", "value_cents": 9_000_000 }),
+    )
+    .await;
+    app.create_deal(
+        &admin,
+        json!({ "title": "Small pilot", "value_cents": 200_000 }),
+    )
+    .await;
+    app.create_deal(
+        &rep,
+        json!({ "title": "Fleet pilot", "value_cents": 6_000_000 }),
+    )
+    .await;
 
     let count = |body: &serde_json::Value| body["total"].as_i64().unwrap();
     let big = app.get("/api/v1/deals?filter=value%3E%3D50k", &admin).await;
@@ -439,11 +448,17 @@ async fn deal_filters_compile_safely_and_report_errors(pool: PgPool) {
     assert_eq!(count(&mine.body), 1);
     assert_eq!(mine.body["data"][0]["title"], "Fleet pilot");
     let either = app
-        .get("/api/v1/deals?filter=small%20OR%20-fleet%20OR%20value%3E80k", &admin)
+        .get(
+            "/api/v1/deals?filter=small%20OR%20-fleet%20OR%20value%3E80k",
+            &admin,
+        )
         .await;
     assert_eq!(count(&either.body), 2);
     let injection = app
-        .get("/api/v1/deals?filter=%22%27%3B%20DROP%20TABLE%20deals%3B--%22", &admin)
+        .get(
+            "/api/v1/deals?filter=%22%27%3B%20DROP%20TABLE%20deals%3B--%22",
+            &admin,
+        )
         .await;
     injection.assert_status(StatusCode::OK);
     assert_eq!(count(&injection.body), 0);
@@ -458,7 +473,9 @@ async fn deal_filters_compile_safely_and_report_errors(pool: PgPool) {
         .sum();
     assert_eq!(on_board, 2);
 
-    let bad = app.get("/api/v1/deals?filter=fleet%20valu%3E5", &admin).await;
+    let bad = app
+        .get("/api/v1/deals?filter=fleet%20valu%3E5", &admin)
+        .await;
     bad.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(bad.error_code(), "invalid_filter");
     assert_eq!(bad.body["error"]["span"], json!([6, 10]));
@@ -471,7 +488,11 @@ async fn saved_views_are_private_unless_shared(pool: PgPool) {
     let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
 
     let private = app
-        .post("/api/v1/views", &rep, json!({ "name": "Big", "filter": "value>50k" }))
+        .post(
+            "/api/v1/views",
+            &rep,
+            json!({ "name": "Big", "filter": "value>50k" }),
+        )
         .await;
     private.assert_status(StatusCode::CREATED);
     app.post(
