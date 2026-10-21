@@ -24,7 +24,16 @@ export const keys = {
   analytics: (report: string, filters: object) => ["analytics", report, filters] as const,
 };
 
-export type Entity = "deal" | "task" | "note" | "company" | "contact" | "stage" | "user" | "target";
+export type Entity =
+  | "deal"
+  | "task"
+  | "note"
+  | "company"
+  | "contact"
+  | "stage"
+  | "user"
+  | "target"
+  | "view";
 
 const AFFECTS: Record<Entity, string[]> = {
   deal: ["board", "deals", "deal", "analytics", "audit", "targets", "companies"],
@@ -35,6 +44,7 @@ const AFFECTS: Record<Entity, string[]> = {
   stage: ["stages", "board", "analytics", "audit"],
   user: ["users", "me", "audit"],
   target: ["targets"],
+  view: ["views"],
 };
 
 export function affected(...entities: string[]): string[] {

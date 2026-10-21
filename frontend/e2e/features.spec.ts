@@ -80,3 +80,45 @@ test("Today flags quiet deals and Reports tracks targets", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Monthly Targets" })).toBeVisible();
   await expect(page.getByRole("img", { name: /won of/ }).first()).toBeVisible();
 });
+
+test("the filter language narrows the board, explains mistakes and saves views", async ({
+  page,
+}, info) => {
+  await page.goto("/pipeline");
+  const filter = page.getByRole("searchbox", { name: "Filter deals" });
+  await filter.fill("value>=400k valu:3");
+  await expect(page.getByText(/unknown field “valu”/)).toBeVisible();
+
+  await filter.fill("value>=400k status:open");
+  await expect(page.getByText(/\d+ deals? match/)).toBeVisible();
+  await expect(page).toHaveURL(/filter=value/);
+  await expect(async () => {
+    const amounts = await page.locator("article .num.font-medium").allTextContents();
+    expect(amounts.length).toBeGreaterThan(0);
+    for (const amount of amounts) {
+      expect(Number(amount.replace(/[^0-9.]/g, ""))).toBeGreaterThanOrEqual(400_000);
+    }
+  }).toPass();
+
+  const name = `Big open ${info.project.name} ${Date.now()}`;
+  await page.getByRole("button", { name: "Save View" }).click();
+  await page.getByLabel("Name").fill(name);
+  await page.getByRole("button", { name: "Save View" }).click();
+  const chip = page.getByRole("button", { name, exact: true });
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await chip.click();
+  await expect(filter).toHaveValue("");
+});
+
+test("Reports simulate the quarter and the chance of reaching the target", async ({ page }) => {
+  await page.goto("/reports");
+  await expect(page.getByRole("heading", { name: "What Will Actually Close?" })).toBeVisible();
+  await expect(page.getByText(/Most likely by/)).toBeVisible();
+  await page.getByRole("button", { name: "This quarter" }).click();
+  await expect(page.getByRole("button", { name: "This quarter" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByText(/chance to reach the .* target for this quarter/)).toBeVisible();
+  await expect(page.getByRole("img", { name: /Distribution of simulated revenue/ })).toBeVisible();
+});
