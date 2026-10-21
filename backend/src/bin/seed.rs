@@ -171,6 +171,7 @@ async fn main() -> anyhow::Result<()> {
     let deals = seed_deals(&mut tx, &ids, &contacts, &mut rng).await?;
     seed_tasks_and_notes(&mut tx, &ids, &deals, &mut rng).await?;
     seed_targets(&mut tx, &ids, &mut rng).await?;
+    seed_automations(&mut tx, &ids, &deals).await?;
     tx.commit().await?;
 
     println!(
@@ -228,6 +229,82 @@ async fn seed_workspace(tx: &mut Transaction<'_, Postgres>) -> anyhow::Result<Id
         stages.push((id, kind));
     }
     Ok(Ids { org, users, stages })
+}
+
+async fn seed_automations(
+    tx: &mut Transaction<'_, Postgres>,
+    ids: &Ids,
+    deals: &[(Uuid, Uuid)],
+) -> anyhow::Result<()> {
+    let (proposal, won) = (ids.stages[2].0, ids.stages[4].0);
+    let rules = [
+        (
+            "Big proposals get a follow-up",
+            serde_json::json!({ "type": "stage_entered", "stage_id": proposal }),
+            "value>=100k",
+            serde_json::json!([
+                { "type": "create_task", "title": "Walk {company} through the proposal for {deal}",
+                  "due_in_days": 2, "assignee_id": null },
+                { "type": "add_note", "body": "{deal} reached {stage} at {value}. Proposal call booked automatically." }
+            ]),
+        ),
+        (
+            "Kick off won deals",
+            serde_json::json!({ "type": "stage_entered", "stage_id": won }),
+            "",
+            serde_json::json!([
+                { "type": "create_task", "title": "Kickoff call with {company}", "due_in_days": 3,
+                  "assignee_id": null }
+            ]),
+        ),
+        (
+            "Always plan the next step",
+            serde_json::json!({ "type": "task_completed" }),
+            "status:open",
+            serde_json::json!([
+                { "type": "create_task", "title": "Plan the next step for {deal}", "due_in_days": 1,
+                  "assignee_id": null }
+            ]),
+        ),
+    ];
+    let mut rule_ids = Vec::new();
+    for (name, trigger, condition, actions) in rules {
+        let id = Uuid::now_v7();
+        sqlx::query(
+            "INSERT INTO automation_rules (id, organization_id, name, trigger, condition, actions, created_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        )
+        .bind(id)
+        .bind(ids.org)
+        .bind(name)
+        .bind(trigger)
+        .bind(condition)
+        .bind(actions)
+        .bind(ids.users[0])
+        .execute(&mut **tx)
+        .await?;
+        rule_ids.push(id);
+    }
+    for (n, (deal, _)) in deals.iter().take(6).enumerate() {
+        let failed = n == 4;
+        sqlx::query(
+            "INSERT INTO automation_runs (organization_id, rule_id, deal_id, succeeded, detail, created_at)
+             VALUES ($1, $2, $3, $4, $5, now() - make_interval(hours => $6))",
+        )
+        .bind(ids.org)
+        .bind(rule_ids[n % 3])
+        .bind(deal)
+        .bind(!failed)
+        .bind(if failed {
+            "active user not found"
+        } else {
+            "created the follow-up"
+        })
+        .bind(i32::try_from(n * 7 + 1)?)
+        .execute(&mut **tx)
+        .await?;
+    }
+    Ok(())
 }
 
 async fn seed_targets(

@@ -122,3 +122,40 @@ test("Reports simulate the quarter and the chance of reaching the target", async
   await expect(page.getByText(/chance to reach the .* target for this quarter/)).toBeVisible();
   await expect(page.getByRole("img", { name: /Distribution of simulated revenue/ })).toBeVisible();
 });
+
+test("an automation is written in plain terms and runs when deals change", async ({
+  page,
+}, info) => {
+  await page.goto("/automations");
+  await expect(page.getByRole("heading", { name: "Big proposals get a follow-up" })).toBeVisible();
+  await expect(page.getByText("value>=100k")).toBeVisible();
+
+  const name = `Note new deals ${info.project.name} ${Date.now()}`;
+  await page.getByRole("button", { name: "New Automation" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "New Automation" });
+  await dialog.getByLabel("Name").fill(name);
+  await dialog.getByLabel("Only for deals matching (optional)").fill("valu>1");
+  await dialog.getByLabel("Step 1").selectOption("add_note");
+  await dialog.getByLabel("Note").fill("Created {deal} for {value}");
+  await dialog.getByRole("button", { name: "Create Automation" }).click();
+  await expect(dialog.getByText(/unknown field “valu”/)).toBeVisible();
+  await dialog.getByLabel("Only for deals matching (optional)").fill("value>1");
+  await dialog.getByRole("button", { name: "Create Automation" }).click();
+  await expect(dialog).toBeHidden();
+
+  const card = page.getByRole("region", { name: "Rules" }).locator("section", { hasText: name });
+  await expect(card.getByText("When a deal is created")).toBeVisible();
+  await expect(card.getByText("Add the note “Created {deal} for {value}”")).toBeVisible();
+
+  const title = `Automated ${info.project.name} ${Date.now()}`;
+  const created = await page.request.post("/api/v1/deals", {
+    data: { title, value_cents: 250_000 },
+  });
+  expect(created.status()).toBe(201);
+  await page.reload();
+  await expect(page.getByRole("link", { name: title }).first()).toBeVisible();
+
+  page.once("dialog", (d) => d.accept());
+  await card.getByRole("button", { name: "Delete" }).click();
+  await expect(card).toHaveCount(0);
+});

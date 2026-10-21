@@ -271,3 +271,38 @@ export interface SavedView {
   owner_name: string;
   created_at: string;
 }
+
+export type Trigger =
+  | { type: "deal_created" }
+  | { type: "stage_entered"; stage_id: string }
+  | { type: "task_completed" };
+
+export type Action =
+  | { type: "create_task"; title: string; due_in_days: number; assignee_id: string | null }
+  | { type: "add_note"; body: string }
+  | { type: "assign_owner"; user_id: string }
+  | { type: "set_close_date"; days_from_now: number };
+
+export interface Rule {
+  id: string;
+  name: string;
+  enabled: boolean;
+  trigger: Trigger;
+  condition: string;
+  actions: Action[];
+  created_at: string;
+  runs_7d: number;
+  failures_7d: number;
+  last_run_at: string | null;
+}
+
+export interface RuleRun {
+  id: number;
+  rule_id: string;
+  rule_name: string;
+  deal_id: string;
+  deal_title: string;
+  succeeded: boolean;
+  detail: string;
+  created_at: string;
+}
