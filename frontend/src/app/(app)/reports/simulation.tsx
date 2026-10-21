@@ -159,7 +159,8 @@ function Marker({ left, label, tone }: { left: string; label: string; tone?: "wo
     >
       <span
         className={cx(
-          "text-meta bg-surface absolute -top-1 left-1.5 rounded px-1 font-medium whitespace-nowrap",
+          "text-meta bg-surface absolute left-1.5 rounded px-1 font-medium whitespace-nowrap",
+          tone === "won" ? "bottom-0" : "-top-1",
           tone === "won" ? "text-won" : "text-ink",
         )}
       >
