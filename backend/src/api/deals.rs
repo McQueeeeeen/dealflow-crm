@@ -12,7 +12,7 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
-use crate::live;
+use crate::{dql, live};
 use crate::models::{EntityType, StageKind};
 use crate::pagination::{Page, Pagination, Params};
 use crate::state::AppState;
@@ -116,6 +116,7 @@ pub struct DealQuery {
     pub company_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
     pub status: Option<StageKind>,
+    pub filter: Option<String>,
     pub page: Option<u32>,
     pub per_page: Option<u32>,
 }
@@ -124,6 +125,7 @@ pub struct DealQuery {
 pub struct BoardQuery {
     pub q: Option<String>,
     pub owner_id: Option<Uuid>,
+    pub filter: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -188,9 +190,11 @@ pub async fn list_deals(
         .bind(query.company_id)?
         .bind(query.contact_id)?
         .bind(query.status)?;
-    let sql = format!("{SELECT_DEAL} {FILTER}");
+    let filter = dql::parse(query.filter.as_deref().unwrap_or(""), Utc::now().date_naive())?;
+    let (condition, params) = dql::compile(filter.as_ref(), params, user.user_id)?;
+    let sql = format!("SELECT * FROM ({SELECT_DEAL} {FILTER}) AS deal WHERE {condition}");
     let page = pagination
-        .fetch(&state.pool, &sql, "d.updated_at DESC, d.id", params)
+        .fetch(&state.pool, &sql, "updated_at DESC, id", params)
         .await?;
     Ok(Json(page))
 }
@@ -202,20 +206,25 @@ pub async fn board(
 ) -> AppResult<Json<Vec<BoardColumn>>> {
     let stages = fetch_stages(&state.pool, user.org_id).await?;
     let pattern = clean(query.q).map(|q| like_pattern(&q));
-    let deals: Vec<Deal> = sqlx::query_as(&format!(
-        "{SELECT_DEAL}
-         WHERE d.organization_id = $1
-           AND ($2::text IS NULL OR d.title ILIKE $2)
-           AND ($3::uuid IS NULL OR d.owner_id = $3)
-         ORDER BY d.board_position, d.id
-         LIMIT $4"
-    ))
-    .bind(user.org_id)
-    .bind(&pattern)
-    .bind(query.owner_id)
-    .bind(BOARD_LIMIT)
-    .fetch_all(&state.pool)
-    .await?;
+    let filter = dql::parse(query.filter.as_deref().unwrap_or(""), Utc::now().date_naive())?;
+    let params = Params::default()
+        .bind(user.org_id)?
+        .bind(&pattern)?
+        .bind(query.owner_id)?;
+    let (condition, params) = dql::compile(filter.as_ref(), params, user.user_id)?;
+    let limit = params.placeholder();
+    let sql = format!(
+        "SELECT * FROM ({SELECT_DEAL}
+             WHERE d.organization_id = $1
+               AND ($2::text IS NULL OR d.title ILIKE $2)
+               AND ($3::uuid IS NULL OR d.owner_id = $3)) AS deal
+         WHERE {condition}
+         ORDER BY board_position, id
+         LIMIT {limit}"
+    );
+    let deals: Vec<Deal> = sqlx::query_as_with(&sql, params.bind(BOARD_LIMIT)?.arguments())
+        .fetch_all(&state.pool)
+        .await?;
 
     let columns = stages
         .into_iter()

@@ -417,3 +417,104 @@ async fn simulation_counts_won_revenue_and_spreads_the_rest(pool: PgPool) {
         "seeded runs repeat"
     );
 }
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn deal_filters_compile_safely_and_report_errors(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
+    app.create_deal(&admin, json!({ "title": "Fleet renewal", "value_cents": 9_000_000 }))
+        .await;
+    app.create_deal(&admin, json!({ "title": "Small pilot", "value_cents": 200_000 }))
+        .await;
+    app.create_deal(&rep, json!({ "title": "Fleet pilot", "value_cents": 6_000_000 }))
+        .await;
+
+    let count = |body: &serde_json::Value| body["total"].as_i64().unwrap();
+    let big = app.get("/api/v1/deals?filter=value%3E%3D50k", &admin).await;
+    assert_eq!(count(&big.body), 2);
+    let mine = app
+        .get("/api/v1/deals?filter=fleet%20owner%3Ame", &rep)
+        .await;
+    assert_eq!(count(&mine.body), 1);
+    assert_eq!(mine.body["data"][0]["title"], "Fleet pilot");
+    let either = app
+        .get("/api/v1/deals?filter=small%20OR%20-fleet%20OR%20value%3E80k", &admin)
+        .await;
+    assert_eq!(count(&either.body), 2);
+    let injection = app
+        .get("/api/v1/deals?filter=%22%27%3B%20DROP%20TABLE%20deals%3B--%22", &admin)
+        .await;
+    injection.assert_status(StatusCode::OK);
+    assert_eq!(count(&injection.body), 0);
+
+    let board = app.get("/api/v1/deals/board?filter=pilot", &admin).await;
+    let on_board: i64 = board
+        .body
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["count"].as_i64().unwrap())
+        .sum();
+    assert_eq!(on_board, 2);
+
+    let bad = app.get("/api/v1/deals?filter=fleet%20valu%3E5", &admin).await;
+    bad.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+    assert_eq!(bad.error_code(), "invalid_filter");
+    assert_eq!(bad.body["error"]["span"], json!([6, 10]));
+}
+
+#[sqlx::test(migrator = "dealflow_api::MIGRATOR")]
+async fn saved_views_are_private_unless_shared(pool: PgPool) {
+    let app = TestApp::new(pool);
+    let admin = app.register("Acme", "owner@acme.test").await;
+    let rep = app.add_user(&admin, "rep@acme.test", "sales_rep").await;
+
+    let private = app
+        .post("/api/v1/views", &rep, json!({ "name": "Big", "filter": "value>50k" }))
+        .await;
+    private.assert_status(StatusCode::CREATED);
+    app.post(
+        "/api/v1/views",
+        &rep,
+        json!({ "name": "Big", "filter": "value>10k" }),
+    )
+    .await
+    .assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+    app.post(
+        "/api/v1/views",
+        &rep,
+        json!({ "name": "Broken", "filter": "valu>5" }),
+    )
+    .await
+    .assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+    let shared = app
+        .post(
+            "/api/v1/views",
+            &admin,
+            json!({ "name": "Team closing", "filter": "closes<30d", "shared": true }),
+        )
+        .await;
+
+    let seen_by_admin = app.get("/api/v1/views", &admin).await;
+    assert_eq!(seen_by_admin.body.as_array().unwrap().len(), 1);
+    let seen_by_rep = app.get("/api/v1/views", &rep).await;
+    let names: Vec<&str> = seen_by_rep
+        .body
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["Big", "Team closing"], "own views first");
+
+    app.delete(&format!("/api/v1/views/{}", shared.id()), &rep)
+        .await
+        .assert_status(StatusCode::FORBIDDEN);
+    app.delete(&format!("/api/v1/views/{}", private.id()), &admin)
+        .await
+        .assert_status(StatusCode::NOT_FOUND);
+    app.delete(&format!("/api/v1/views/{}", private.id()), &rep)
+        .await
+        .assert_status(StatusCode::NO_CONTENT);
+}

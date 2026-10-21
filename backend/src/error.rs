@@ -32,6 +32,8 @@ pub enum AppError {
     #[error("{0}")]
     BadRequest(String),
     #[error(transparent)]
+    InvalidFilter(#[from] crate::dql::ParseError),
+    #[error(transparent)]
     Database(sqlx::Error),
     #[error(transparent)]
     Internal(#[from] anyhow::Error),
@@ -55,6 +57,7 @@ impl AppError {
             Self::Conflict(_) => (StatusCode::CONFLICT, "conflict"),
             Self::Validation(_) => (StatusCode::UNPROCESSABLE_ENTITY, "validation_failed"),
             Self::BadRequest(_) => (StatusCode::BAD_REQUEST, "bad_request"),
+            Self::InvalidFilter(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_filter"),
             Self::Database(_) | Self::Internal(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "internal_error")
             }
@@ -77,6 +80,9 @@ impl From<sqlx::Error> for AppError {
                     "users_email_key" => Self::validation("email", "is already registered"),
                     "pipeline_stages_name_key" => {
                         Self::validation("name", "a stage with this name already exists")
+                    }
+                    "saved_views_name_key" => {
+                        Self::validation("name", "you already have a view with this name")
                     }
                     _ => Self::Conflict("record already exists".into()),
                 };
@@ -112,11 +118,17 @@ impl IntoResponse for AppError {
         } else {
             self.to_string()
         };
+        let span = match &self {
+            Self::InvalidFilter(e) => json!([e.start, e.end]),
+            _ => json!(null),
+        };
         let fields = match self {
             Self::Validation(fields) => fields,
             _ => Vec::new(),
         };
-        let body = json!({ "error": { "code": code, "message": message, "fields": fields } });
+        let body = json!({
+            "error": { "code": code, "message": message, "fields": fields, "span": span }
+        });
         (status, Json(body)).into_response()
     }
 }
