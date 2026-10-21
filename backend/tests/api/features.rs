@@ -394,7 +394,10 @@ async fn simulation_counts_won_revenue_and_spreads_the_rest(pool: PgPool) {
         d["p50_cents"].as_i64().unwrap(),
         d["p90_cents"].as_i64().unwrap(),
     );
-    assert!(50_000 <= p10 && p10 <= p50 && p50 <= p90 && p90 <= 650_000, "{d}");
+    assert!(
+        50_000 <= p10 && p10 <= p50 && p50 <= p90 && p90 <= 650_000,
+        "{d}"
+    );
     let binned: u64 = d["histogram"]
         .as_array()
         .unwrap()
@@ -409,5 +412,8 @@ async fn simulation_counts_won_revenue_and_spreads_the_rest(pool: PgPool) {
     let again = app
         .get("/api/v1/analytics/simulation?runs=50", &admin)
         .await;
-    assert_eq!(again.body["periods"], sim.body["periods"], "seeded runs repeat");
+    assert_eq!(
+        again.body["periods"], sim.body["periods"],
+        "seeded runs repeat"
+    );
 }

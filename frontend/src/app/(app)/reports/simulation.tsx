@@ -30,8 +30,8 @@ export function SimulationSection({ owner }: { owner: string }) {
             {simulation.data
               ? `${simulation.data.runs.toLocaleString()} simulated futures for ${simulation.data.open_deals} open deals, `
               : "Thousands of simulated futures for the open deals, "}
-            using how often each stage really advanced and how long deals sat in it over the
-            last year.
+            using how often each stage really advanced and how long deals sat in it over the last
+            year.
           </p>
         </div>
         <div role="group" aria-label="Period" className="bg-row flex rounded-lg p-1">
@@ -88,8 +88,7 @@ function Outcome({ period }: { period: SimulationPeriod }) {
           <span className="num text-ink font-medium">{fmt(d.p90_cents)}</span>
           {period.won_cents > 0 ? (
             <>
-              , including <span className="num text-won">{fmt(period.won_cents)}</span> already
-              won
+              , including <span className="num text-won">{fmt(period.won_cents)}</span> already won
             </>
           ) : null}
           .
@@ -177,8 +176,8 @@ function Model({ simulation }: { simulation: Simulation }) {
     <div className="min-w-0">
       <h3 className="text-body font-semibold">What the Model Learned</h3>
       <p className="text-meta text-muted mt-1">
-        Stages with little history lean on their configured probability until real moves
-        outweigh it.
+        Stages with little history lean on their configured probability until real moves outweigh
+        it.
       </p>
       <table className="text-body mt-3 w-full border-separate border-spacing-y-1.5">
         <thead>
