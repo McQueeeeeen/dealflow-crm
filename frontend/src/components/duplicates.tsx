@@ -92,8 +92,7 @@ function PairCard({ kind, pair }: { kind: Kind; pair: DuplicatePair }) {
   const [keep, remove] = keepFirst ? [pair.first, pair.second] : [pair.second, pair.first];
   const sides = [pair.first, pair.second];
   const merge = useMutation({
-    mutationFn: () =>
-      post(`/duplicates/${kind}/merge`, { keep: keep.id, remove: remove.id, take }),
+    mutationFn: () => post(`/duplicates/${kind}/merge`, { keep: keep.id, remove: remove.id, take }),
     onSuccess: () => invalidate(kind === "contacts" ? "contact" : "company"),
   });
 
@@ -146,7 +145,10 @@ function PairCard({ kind, pair }: { kind: Kind; pair: DuplicatePair }) {
               const differ = values[0] !== values[1];
               return (
                 <tr key={field.key}>
-                  <th scope="row" className="bg-row text-muted rounded-l-lg px-3 py-2.5 font-medium">
+                  <th
+                    scope="row"
+                    className="bg-row text-muted rounded-l-lg px-3 py-2.5 font-medium"
+                  >
                     {field.label}
                   </th>
                   {sides.map((row, i) => {

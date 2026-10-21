@@ -160,9 +160,7 @@ test("an automation is written in plain terms and runs when deals change", async
   await expect(card).toHaveCount(0);
 });
 
-test("duplicate contacts are found and merged with a choice per field", async ({
-  page,
-}, info) => {
+test("duplicate contacts are found and merged with a choice per field", async ({ page }, info) => {
   const tag = `${info.project.name}${Date.now()}`;
   const email = `twin.${tag}@example.com`;
   for (const [first, last, phone] of [
