@@ -261,3 +261,13 @@ export interface Simulation {
     samples: number;
   }[];
 }
+
+export interface SavedView {
+  id: string;
+  name: string;
+  filter: string;
+  shared: boolean;
+  user_id: string;
+  owner_name: string;
+  created_at: string;
+}

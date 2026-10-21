@@ -6,6 +6,7 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly fields: FieldError[] = [],
+    readonly span?: [number, number],
   ) {
     super(message);
   }
@@ -60,6 +61,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       error?.code ?? "unknown",
       error?.message ?? `Request failed with status ${res.status}`,
       error?.fields ?? [],
+      error?.span ?? undefined,
     );
   }
   return body as T;
