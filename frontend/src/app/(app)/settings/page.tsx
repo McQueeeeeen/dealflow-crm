@@ -21,7 +21,7 @@ import {
 } from "@/components/ui";
 import { ApiError, del, post, put } from "@/lib/api";
 import { ROLE_LABELS, shortDate } from "@/lib/format";
-import { keys, useMe, useStages, useUsers } from "@/lib/queries";
+import { keys, useInvalidate, useMe, useStages, useUsers } from "@/lib/queries";
 import type { Role, Stage, StageKind, User } from "@/lib/types";
 
 export default function SettingsPage() {
@@ -142,6 +142,7 @@ function RoleSelect(props: {
 
 function AddUserForm({ onClose }: { onClose: () => void }) {
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     full_name: "",
     email: "",
@@ -151,7 +152,7 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
   const save = useMutation({
     mutationFn: () => post<User>("/users", values),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: keys.users });
+      invalidate("user");
       onClose();
     },
   });
@@ -216,6 +217,7 @@ function AddUserForm({ onClose }: { onClose: () => void }) {
 
 function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     full_name: user.full_name,
     role: user.role,
@@ -224,7 +226,7 @@ function EditUserForm({ user, onClose }: { user: User; onClose: () => void }) {
   const save = useMutation({
     mutationFn: () => put<User>(`/users/${user.id}`, values),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: keys.users });
+      invalidate("user");
       onClose();
     },
   });
@@ -283,6 +285,7 @@ const KIND_LABELS: Record<StageKind, string> = {
 function PipelineSection() {
   const stages = useStages();
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Stage | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -290,12 +293,12 @@ function PipelineSection() {
   const reorder = useMutation({
     mutationFn: (ids: string[]) => put<Stage[]>("/stages/order", { stage_ids: ids }),
     onSuccess: (saved) => client.setQueryData(keys.stages, saved),
-    onSettled: () => client.invalidateQueries({ queryKey: ["board"] }),
+    onSettled: () => invalidate("stage"),
   });
   const remove = useMutation({
     mutationFn: (id: string) => del(`/stages/${id}`),
     onMutate: () => setProblem(null),
-    onSuccess: () => client.invalidateQueries({ queryKey: keys.stages }),
+    onSuccess: () => invalidate("stage"),
     onError: (err) =>
       setProblem(err instanceof ApiError ? err.message : "Could not delete the stage."),
   });
@@ -384,6 +387,7 @@ function PipelineSection() {
 
 function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [values, setValues] = useState({
     name: stage?.name ?? "",
     probability: String(stage?.probability ?? 50),
@@ -397,8 +401,7 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
         : post<Stage>("/stages", { ...body, kind: values.kind });
     },
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: keys.stages });
-      client.invalidateQueries({ queryKey: ["board"] });
+      invalidate("stage");
       onClose();
     },
   });
@@ -462,10 +465,11 @@ function StageForm({ stage, onClose }: { stage?: Stage; onClose: () => void }) {
 function WorkspaceSection() {
   const me = useMe().data;
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [days, setDays] = useState(String(me?.stale_after_days ?? 14));
   const save = useMutation({
     mutationFn: () => put("/organization", { stale_after_days: Number(days) }),
-    onSuccess: () => client.invalidateQueries({ queryKey: keys.me }),
+    onSuccess: () => invalidate("user"),
   });
   return (
     <Panel className="p-4">

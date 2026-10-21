@@ -1,4 +1,8 @@
 use serde::Serialize;
+use sqlx::postgres::{PgArguments, PgRow};
+use sqlx::{Arguments, Encode, FromRow, PgPool, Postgres, Type};
+
+use crate::error::AppResult;
 
 pub const DEFAULT_PER_PAGE: u32 = 25;
 pub const MAX_PER_PAGE: u32 = 100;
@@ -32,6 +36,51 @@ impl Pagination {
             per_page: self.per_page,
             total,
         }
+    }
+}
+
+#[derive(Default)]
+pub struct Params {
+    args: PgArguments,
+    len: usize,
+}
+
+impl Params {
+    pub fn bind<'q, T>(mut self, value: T) -> AppResult<Self>
+    where
+        T: 'q + Encode<'q, Postgres> + Type<Postgres>,
+    {
+        self.args.add(value).map_err(|err| anyhow::anyhow!(err))?;
+        self.len += 1;
+        Ok(self)
+    }
+}
+
+impl Pagination {
+    pub async fn fetch<T>(
+        self,
+        pool: &PgPool,
+        sql: &str,
+        order: &str,
+        params: Params,
+    ) -> AppResult<Page<T>>
+    where
+        T: for<'r> FromRow<'r, PgRow> + Send + Unpin,
+    {
+        let total: i64 = sqlx::query_scalar_with(
+            &format!("SELECT count(*) FROM ({sql}) AS filtered"),
+            params.args.clone(),
+        )
+        .fetch_one(pool)
+        .await?;
+        let Params { args, len } = params.bind(self.limit())?.bind(self.offset())?;
+        let rows = sqlx::query_as_with(
+            &format!("{sql} ORDER BY {order} LIMIT ${} OFFSET ${len}", len - 1),
+            args,
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(self.wrap(rows, total))
     }
 }
 

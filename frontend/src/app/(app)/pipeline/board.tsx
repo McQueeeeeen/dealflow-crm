@@ -30,7 +30,7 @@ import { ApiError, post } from "@/lib/api";
 import { parseDay, quietDays, shortDate } from "@/lib/format";
 import { stageHeat } from "@/lib/heat";
 import { useMoney } from "@/lib/hooks";
-import { canModify, useMe } from "@/lib/queries";
+import { canModify, useInvalidate, useMe } from "@/lib/queries";
 import type { BoardColumn, Deal } from "@/lib/types";
 
 const GAP = 1024;
@@ -114,6 +114,7 @@ export function Board({
   queryKey: readonly unknown[];
 }) {
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [active, setActive] = useState<Deal | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [status, setStatus] = useState("");
@@ -156,8 +157,7 @@ export function Board({
     onSettled: (_data, err, m) => {
       document.querySelector<HTMLElement>(`[data-handle="${m.deal.id}"]`)?.focus();
       if (err) client.invalidateQueries({ queryKey });
-      client.invalidateQueries({ queryKey: ["analytics"] });
-      client.invalidateQueries({ queryKey: ["deals"] });
+      invalidate("deal");
     },
   });
 

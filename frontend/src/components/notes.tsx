@@ -1,20 +1,20 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { Button, ErrorState, FormError, Loading, Panel, TextArea } from "@/components/ui";
 import { del, get, post, query } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 import { useUnsavedChanges } from "@/lib/hooks";
-import { canModify, keys, useMe } from "@/lib/queries";
+import { canModify, keys, useInvalidate, useMe } from "@/lib/queries";
 import type { Note, Page } from "@/lib/types";
 
 type Parent = { deal_id: string } | { contact_id: string } | { company_id: string };
 
 export function NotesPanel({ parent }: { parent: Parent }) {
   const me = useMe().data;
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [body, setBody] = useState("");
   useUnsavedChanges(body.trim() !== "");
   const notesKey = keys.notes(parent);
@@ -27,12 +27,12 @@ export function NotesPanel({ parent }: { parent: Parent }) {
     mutationFn: () => post<Note>("/notes", { body, ...parent }),
     onSuccess: () => {
       setBody("");
-      client.invalidateQueries({ queryKey: notesKey });
+      invalidate("note");
     },
   });
   const remove = useMutation({
     mutationFn: (id: string) => del(`/notes/${id}`),
-    onSuccess: () => client.invalidateQueries({ queryKey: notesKey }),
+    onSuccess: () => invalidate("note"),
   });
 
   function submit(e: { preventDefault: () => void }) {

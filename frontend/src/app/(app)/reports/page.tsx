@@ -7,7 +7,7 @@ import {
   IconScale,
   IconTrophy,
 } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
 import { OwnerFilter } from "@/components/owner-select";
@@ -29,7 +29,7 @@ import { get, put, query } from "@/lib/api";
 import { centsToInput, monthLabel, parseMoneyInput, percent, shortDate } from "@/lib/format";
 import { WON_HEAT } from "@/lib/heat";
 import { useMoney, useUrlParams } from "@/lib/hooks";
-import { isManager, keys, useMe, useTargets } from "@/lib/queries";
+import { isManager, keys, useInvalidate, useMe, useTargets } from "@/lib/queries";
 import type { Forecast, Funnel, LeaderboardRow, Summary, TargetRow } from "@/lib/types";
 
 import { FunnelChart, ForecastChart } from "./charts";
@@ -355,12 +355,12 @@ function TargetsSection() {
 }
 
 function TargetEditor({ row, month }: { row: TargetRow; month: string }) {
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [value, setValue] = useState(row.target_cents ? centsToInput(row.target_cents) : "");
   const save = useMutation({
     mutationFn: (amount: number | null) =>
       put(`/targets/${row.user_id}`, { month, amount_cents: amount }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["targets"] }),
+    onSuccess: () => invalidate("target"),
   });
   const cents = value.trim() ? parseMoneyInput(value) : null;
   return (

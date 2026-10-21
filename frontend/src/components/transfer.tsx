@@ -1,10 +1,11 @@
 "use client";
 
 import { IconDownload, IconUpload } from "@tabler/icons-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { Button, Dialog, Field, FormError, Select, buttonClass, cx } from "@/components/ui";
+import { useInvalidate } from "@/lib/queries";
 import { post } from "@/lib/api";
 import { parseCsv } from "@/lib/csv";
 import type { ImportReport } from "@/lib/types";
@@ -67,7 +68,7 @@ export function ImportButton({ kind }: { kind: Kind }) {
 }
 
 function ImportFlow({ kind, onClose }: { kind: Kind; onClose: () => void }) {
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const targets = TARGETS[kind];
   const [file, setFile] = useState<{ name: string; header: string[]; rows: string[][] } | null>(
     null,
@@ -86,11 +87,7 @@ function ImportFlow({ kind, onClose }: { kind: Kind; onClose: () => void }) {
         ),
       }),
     onSuccess: (report) => {
-      if (!report.dry_run) {
-        for (const key of [["contacts"], ["companies"], ["audit"]]) {
-          client.invalidateQueries({ queryKey: key });
-        }
-      }
+      if (!report.dry_run) invalidate("contact", "company");
     },
   });
   const report = run.data;

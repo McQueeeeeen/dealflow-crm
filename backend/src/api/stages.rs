@@ -12,7 +12,7 @@ use crate::audit;
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath};
-use crate::models::{AuditAction, EntityType, StageKind};
+use crate::models::{EntityType, StageKind};
 use crate::state::AppState;
 use crate::validation::Validator;
 
@@ -103,14 +103,7 @@ pub async fn create_stage(
     .bind(req.kind)
     .fetch_one(&mut *tx)
     .await?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Stage,
-        stage.id,
-        AuditAction::Created,
-        audit::snapshot(&stage),
-    )
+    audit::created(&mut tx, &actor, EntityType::Stage, stage.id, &stage)
     .await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(stage)))
@@ -147,18 +140,8 @@ pub async fn update_stage(
     .bind(req.probability)
     .fetch_one(&mut *tx)
     .await?;
-    let changes = audit::diff(&before, &after);
-    if !audit::is_empty_diff(&changes) {
-        audit::record(
-            &mut tx,
-            &actor,
-            EntityType::Stage,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+    audit::updated(&mut tx, &actor, EntityType::Stage, id, &before, &after)
         .await?;
-    }
     tx.commit().await?;
     Ok(Json(after))
 }
@@ -226,14 +209,7 @@ pub async fn delete_stage(
             }
             other => other,
         })?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::Stage,
-        id,
-        AuditAction::Deleted,
-        audit::snapshot(stage),
-    )
+    audit::deleted(&mut tx, &actor, EntityType::Stage, id, stage)
     .await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useId, useState } from "react";
 
@@ -8,13 +8,13 @@ import { TaskFormDialog } from "@/components/task-form";
 import { Person, cx } from "@/components/ui";
 import { del, post } from "@/lib/api";
 import { isOverdue, relativeDue } from "@/lib/format";
-import { canModify, useMe } from "@/lib/queries";
+import { canModify, useInvalidate, useMe } from "@/lib/queries";
 import type { Task } from "@/lib/types";
 import { FORWARD } from "@/lib/transitions";
 
 export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: boolean }) {
   const me = useMe().data;
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const [editing, setEditing] = useState(false);
   const [intent, setIntent] = useState<boolean | null>(null);
   const checkId = useId();
@@ -26,14 +26,11 @@ export function TaskRow({ task, showLinks = true }: { task: Task; showLinks?: bo
     mutationFn: (complete: boolean) =>
       post<Task>(`/tasks/${task.id}/${complete ? "complete" : "reopen"}`),
     onError: () => setIntent(null),
-    onSettled: () => {
-      client.invalidateQueries({ queryKey: ["tasks"] });
-      client.invalidateQueries({ queryKey: ["audit"] });
-    },
+    onSettled: () => invalidate("task"),
   });
   const remove = useMutation({
     mutationFn: () => del(`/tasks/${task.id}`),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: () => invalidate("task"),
   });
 
   const checked = intent ?? done;

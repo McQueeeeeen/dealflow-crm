@@ -12,7 +12,7 @@ use crate::auth::password::{self, MAX_PASSWORD_LEN, MIN_PASSWORD_LEN};
 use crate::auth::AuthUser;
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath};
-use crate::models::{AuditAction, EntityType, Role};
+use crate::models::{EntityType, Role};
 use crate::state::AppState;
 use crate::validation::{normalize_email, Validator};
 
@@ -96,14 +96,7 @@ pub async fn create_user(
     .bind(req.role)
     .fetch_one(&mut *tx)
     .await?;
-    audit::record(
-        &mut tx,
-        &actor,
-        EntityType::User,
-        created.id,
-        AuditAction::Created,
-        audit::snapshot(&created),
-    )
+    audit::created(&mut tx, &actor, EntityType::User, created.id, &created)
     .await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(created)))
@@ -158,18 +151,8 @@ pub async fn update_user(
         .await?;
     }
 
-    let changes = audit::diff(&before, &after);
-    if !audit::is_empty_diff(&changes) {
-        audit::record(
-            &mut tx,
-            &actor,
-            EntityType::User,
-            id,
-            AuditAction::Updated,
-            changes,
-        )
+    audit::updated(&mut tx, &actor, EntityType::User, id, &before, &after)
         .await?;
-    }
     tx.commit().await?;
     Ok(Json(after))
 }

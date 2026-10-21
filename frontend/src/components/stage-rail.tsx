@@ -6,12 +6,13 @@ import { Button, cx } from "@/components/ui";
 import { ApiError, post } from "@/lib/api";
 import { shortDate } from "@/lib/format";
 import { stageHeat } from "@/lib/heat";
-import { keys, useStages } from "@/lib/queries";
+import { keys, useInvalidate, useStages } from "@/lib/queries";
 import type { Deal } from "@/lib/types";
 
 export function StageRail({ deal, editable }: { deal: Deal; editable: boolean }) {
   const stages = useStages().data ?? [];
   const client = useQueryClient();
+  const invalidate = useInvalidate();
   const open = stages.filter((s) => s.kind === "open");
   const won = stages.find((s) => s.kind === "won");
   const lost = stages.find((s) => s.kind === "lost");
@@ -24,20 +25,10 @@ export function StageRail({ deal, editable }: { deal: Deal; editable: boolean })
       post<Deal>(`/deals/${deal.id}/move`, { stage_id: stageId, version: deal.version }),
     onSuccess: (saved) => {
       client.setQueryData(keys.deal(deal.id), saved);
-      for (const key of [
-        ["board"],
-        ["deals"],
-        ["analytics"],
-        ["audit"],
-        keys.stageHistory(deal.id),
-      ]) {
-        client.invalidateQueries({ queryKey: key });
-      }
+      invalidate("deal");
     },
     onError: (err) => {
-      if (err instanceof ApiError && err.status === 409) {
-        client.invalidateQueries({ queryKey: keys.deal(deal.id) });
-      }
+      if (err instanceof ApiError && err.status === 409) invalidate("deal");
     },
   });
 

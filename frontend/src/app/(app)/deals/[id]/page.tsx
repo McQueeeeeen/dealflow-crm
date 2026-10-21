@@ -1,7 +1,7 @@
 "use client";
 
 import { IconSnowflake } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,7 +17,7 @@ import { Button, ErrorState, Loading, Panel, Person, RecordView } from "@/compon
 import { del, get, query } from "@/lib/api";
 import { dateTime, quietDays, shortDate } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
-import { canModify, isManager, keys, useMe } from "@/lib/queries";
+import { canModify, isManager, keys, useInvalidate, useMe } from "@/lib/queries";
 import type { Deal, Page, StageChange, Task } from "@/lib/types";
 import { BACK, FORWARD } from "@/lib/transitions";
 
@@ -149,13 +149,11 @@ function DealView({ deal }: { deal: Deal }) {
 
 function DeleteDeal({ deal }: { deal: Deal }) {
   const router = useRouter();
-  const client = useQueryClient();
+  const invalidate = useInvalidate();
   const remove = useMutation({
     mutationFn: () => del(`/deals/${deal.id}`),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["board"] });
-      client.invalidateQueries({ queryKey: ["deals"] });
-      client.invalidateQueries({ queryKey: ["analytics"] });
+      invalidate("deal");
       router.push("/pipeline");
     },
   });
