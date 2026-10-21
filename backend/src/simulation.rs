@@ -97,16 +97,20 @@ pub fn simulate<R: Rng>(
     rng: &mut R,
 ) -> Vec<Vec<i64>> {
     let limit = horizons.iter().copied().fold(0.0, f64::max);
-    let mut totals = vec![vec![0_i64; runs]; horizons.len()];
-    for run in 0..runs {
+    let mut totals = vec![Vec::with_capacity(runs); horizons.len()];
+    for _ in 0..runs {
+        let mut sums = vec![0_i64; horizons.len()];
         for deal in deals {
             if let Some(day) = close_day(stages, deal, limit, rng) {
-                for (h, horizon) in horizons.iter().enumerate() {
+                for (sum, horizon) in sums.iter_mut().zip(horizons) {
                     if day <= *horizon {
-                        totals[h][run] += deal.value_cents;
+                        *sum += deal.value_cents;
                     }
                 }
             }
+        }
+        for (series, sum) in totals.iter_mut().zip(sums) {
+            series.push(sum);
         }
     }
     totals
