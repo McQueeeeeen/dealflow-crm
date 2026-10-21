@@ -885,7 +885,7 @@ async fn similar_company_names_pair_up_and_merges_respect_ownership(pool: PgPool
     let pairs = pairs.body.as_array().unwrap();
     assert_eq!(pairs.len(), 1);
     assert_eq!(pairs[0]["same_key"], false);
-    assert!(pairs[0]["similarity"].as_f64().unwrap() > 0.55);
+    assert!(pairs[0]["similarity"].as_f64().unwrap() > 0.7);
 
     let body = json!({ "keep": second.id(), "remove": first.id() });
     app.post("/api/v1/duplicates/companies/merge", &rep, body.clone())

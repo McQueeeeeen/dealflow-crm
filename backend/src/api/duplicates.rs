@@ -18,7 +18,7 @@ use crate::models::EntityType;
 use crate::state::AppState;
 
 const MAX_PAIRS: i64 = 50;
-const MIN_SIMILARITY: f64 = 0.55;
+const MIN_SIMILARITY: f64 = 0.7;
 
 struct Kind {
     table: &'static str,
@@ -138,7 +138,9 @@ pub async fn find_pairs(
          FROM {table} a
          JOIN {table} b ON b.organization_id = a.organization_id AND a.id < b.id
          WHERE a.organization_id = $1
-           AND (a.{key} = b.{key} OR similarity({name_a}, {name_b}) > $2)
+           AND (a.{key} = b.{key}
+                OR (similarity({name_a}, {name_b}) > $2
+                    AND (a.{key} IS NULL OR b.{key} IS NULL)))
          ORDER BY coalesce(a.{key} = b.{key}, false) DESC, 4 DESC, a.id, b.id
          LIMIT $3",
         key = kind.key,

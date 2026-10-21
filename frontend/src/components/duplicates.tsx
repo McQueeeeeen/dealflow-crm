@@ -61,7 +61,7 @@ export function Duplicates({ kind }: { kind: Kind }) {
       </Link>
       <PageHeader
         title={kind === "contacts" ? "Possible Duplicate Contacts" : "Possible Duplicate Companies"}
-        description={`Pairs with the same ${kind === "contacts" ? "email" : "domain"} or very similar names. A merge keeps one record, moves every deal, follow-up and note onto it, fills its blanks and deletes the other.`}
+        description={`Pairs with the same ${kind === "contacts" ? "email" : "domain"}, or near-identical names where one side has no ${kind === "contacts" ? "email" : "domain"}. A merge keeps one record, moves every deal, follow-up and note onto it, fills its blanks and deletes the other.`}
       />
       {pairs.isPending ? (
         <Loading label="Looking for duplicates…" />

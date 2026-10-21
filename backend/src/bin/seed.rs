@@ -346,7 +346,7 @@ async fn seed_targets(
         )
         .bind(ids.org)
         .bind(user)
-        .bind(rng.gen_range(6..=16) * 2_500_000_i64)
+        .bind(rng.gen_range(3..=8) * 2_500_000_i64)
         .execute(&mut **tx)
         .await?;
     }
