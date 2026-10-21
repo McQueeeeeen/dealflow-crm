@@ -306,3 +306,10 @@ export interface RuleRun {
   detail: string;
   created_at: string;
 }
+
+export interface DuplicatePair {
+  first: Record<string, string | number | null>;
+  second: Record<string, string | number | null>;
+  same_key: boolean;
+  similarity: number;
+}
