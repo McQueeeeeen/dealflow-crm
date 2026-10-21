@@ -79,7 +79,10 @@ pub fn render(template: &str, deal: &Deal) -> String {
         .collect();
     template
         .replace("{deal}", &deal.title)
-        .replace("{company}", deal.company_name.as_deref().unwrap_or("no company"))
+        .replace(
+            "{company}",
+            deal.company_name.as_deref().unwrap_or("no company"),
+        )
         .replace("{owner}", &deal.owner_name)
         .replace("{stage}", &deal.stage_name)
         .replace("{value}", &grouped)
@@ -179,7 +182,12 @@ async fn apply(
     Ok(Some(done))
 }
 
-async fn run(conn: &mut PgConnection, actor: &AuthUser, action: &Action, deal: &Deal) -> AppResult<String> {
+async fn run(
+    conn: &mut PgConnection,
+    actor: &AuthUser,
+    action: &Action,
+    deal: &Deal,
+) -> AppResult<String> {
     match action {
         Action::CreateTask {
             title,
@@ -265,7 +273,9 @@ async fn run(conn: &mut PgConnection, actor: &AuthUser, action: &Action, deal: &
             audit::updated(conn, actor, EntityType::Deal, deal.id, &before, &after).await?;
             Ok(format!(
                 "set the expected close to {}",
-                after.expected_close_date.map_or_else(String::new, |d| d.to_string())
+                after
+                    .expected_close_date
+                    .map_or_else(String::new, |d| d.to_string())
             ))
         }
     }

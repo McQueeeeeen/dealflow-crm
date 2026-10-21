@@ -105,7 +105,11 @@ async fn active_user(conn: &mut PgConnection, org_id: Uuid, id: Uuid) -> AppResu
     .await?)
 }
 
-async fn validate(conn: &mut PgConnection, actor: &AuthUser, input: &mut RuleInput) -> AppResult<()> {
+async fn validate(
+    conn: &mut PgConnection,
+    actor: &AuthUser,
+    input: &mut RuleInput,
+) -> AppResult<()> {
     input.name = input.name.trim().to_owned();
     input.condition = input.condition.trim().to_owned();
     let actions = &input.actions.0;
@@ -131,7 +135,11 @@ async fn validate(conn: &mut PgConnection, actor: &AuthUser, input: &mut RuleInp
                 );
                 if let Some(id) = assignee_id {
                     let ok = active_user(conn, actor.org_id, *id).await?;
-                    v.check(ok, "actions", "the follow-up goes to someone who is not on the team");
+                    v.check(
+                        ok,
+                        "actions",
+                        "the follow-up goes to someone who is not on the team",
+                    );
                 }
             }
             Action::AddNote { body } => {
@@ -165,7 +173,10 @@ async fn validate(conn: &mut PgConnection, actor: &AuthUser, input: &mut RuleInp
     Ok(())
 }
 
-pub async fn list_rules(State(state): State<AppState>, user: AuthUser) -> AppResult<Json<Vec<RuleView>>> {
+pub async fn list_rules(
+    State(state): State<AppState>,
+    user: AuthUser,
+) -> AppResult<Json<Vec<RuleView>>> {
     let rules = sqlx::query_as(&format!(
         "{SELECT_RULE} WHERE r.organization_id = $1 GROUP BY r.id ORDER BY r.created_at, r.id"
     ))

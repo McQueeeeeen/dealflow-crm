@@ -9,8 +9,8 @@ use uuid::Uuid;
 
 use crate::api::stages::{fetch_stages, Stage};
 use crate::audit;
-use crate::automation::{self, Trigger};
 use crate::auth::AuthUser;
+use crate::automation::{self, Trigger};
 use crate::error::{AppError, AppResult};
 use crate::extract::{ApiJson, ApiPath, ApiQuery};
 use crate::models::{EntityType, StageKind};
