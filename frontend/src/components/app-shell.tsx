@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  IconBolt,
   IconBuilding,
   IconCalendarCheck,
   IconChartBar,
@@ -35,6 +36,7 @@ const NAV: NavItem[] = [
   { href: "/companies", label: "Companies", icon: IconBuilding },
   { href: "/contacts", label: "Contacts", icon: IconUsers },
   { href: "/reports", label: "Reports", icon: IconChartBar },
+  { href: "/automations", label: "Automations", icon: IconBolt },
   {
     href: "/settings",
     label: "Settings",

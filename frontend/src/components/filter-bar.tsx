@@ -179,7 +179,7 @@ export function FilterBar({
   );
 }
 
-function Marked({ text, span }: { text: string; span?: [number, number] }) {
+export function Marked({ text, span }: { text: string; span?: [number, number] }) {
   if (!span) return null;
   const chars = Array.from(text);
   const [start, end] = [span[0], Math.max(span[1], span[0] + 1)];

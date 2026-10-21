@@ -24,11 +24,8 @@ export const keys = {
   analytics: (report: string, filters: object) => ["analytics", report, filters] as const,
 };
 
-export type Entity =
-  "deal" | "task" | "note" | "company" | "contact" | "stage" | "user" | "target" | "view";
-
-const AFFECTS: Record<Entity, string[]> = {
-  deal: ["board", "deals", "deal", "analytics", "audit", "targets", "companies"],
+const AFFECTS = {
+  deal: ["board", "deals", "deal", "analytics", "audit", "targets", "companies", "automations"],
   task: ["tasks", "board", "deals", "deal", "audit"],
   note: ["notes", "board", "deals", "deal"],
   company: ["companies", "company", "deals", "board", "audit"],
@@ -37,7 +34,10 @@ const AFFECTS: Record<Entity, string[]> = {
   user: ["users", "me", "audit"],
   target: ["targets"],
   view: ["views"],
-};
+  rule: ["automations", "audit"],
+} satisfies Record<string, string[]>;
+
+export type Entity = keyof typeof AFFECTS;
 
 export function affected(...entities: string[]): string[] {
   return [...new Set(entities.flatMap((e) => AFFECTS[e as Entity] ?? []))];
