@@ -33,6 +33,7 @@ import { isManager, keys, useInvalidate, useMe, useTargets } from "@/lib/queries
 import type { Forecast, Funnel, LeaderboardRow, Summary, TargetRow } from "@/lib/types";
 
 import { FunnelChart, ForecastChart } from "./charts";
+import { SimulationSection } from "./simulation";
 
 const PERIODS = [
   { days: 90, label: "Last 90 days" },
@@ -78,6 +79,7 @@ export default function ReportsPage() {
       </div>
 
       <SummaryStrip owner={owner} />
+      <SimulationSection owner={owner} />
 
       <div className="mt-6 grid items-start gap-6 xl:grid-cols-2">
         <FunnelSection owner={owner} from={from} />

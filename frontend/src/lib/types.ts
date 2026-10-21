@@ -232,3 +232,32 @@ export interface Viewer {
   name: string;
   view: string | null;
 }
+
+export interface SimulationPeriod {
+  key: "month" | "quarter";
+  starts_on: string;
+  ends_on: string;
+  won_cents: number;
+  target_cents: number | null;
+  chance_to_hit_target: number | null;
+  distribution: {
+    mean_cents: number;
+    p10_cents: number;
+    p50_cents: number;
+    p90_cents: number;
+    histogram: { from_cents: number; to_cents: number; runs: number }[];
+  };
+}
+
+export interface Simulation {
+  runs: number;
+  open_deals: number;
+  periods: SimulationPeriod[];
+  stages: {
+    stage_id: string;
+    name: string;
+    advance_rate: number;
+    median_days: number;
+    samples: number;
+  }[];
+}
