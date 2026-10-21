@@ -1,8 +1,9 @@
 # DealFlow CRM
 
 A multi-tenant sales CRM for small B2B sales teams: a drag-and-drop pipeline that updates
-live for the whole team, Cmd+K search, deals that flag themselves when they go cold, monthly
-targets, CSV import and export, follow-ups, notes, a full change history and sales reports.
+live for the whole team, a filter language for deals, automation rules, a Monte Carlo revenue
+forecast, duplicate merging, undo for any edit, Cmd+K search, monthly targets, CSV import and
+export, follow-ups, notes, a full change history and sales reports.
 
 The backend is written in Rust (Axum, SQLx, PostgreSQL). The web app is Next.js with
 TypeScript.
@@ -20,6 +21,18 @@ sign-in page. The demo workspace is reset every night.
 - **Live for the whole team**: when a teammate moves a deal, adds a note or completes a
   follow-up, every open screen updates within a second, and the header shows who else is
   looking at the same record.
+- **Filter language**: `fleet value>=50k -status:lost (owner:me OR stage:prop) closes<30d`
+  narrows the board. Mistakes are underlined where the parser found them, and filters can be
+  saved as personal or team views.
+- **Automations**: "when a deal enters Proposal and matches `value>=100k`, create a follow-up
+  for the owner in two days and add a note". Rules run inside the change that triggers them and
+  keep a log of what they did or why they failed.
+- **What will actually close**: ten thousand simulated futures of the open pipeline, learned
+  from how each stage really moved over the last year, give the likely revenue for the month
+  and quarter, an 80% range and the chance of reaching the target.
+- **Duplicates**: contacts and companies that share an email or domain, or have near-identical
+  names, are paired side by side; pick the surviving record and each field, then merge.
+- **Undo**: any edit to a deal, contact or company can be undone from its history.
 - **Cmd+K**: one box searches deals, companies and people, tolerates typos ("copperleef"
   finds Copperleaf), and runs actions like "New deal" or "Switch theme".
 - **Today**: your follow-ups, progress toward this month's target, your pipeline by stage,
@@ -38,11 +51,13 @@ sign-in page. The demo workspace is reset every night.
   Every list exports to a spreadsheet-safe CSV.
 - **Settings**: invite teammates with a role, rename, reorder and re-weight pipeline stages.
 
-| Today | Cmd+K search |
+| Today | Reports with the revenue simulation, light theme |
 |---|---|
-| ![Today](docs/screenshots/today.png) | ![Search](docs/screenshots/palette.png) |
-| **Reports, light theme** | **Deal** |
-| ![Reports](docs/screenshots/reports-light.png) | ![Deal](docs/screenshots/deal.png) |
+| ![Today](docs/screenshots/today.png) | ![Reports](docs/screenshots/reports-light.png) |
+| **Automations** | **Duplicate contacts** |
+| ![Automations](docs/screenshots/automations.png) | ![Duplicates](docs/screenshots/duplicates.png) |
+| **Cmd+K search** | **Deal** |
+| ![Search](docs/screenshots/palette.png) | ![Deal](docs/screenshots/deal.png) |
 
 <img src="docs/screenshots/mobile-today.png" alt="Today on a phone" width="320">
 
@@ -68,6 +83,9 @@ backend/
   src/authz.rs       every role rule in one place
   src/audit.rs       field-level diffs written in the same transaction as the change
   src/live.rs        LISTEN/NOTIFY fan-out to server-sent events, presence
+  src/dql.rs         lexer, parser and SQL compiler for the deal filter language
+  src/automation.rs  rule triggers, conditions and actions, run in savepoints
+  src/simulation.rs  stage model learning and the Monte Carlo forecast
   src/bin/seed.rs    deterministic demo workspace with realistic stage history
   tests/api/         end-to-end tests against a real database
 frontend/
@@ -116,6 +134,40 @@ notifications out to server-sent event streams, filtered to the caller's workspa
 batch the events and refetch only the affected queries; a stream that falls behind gets a
 single "resync" instead of a flood. Streams close after ten minutes so the access token is
 re-checked, and the client reconnects with backoff.
+
+**The filter language compiles to SQL, never into it.** A hand-written lexer and recursive
+descent parser turn the filter into a typed tree: `OR` binds looser than the implicit `AND`,
+`-` and `NOT` negate, parentheses group, and each field parses its own values (`50k`, `1.2m`,
+`30d`, `2w`, `2026-12-31`). Errors carry character spans, which the UI underlines. The compiler
+emits SQL with a placeholder for every value and wraps each condition in `coalesce(…, false)` so
+negation behaves on empty fields. The same language serves the board, saved views and
+automation conditions.
+
+**Automations run inside the change, each in its own savepoint.** Moving a deal fires the
+rules for that stage in the same transaction, so their follow-ups and notes commit or roll back
+with the move. Each rule gets a savepoint: if one fails, for example because its new owner was
+deactivated, only that rule is rolled back, the failure is logged, and the move and the other
+rules go through. Triggers and actions are tagged enums stored as JSONB, and rules are matched
+by JSONB equality on the trigger.
+
+**The forecast learns from history and says how sure it is.** For each open stage the API counts
+how often deals moved forward and how long they stayed, shrinking thin evidence toward the
+stage's configured probability (a beta prior worth five observations). Each open deal is then
+played forward ten thousand times, conditioning its first stay on the time already spent in its
+stage. Revenue already won is added to every run, and the result is reported as percentiles,
+a histogram and the share of runs that reach the target. The run is seeded, so the same
+pipeline gives the same answer.
+
+**An undo checks before it writes.** The audit row already holds the before and after of every
+field. An undo writes the old values back through `jsonb_populate_record`, but only if the
+fields still hold the values that change set; otherwise it answers 409 and asks to undo the
+later change first. The undo is an edit like any other, so it can be undone too.
+
+**Duplicates are found and merged by one generic implementation.** Contacts and companies are
+described by their table, name expression, matching key, mergeable fields and the tables that
+reference them. Records with different emails or domains are never paired on name alone. A
+merge moves every reference, fills the kept record's blanks and records both sides in the
+audit log, in one transaction.
 
 **Search is one trigram query per kind.** Deals, companies and contacts are matched with
 `ILIKE` for exact substrings and `pg_trgm` word similarity for typos, both served by the same
@@ -174,7 +226,11 @@ detection, deactivation, tenant isolation, cross-tenant references, role permiss
 optimistic concurrency, stage moves, the audit trail and its immutability, search and
 pagination, tasks, notes, pipeline reordering, the numbers behind every report, live events
 that never cross workspaces, presence, typo-tolerant search, targets, CSV dry runs and
-dedupe, formula-safe export, and last-activity tracking.
+dedupe, formula-safe export, last-activity tracking, the filter language end to end (including
+an injection attempt), saved views, automations firing on every trigger, savepoint isolation of
+a failing rule, the simulation's percentiles and target odds, duplicate pairing and merging, and
+undo with its conflict check. Unit tests cover the parser's precedence, values and error spans,
+the SQL it emits, the forecast's learning, sampling and summaries.
 
 The end-to-end suite boots the whole stack in CI (PostgreSQL, the API with demo data, the
 production Next.js build) and drives it with Playwright on desktop and phone viewports. It
@@ -182,8 +238,9 @@ visits every screen in both themes and fails on any console error, any sideways 
 a phone, or any serious WCAG 2.1 AA violation reported by axe. It also moves a deal across the
 board with the arrow keys, completes a follow-up, adds a note, checks form validation, the theme
 toggle and signing out, finds a company through Cmd+K with a typo, watches a deal created by
-another user appear on the open board, imports a CSV through its preview and downloads an
-export.
+another user appear on the open board, imports a CSV through its preview, downloads an
+export, filters the board and saves a view, reads the simulation, builds an automation and
+watches it run, merges two duplicate contacts and undoes an edit.
 
 CI runs `rustfmt`, `clippy -D warnings`, the full test suite and the seed script for the
 backend, and Prettier, ESLint, a production build and `tsc` for the frontend.

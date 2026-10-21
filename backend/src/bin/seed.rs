@@ -340,13 +340,29 @@ async fn seed_targets(
     rng: &mut StdRng,
 ) -> anyhow::Result<()> {
     for &user in &ids.users {
+        let likely: i64 = sqlx::query_scalar(
+            "SELECT coalesce(sum(CASE
+                       WHEN s.kind = 'won' AND d.closed_at >= date_trunc('month', now())
+                           THEN d.value_cents
+                       WHEN s.kind = 'open'
+                            AND d.expected_close_date < date_trunc('month', now()) + interval '1 month'
+                           THEN d.value_cents * s.probability / 100
+                   END), 0)::bigint
+             FROM deals d JOIN pipeline_stages s ON s.id = d.stage_id
+             WHERE d.organization_id = $1 AND d.owner_id = $2",
+        )
+        .bind(ids.org)
+        .bind(user)
+        .fetch_one(&mut **tx)
+        .await?;
+        let stretch = likely as f64 * rng.gen_range(1.05..1.5) / 500_000.0;
         sqlx::query(
             "INSERT INTO sales_targets (organization_id, user_id, month, amount_cents)
              VALUES ($1, $2, date_trunc('month', now())::date, $3)",
         )
         .bind(ids.org)
         .bind(user)
-        .bind(rng.gen_range(3..=8) * 2_500_000_i64)
+        .bind((stretch.round() as i64 * 500_000).max(5_000_000))
         .execute(&mut **tx)
         .await?;
     }
