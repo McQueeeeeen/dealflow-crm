@@ -96,8 +96,7 @@ pub async fn create_user(
     .bind(req.role)
     .fetch_one(&mut *tx)
     .await?;
-    audit::created(&mut tx, &actor, EntityType::User, created.id, &created)
-    .await?;
+    audit::created(&mut tx, &actor, EntityType::User, created.id, &created).await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(created)))
 }
@@ -151,8 +150,7 @@ pub async fn update_user(
         .await?;
     }
 
-    audit::updated(&mut tx, &actor, EntityType::User, id, &before, &after)
-        .await?;
+    audit::updated(&mut tx, &actor, EntityType::User, id, &before, &after).await?;
     tx.commit().await?;
     Ok(Json(after))
 }

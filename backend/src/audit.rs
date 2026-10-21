@@ -39,7 +39,15 @@ pub async fn created<T: Serialize>(
     id: Uuid,
     fields: &T,
 ) -> AppResult<()> {
-    record(conn, actor, entity, id, AuditAction::Created, snapshot(fields)).await
+    record(
+        conn,
+        actor,
+        entity,
+        id,
+        AuditAction::Created,
+        snapshot(fields),
+    )
+    .await
 }
 
 pub async fn deleted<T: Serialize>(
@@ -49,7 +57,15 @@ pub async fn deleted<T: Serialize>(
     id: Uuid,
     fields: &T,
 ) -> AppResult<()> {
-    record(conn, actor, entity, id, AuditAction::Deleted, snapshot(fields)).await
+    record(
+        conn,
+        actor,
+        entity,
+        id,
+        AuditAction::Deleted,
+        snapshot(fields),
+    )
+    .await
 }
 
 pub async fn updated<T: Serialize>(

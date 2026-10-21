@@ -71,5 +71,7 @@ pub async fn list_audit(
          {FILTER}"
     );
     let order = "a.created_at DESC, a.id DESC";
-    Ok(Json(pagination.fetch(&state.pool, &sql, order, params).await?))
+    Ok(Json(
+        pagination.fetch(&state.pool, &sql, order, params).await?,
+    ))
 }

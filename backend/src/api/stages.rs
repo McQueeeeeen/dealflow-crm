@@ -103,8 +103,7 @@ pub async fn create_stage(
     .bind(req.kind)
     .fetch_one(&mut *tx)
     .await?;
-    audit::created(&mut tx, &actor, EntityType::Stage, stage.id, &stage)
-    .await?;
+    audit::created(&mut tx, &actor, EntityType::Stage, stage.id, &stage).await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(stage)))
 }
@@ -140,8 +139,7 @@ pub async fn update_stage(
     .bind(req.probability)
     .fetch_one(&mut *tx)
     .await?;
-    audit::updated(&mut tx, &actor, EntityType::Stage, id, &before, &after)
-        .await?;
+    audit::updated(&mut tx, &actor, EntityType::Stage, id, &before, &after).await?;
     tx.commit().await?;
     Ok(Json(after))
 }
@@ -209,8 +207,7 @@ pub async fn delete_stage(
             }
             other => other,
         })?;
-    audit::deleted(&mut tx, &actor, EntityType::Stage, id, stage)
-    .await?;
+    audit::deleted(&mut tx, &actor, EntityType::Stage, id, stage).await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }

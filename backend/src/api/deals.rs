@@ -355,8 +355,7 @@ pub async fn create_deal(
     .fetch_one(&mut *tx)
     .await?;
     record_stage_change(&mut tx, &actor, id, None, stage_id).await?;
-    audit::created(&mut tx, &actor, EntityType::Deal, id, &fields)
-    .await?;
+    audit::created(&mut tx, &actor, EntityType::Deal, id, &fields).await?;
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(deal)))
@@ -423,8 +422,7 @@ pub async fn update_deal(
     .bind(req.expected_close_date)
     .fetch_one(&mut *tx)
     .await?;
-    audit::updated(&mut tx, &actor, EntityType::Deal, id, &before, &after)
-        .await?;
+    audit::updated(&mut tx, &actor, EntityType::Deal, id, &before, &after).await?;
     let deal = fetch_deal(&mut tx, actor.org_id, id).await?;
     tx.commit().await?;
     Ok(Json(deal))
@@ -481,7 +479,14 @@ pub async fn move_deal(
             req.stage_id,
         )
         .await?;
-        audit::updated(&mut tx, &actor, EntityType::Deal, id, &locked.fields, &after)
+        audit::updated(
+            &mut tx,
+            &actor,
+            EntityType::Deal,
+            id,
+            &locked.fields,
+            &after,
+        )
         .await?;
     } else {
         let change = live::Change {
@@ -513,8 +518,7 @@ pub async fn delete_deal(
     .fetch_optional(&mut *tx)
     .await?;
     let deleted = deleted.ok_or(AppError::NotFound("deal"))?;
-    audit::deleted(&mut tx, &actor, EntityType::Deal, id, &deleted)
-    .await?;
+    audit::deleted(&mut tx, &actor, EntityType::Deal, id, &deleted).await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }

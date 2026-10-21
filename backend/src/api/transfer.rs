@@ -296,8 +296,7 @@ async fn insert_company(
     .bind(actor.user_id)
     .fetch_one(&mut *conn)
     .await?;
-    audit::created(conn, actor, EntityType::Company, id, &fields)
-    .await?;
+    audit::created(conn, actor, EntityType::Company, id, &fields).await?;
     Ok(id)
 }
 
@@ -452,8 +451,7 @@ async fn upsert_contact(
         .bind(actor.user_id)
         .fetch_one(&mut *conn)
         .await?;
-        audit::created(conn, actor, EntityType::Contact, id, &fields)
-        .await?;
+        audit::created(conn, actor, EntityType::Contact, id, &fields).await?;
         return Ok(Ok(Outcome::Created));
     };
     if !actor.can_modify(owner_id) {
