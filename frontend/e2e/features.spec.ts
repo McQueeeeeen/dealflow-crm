@@ -86,17 +86,17 @@ test("the filter language narrows the board, explains mistakes and saves views",
 }, info) => {
   await page.goto("/pipeline");
   const filter = page.getByRole("searchbox", { name: "Filter deals" });
-  await filter.fill("value>=400k valu:3");
+  await filter.fill("value>=150k valu:3");
   await expect(page.getByText(/unknown field “valu”/)).toBeVisible();
 
-  await filter.fill("value>=400k status:open");
+  await filter.fill("value>=150k status:open");
   await expect(page.getByText(/\d+ deals? match/)).toBeVisible();
   await expect(page).toHaveURL(/filter=value/);
   await expect(async () => {
     const amounts = await page.locator("article .num.font-medium").allTextContents();
     expect(amounts.length).toBeGreaterThan(0);
     for (const amount of amounts) {
-      expect(Number(amount.replace(/[^0-9.]/g, ""))).toBeGreaterThanOrEqual(400_000);
+      expect(Number(amount.replace(/[^0-9.]/g, ""))).toBeGreaterThanOrEqual(150_000);
     }
   }).toPass();
 
