@@ -159,3 +159,50 @@ test("an automation is written in plain terms and runs when deals change", async
   await card.getByRole("button", { name: "Delete" }).click();
   await expect(card).toHaveCount(0);
 });
+
+test("duplicate contacts are found and merged with a choice per field", async ({
+  page,
+}, info) => {
+  const tag = `${info.project.name}${Date.now()}`;
+  const email = `twin.${tag}@example.com`;
+  for (const [first, last, phone] of [
+    ["Nora", `Twin${tag}`, null],
+    ["Nora", `Twinn${tag}`, "+1 555 0199"],
+  ]) {
+    const res = await page.request.post("/api/v1/contacts", {
+      data: { first_name: first, last_name: last, email, phone },
+    });
+    expect(res.status()).toBe(201);
+  }
+
+  await page.goto("/contacts");
+  await page.getByRole("link", { name: "Find Duplicates" }).click();
+  await expect(page.getByRole("heading", { name: "Possible Duplicate Contacts" })).toBeVisible();
+  const pair = page.locator("section", { hasText: `Twinn${tag}` });
+  await expect(pair.getByText("Same email")).toBeVisible();
+  await pair.getByRole("radio", { name: `Twinn${tag}` }).check();
+  await pair.getByRole("button", { name: /^Merge into/ }).click();
+  await expect(pair).toHaveCount(0);
+
+  await page.goto("/contacts");
+  await page.getByRole("searchbox", { name: "Search contacts" }).fill(email);
+  await expect(page.getByRole("link", { name: `Nora Twinn${tag}` })).toHaveCount(1);
+});
+
+test("an edit is undone from the deal's history", async ({ page }, info) => {
+  await page.goto("/pipeline");
+  await page.locator("article a").first().click();
+  await page.waitForURL(/\/deals\//);
+  const heading = page.getByRole("heading", { level: 1 });
+  const original = (await heading.textContent())!.trim();
+
+  await page.getByRole("button", { name: "Edit Deal" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit Deal" });
+  const renamed = `${original} (${info.project.name} draft)`;
+  await dialog.getByLabel("Deal name").fill(renamed);
+  await dialog.getByRole("button", { name: "Save Deal" }).click();
+  await expect(heading).toHaveText(renamed);
+
+  await page.getByRole("button", { name: "Undo" }).first().click();
+  await expect(heading).toHaveText(original);
+});

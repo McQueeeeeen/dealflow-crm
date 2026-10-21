@@ -19,6 +19,7 @@ import {
   Panel,
   Person,
   TextInput,
+  buttonClass,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { useMoney, useUrlParams, useUrlSearch } from "@/lib/hooks";
@@ -48,6 +49,9 @@ export default function CompaniesPage() {
         title="Companies"
         actions={
           <>
+            <Link href="/companies/duplicates" className={buttonClass()}>
+              Find Duplicates
+            </Link>
             <ImportButton kind="companies" />
             <ExportLink kind="companies" />
             <Button variant="primary" onClick={() => setCreating(true)}>

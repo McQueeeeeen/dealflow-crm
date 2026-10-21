@@ -19,6 +19,7 @@ import {
   Panel,
   Person,
   TextInput,
+  buttonClass,
 } from "@/components/ui";
 import { get, query } from "@/lib/api";
 import { fullName } from "@/lib/format";
@@ -48,6 +49,9 @@ export default function ContactsPage() {
         title="Contacts"
         actions={
           <>
+            <Link href="/contacts/duplicates" className={buttonClass()}>
+              Find Duplicates
+            </Link>
             <ImportButton kind="contacts" />
             <ExportLink kind="contacts" />
             <Button variant="primary" onClick={() => setCreating(true)}>

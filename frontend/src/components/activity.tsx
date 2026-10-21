@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { IconArrowBackUp } from "@tabler/icons-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { ErrorState, Loading, Panel } from "@/components/ui";
-import { get, query } from "@/lib/api";
+import { Button, ErrorState, Loading, Panel } from "@/components/ui";
+import { ApiError, get, post, query } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 import { useMoney } from "@/lib/hooks";
-import { keys, useStages, useUsers } from "@/lib/queries";
+import { keys, useInvalidate, useStages, useUsers, type Entity } from "@/lib/queries";
 import type { AuditEntry, Page } from "@/lib/types";
 
 const FIELD_LABELS: Record<string, string> = {
@@ -23,6 +24,12 @@ const FIELD_LABELS: Record<string, string> = {
   assignee_id: "assignee",
   due_at: "due date",
   completed_at: "completion",
+};
+
+const REVERTIBLE: Record<string, string[]> = {
+  deal: ["title", "value_cents", "company_id", "contact_id", "owner_id", "expected_close_date"],
+  contact: ["first_name", "last_name", "email", "phone", "job_title", "company_id", "owner_id"],
+  company: ["name", "domain", "industry", "owner_id"],
 };
 
 export function ActivityPanel({ entityType, entityId }: { entityType: string; entityId: string }) {
@@ -48,7 +55,13 @@ export function ActivityPanel({ entityType, entityId }: { entityType: string; en
           {entries.data.data.map((entry) => (
             <li key={entry.id} className="border-line border-l-2 pl-3">
               <EntrySentence entry={entry} />
-              <p className="num text-meta text-muted mt-0.5">{dateTime(entry.created_at)}</p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3">
+                <p className="num text-meta text-muted">{dateTime(entry.created_at)}</p>
+                {entry.action === "updated" &&
+                Object.keys(entry.changes).some((f) => REVERTIBLE[entry.entity_type]?.includes(f)) ? (
+                  <Undo entry={entry} />
+                ) : null}
+              </div>
             </li>
           ))}
         </ol>
@@ -100,6 +113,33 @@ function ChangeLine({ field, change }: { field: string; change: { from: unknown;
       <span className="line-through decoration-1">{show(change.from)}</span>
       {" to "}
       <span className="text-ink">{show(change.to)}</span>
+    </>
+  );
+}
+
+function Undo({ entry }: { entry: AuditEntry }) {
+  const invalidate = useInvalidate();
+  const undo = useMutation({
+    mutationFn: () => post(`/audit/${entry.id}/revert`),
+    onSuccess: () => invalidate(entry.entity_type as Entity),
+  });
+  return (
+    <>
+      <Button
+        type="button"
+        variant="quiet"
+        busy={undo.isPending}
+        onClick={() => undo.mutate()}
+        className="text-meta -my-1 min-h-8 px-2 sm:min-h-7"
+      >
+        <IconArrowBackUp size={14} stroke={1.75} aria-hidden="true" />
+        Undo
+      </Button>
+      {undo.isError ? (
+        <p role="alert" className="text-meta text-critical basis-full">
+          {undo.error instanceof ApiError ? undo.error.message : "The undo did not save."}
+        </p>
+      ) : null}
     </>
   );
 }
