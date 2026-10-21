@@ -108,6 +108,9 @@ test("the filter language narrows the board, explains mistakes and saves views",
   await expect(chip).toHaveAttribute("aria-pressed", "true");
   await chip.click();
   await expect(filter).toHaveValue("");
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: `Delete view ${name}` }).click();
+  await expect(chip).toHaveCount(0);
 });
 
 test("Reports simulate the quarter and the chance of reaching the target", async ({ page }) => {
