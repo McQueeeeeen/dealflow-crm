@@ -93,3 +93,16 @@ test("the stage rail moves a deal from its page", async ({ page }) => {
   await expect(rail.locator('[aria-current="step"]')).toContainText("Proposal");
   await expect(page.getByText("50% likely to close.")).toBeVisible();
 });
+
+test("a session that no longer exists lands on the sign-in page", async ({ page, context }) => {
+  await context.clearCookies();
+  const url = new URL(page.url()).origin;
+  await context.addCookies([
+    { name: "df_access", value: "stale", url },
+    { name: "df_refresh", value: "stale", url },
+  ]);
+  await page.goto("/today");
+  await page.waitForURL(/\/login/);
+  await expect(page.getByRole("button", { name: "Sign In", exact: true })).toBeVisible();
+  expect((await context.cookies()).map((c) => c.name)).not.toContain("df_refresh");
+});

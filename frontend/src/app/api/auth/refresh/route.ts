@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { REFRESH_COOKIE, forwardJson, unavailable, withSession } from "@/lib/server/session";
+import {
+  REFRESH_COOKIE,
+  clearSession,
+  forwardJson,
+  unavailable,
+  withSession,
+} from "@/lib/server/session";
 
 export async function POST(req: NextRequest) {
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
@@ -12,7 +18,7 @@ export async function POST(req: NextRequest) {
   );
   if (!res) return unavailable();
   if (!res.ok) {
-    return NextResponse.json({ error: { code: "unauthorized" } }, { status: 401 });
+    return clearSession(NextResponse.json({ error: { code: "unauthorized" } }, { status: 401 }));
   }
   return withSession(await res.json());
 }
